@@ -22,10 +22,22 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseServiceClient()
 
+    // facility_portal_profilesのIDを取得（profile_id FK用）
+    const { data: portalProfile } = await supabase
+      .from('facility_portal_profiles')
+      .select('id')
+      .eq('facility_id', facility_id)
+      .single()
+
+    if (!portalProfile) {
+      return NextResponse.json({ error: 'この施設はポータルに登録されていません' }, { status: 404 })
+    }
+
     const { data, error } = await supabase
       .from('facility_portal_inquiries')
       .insert({
         facility_id,
+        profile_id: portalProfile.id,
         inquirer_name,
         inquirer_phone: inquirer_phone || null,
         inquirer_email: inquirer_email || null,
