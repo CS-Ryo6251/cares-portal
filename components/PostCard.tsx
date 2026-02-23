@@ -73,6 +73,7 @@ type PostCardProps = {
     content: string
     category: string | null
     link_url: string | null
+    view_count: number
     created_at: string
     facility_portal_post_media: Array<{
       id: string
@@ -151,6 +152,11 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
           <span className="text-sm text-gray-400">
             {formatRelativeDate(post.created_at)}
           </span>
+          {post.view_count > 0 && (
+            <span className="text-sm text-gray-400 ml-auto">
+              👀 {post.view_count.toLocaleString()}
+            </span>
+          )}
         </div>
       </div>
 

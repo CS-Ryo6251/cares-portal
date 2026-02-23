@@ -44,6 +44,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
       content,
       category,
       link_url,
+      view_count,
       created_at,
       facility_portal_post_media (
         id, media_url, media_type, sort_order
@@ -109,6 +110,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
         content: post.content,
         category: post.category,
         link_url: post.link_url,
+        view_count: post.view_count || 0,
         created_at: post.created_at,
         facility_portal_post_media: post.facility_portal_post_media || [],
       },

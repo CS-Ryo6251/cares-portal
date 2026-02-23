@@ -13,6 +13,7 @@ import {
   ArrowLeft,
 } from 'lucide-react'
 import InquiryForm from './InquiryForm'
+import ViewTracker from '@/components/ViewTracker'
 import FeeSimulator from './FeeSimulator'
 import CommentSection from '@/components/CommentSection'
 
@@ -305,6 +306,7 @@ export default async function FacilityDetailPage({
               id={`post-${post.id}`}
               className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
             >
+              <ViewTracker postId={post.id} />
               <div className="p-6">
                 {/* Category and date */}
                 <div className="flex items-center gap-2 mb-3">
@@ -322,6 +324,11 @@ export default async function FacilityDetailPage({
                       day: 'numeric',
                     })}
                   </span>
+                  {post.view_count > 0 && (
+                    <span className="text-sm text-gray-400 ml-auto">
+                      👀 {post.view_count.toLocaleString()}
+                    </span>
+                  )}
                 </div>
 
                 {/* Media */}
