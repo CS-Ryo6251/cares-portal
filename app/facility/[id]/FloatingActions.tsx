@@ -12,16 +12,22 @@ type Fee = {
   care_level: string | null
   notes: string | null
   sort_order: number
+  billing_unit: string
+  fee_section: string
+  amount_max: number | null
+  is_optional: boolean
 }
 
 type Props = {
   fees: Fee[]
+  feePattern?: string
 }
 
-export default function FloatingFeeSimulator({ fees }: Props) {
+export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
   const [open, setOpen] = useState(false)
 
-  if (fees.length === 0) return null
+  // パターンA（自己負担なし）または料金未設定の場合は非表示
+  if (feePattern === 'no_charge' || fees.length === 0) return null
 
   return (
     <>
@@ -59,7 +65,7 @@ export default function FloatingFeeSimulator({ fees }: Props) {
             </div>
             <div className="p-5">
               <p className="text-sm text-gray-500 mb-4">
-                介護度とオプションを選択すると自動で月額料金を計算します
+                条件を設定すると自動で月額料金を計算します
               </p>
               <FeeSimulator fees={fees} />
             </div>

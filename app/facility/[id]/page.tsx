@@ -12,6 +12,7 @@ import {
   ExternalLink,
   ArrowLeft,
 } from 'lucide-react'
+import { Shield } from 'lucide-react'
 import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
 import FloatingActions from './FloatingActions'
@@ -499,8 +500,28 @@ export default async function FacilityDetailPage({
         </div>
       )}
 
+      {/* パターンA: 自己負担なしの表示 */}
+      {facility.fee_pattern === 'no_charge' && (
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-gray-200" />
+            <h2 className="text-lg font-bold text-gray-900 shrink-0">料金について</h2>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
+            <Shield className="w-10 h-10 text-green-600 mx-auto mb-3" />
+            <p className="text-base font-semibold text-green-800">
+              利用者の費用負担はありません
+            </p>
+            <p className="text-sm text-green-600 mt-2">
+              全額介護保険で賄われます
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Floating fee simulator button */}
-      <FloatingActions fees={facility.fees} />
+      <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} />
     </div>
   )
 }
