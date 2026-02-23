@@ -32,6 +32,98 @@ const acceptanceColors: Record<string, string> = {
   unknown: 'bg-gray-100 text-gray-600',
 }
 
+function calculateScore(post: any, userArea: string | undefined): number {
+  // 鮮度スコア (40%)
+  const ageHours = (Date.now() - new Date(post.created_at).getTime()) / (1000 * 60 * 60)
+  let freshnessScore = 0
+  if (ageHours < 24) freshnessScore = 100
+  else if (ageHours < 72) freshnessScore = 80
+  else if (ageHours < 168) freshnessScore = 60  // 7日
+  else if (ageHours < 720) freshnessScore = 30  // 30日
+  else freshnessScore = 10
+
+  // エリア近接スコア (25%)
+  let areaScore = 50 // デフォルト（エリア未指定時）
+  if (userArea) {
+    const facilityAddress = post.facility_portal_profiles?.facilities?.address || ''
+    if (facilityAddress.includes(userArea)) areaScore = 100
+    else areaScore = 20
+  }
+
+  // エンゲージメントスコア (15%)
+  const views = post.view_count || 0
+  const favorites = post.favorite_count || 0
+  const engagementRaw = views + favorites * 5
+  const engagementScore = Math.min(100, engagementRaw / 2)
+
+  // 受入状況スコア (10%)
+  const acceptanceStatus = post.facility_portal_profiles?.acceptance_status || 'unknown'
+  const acceptanceScores: Record<string, number> = {
+    accepting: 100,
+    limited: 70,
+    waitlist: 40,
+    not_accepting: 10,
+    unknown: 30,
+  }
+  const acceptScore = acceptanceScores[acceptanceStatus] || 30
+
+  return (
+    freshnessScore * 0.4 +
+    areaScore * 0.25 +
+    engagementScore * 0.15 +
+    acceptScore * 0.1
+  )
+}
+
+function applyDiversityShuffle(posts: any[]): any[] {
+  if (posts.length <= 1) return posts
+
+  const result: any[] = [posts[0]]
+  const remaining = posts.slice(1)
+
+  for (let i = 0; i < remaining.length; i++) {
+    const candidate = remaining[i]
+    const recentInResult = result.slice(-2)
+
+    // 同じ施設が3連続しないようチェック
+    const sameFacilityCount = recentInResult.filter(
+      (p: any) => p.facility_id === candidate.facility_id
+    ).length
+    if (sameFacilityCount >= 2) {
+      // 後ろにずらす（次の異なる施設/カテゴリの投稿を先に入れる）
+      const swapIdx = remaining.slice(i + 1).findIndex(
+        (p: any) => p.facility_id !== candidate.facility_id && p.category !== candidate.category
+      )
+      if (swapIdx !== -1) {
+        const actualIdx = i + 1 + swapIdx
+        ;[remaining[i], remaining[actualIdx]] = [remaining[actualIdx], remaining[i]]
+        result.push(remaining[i])
+        continue
+      }
+    }
+
+    // 同じカテゴリが3連続しないようチェック
+    const sameCategoryCount = recentInResult.filter(
+      (p: any) => p.category === candidate.category
+    ).length
+    if (sameCategoryCount >= 2) {
+      const swapIdx = remaining.slice(i + 1).findIndex(
+        (p: any) => p.category !== candidate.category
+      )
+      if (swapIdx !== -1) {
+        const actualIdx = i + 1 + swapIdx
+        ;[remaining[i], remaining[actualIdx]] = [remaining[actualIdx], remaining[i]]
+        result.push(remaining[i])
+        continue
+      }
+    }
+
+    result.push(candidate)
+  }
+
+  return result
+}
+
 async function getFeedPosts(searchParams: { [key: string]: string | undefined }) {
   const supabase = getSupabaseClient()
 
@@ -45,6 +137,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
       category,
       link_url,
       view_count,
+      favorite_count,
       created_at,
       facility_portal_post_media (
         id, media_url, media_type, sort_order
@@ -98,6 +191,25 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
     })
   }
 
+  // ソートモードに応じた並び替え
+  const sortMode = searchParams.sort || 'recommended'
+
+  if (sortMode === 'recommended') {
+    // スコアリングで並び替え
+    const userArea = searchParams.area
+    posts.sort((a, b) => calculateScore(b, userArea) - calculateScore(a, userArea))
+    // カテゴリ多様性シャッフル
+    posts = applyDiversityShuffle(posts)
+  } else if (sortMode === 'popular') {
+    // 人気順: view_count + favorite_count * 5 DESC
+    posts.sort((a, b) => {
+      const scoreA = (a.view_count || 0) + (a.favorite_count || 0) * 5
+      const scoreB = (b.view_count || 0) + (b.favorite_count || 0) * 5
+      return scoreB - scoreA
+    })
+  }
+  // newest: created_at DESC はSupabaseクエリのデフォルト順のまま
+
   // PostCard用にデータをマッピング
   return posts.map((post) => {
     const profile = post.facility_portal_profiles
@@ -111,6 +223,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
         category: post.category,
         link_url: post.link_url,
         view_count: post.view_count || 0,
+        favorite_count: post.favorite_count || 0,
         created_at: post.created_at,
         facility_portal_post_media: post.facility_portal_post_media || [],
       },
@@ -194,6 +307,7 @@ export default async function FeedPage({
   searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
   const params = await searchParams
+  const currentSort = params.sort || 'recommended'
   const posts = await getFeedPosts(params)
 
   return (
@@ -245,6 +359,36 @@ export default async function FeedPage({
               )
             })}
           </div>
+        </div>
+
+        {/* Sort selector */}
+        <div className="flex items-center gap-3 mb-4">
+          {[
+            { key: 'recommended', label: 'おすすめ' },
+            { key: 'newest', label: '新着順' },
+            { key: 'popular', label: '人気順' },
+          ].map((sort) => {
+            const isActive = currentSort === sort.key
+            const sortParams = new URLSearchParams()
+            // 既存パラメータを維持
+            if (params.category) sortParams.set('category', params.category)
+            if (params.area) sortParams.set('area', params.area)
+            if (params.status) sortParams.set('status', params.status)
+            if (params.q) sortParams.set('q', params.q)
+            if (sort.key !== 'recommended') sortParams.set('sort', sort.key)
+            const href = sortParams.toString() ? `/?${sortParams.toString()}` : '/'
+            return (
+              <a
+                key={sort.key}
+                href={href}
+                className={`text-sm font-semibold transition-colors ${
+                  isActive ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                {sort.label}
+              </a>
+            )
+          })}
         </div>
 
         {/* Active filters */}

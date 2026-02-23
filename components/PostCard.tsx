@@ -1,3 +1,5 @@
+import FavoriteButton from './FavoriteButton'
+
 const categoryLabels: Record<string, { label: string; color: string }> = {
   daily: { label: '日常', color: 'bg-green-100 text-green-700' },
   notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700' },
@@ -74,6 +76,7 @@ type PostCardProps = {
     category: string | null
     link_url: string | null
     view_count: number
+    favorite_count: number
     created_at: string
     facility_portal_post_media: Array<{
       id: string
@@ -243,6 +246,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
           <span aria-hidden="true">💬</span>
           コメント
         </a>
+        <FavoriteButton postId={post.id} initialCount={post.favorite_count} />
         <a
           href={`${facilityDetailUrl}#inquiry`}
           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-sm font-medium transition-colors border border-gray-200"
