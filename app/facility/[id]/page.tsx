@@ -28,7 +28,7 @@ const postCategoryLabels: Record<string, { label: string; color: string }> = {
 }
 
 const allCategories = [
-  { key: '', label: '全て' },
+  { key: '', label: 'すべて' },
   { key: 'daily', label: '日常' },
   { key: 'notice', label: 'お知らせ' },
   { key: 'event', label: 'イベント' },
