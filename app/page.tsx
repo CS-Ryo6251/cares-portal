@@ -147,7 +147,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
         is_published,
         phone,
         facilities!inner (
-          name, address, facility_type, phone
+          name, address, service_type, phone
         )
       )
     `)
@@ -230,7 +230,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
       facility: {
         name: facility.name,
         address: facility.address,
-        facility_type: facility.facility_type,
+        facility_type: facility.service_type,
         phone: profile.phone || facility.phone,
       },
       acceptanceStatus: profile.acceptance_status,

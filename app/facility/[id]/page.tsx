@@ -104,7 +104,7 @@ async function getFacilityDetail(facilityId: string) {
     .select(`
       *,
       facilities!inner(
-        id, name, address, facility_type, phone
+        id, name, address, service_type, phone
       )
     `)
     .eq('facility_id', facilityId)
@@ -192,7 +192,7 @@ export default async function FacilityDetailPage({
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900 leading-tight">{f.name}</h1>
             <p className="text-base text-cares-600 font-medium mt-1">
-              {facilityTypeLabels[f.facility_type] || f.facility_type}
+              {facilityTypeLabels[f.service_type] || f.service_type}
             </p>
           </div>
           <span
