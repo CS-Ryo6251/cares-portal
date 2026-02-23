@@ -89,7 +89,7 @@ export default function ForBusinessPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="https://app.carespace.jp/register"
+              href="https://app.carespace.jp/signup"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-cares-600 text-white rounded-lg hover:bg-cares-700 font-semibold text-lg transition-colors"
             >
               無料で始める
@@ -200,7 +200,7 @@ export default function ForBusinessPage() {
             利用者やケアマネジャーが、あなたの施設を見つけてくれます。
           </p>
           <a
-            href="https://app.carespace.jp/register"
+            href="https://app.carespace.jp/signup"
             className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-cares-600 text-white rounded-lg hover:bg-cares-700 font-semibold text-lg transition-colors shadow-lg shadow-cares-600/20"
           >
             無料で始める
