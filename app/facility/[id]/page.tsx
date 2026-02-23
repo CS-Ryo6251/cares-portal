@@ -50,11 +50,17 @@ async function getFacilityDetail(facilityId: string) {
 
   if (profileError || !profile) return null
 
-  // 投稿取得
+  // 投稿取得（メディア含む）
   const { data: posts } = await supabase
     .from('facility_portal_posts')
-    .select('*')
+    .select(`
+      *,
+      facility_portal_post_media (
+        id, media_url, media_type, sort_order
+      )
+    `)
     .eq('facility_id', facilityId)
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(10)
 
@@ -199,33 +205,39 @@ export default async function FacilityDetailPage({
           <div className="space-y-4">
             {facility.posts.map((post: any) => (
               <div key={post.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-xs text-gray-500">
-                      {new Date(post.created_at).toLocaleDateString('ja-JP', {
-                        year: 'numeric', month: 'long', day: 'numeric',
-                      })}
-                    </span>
-                  </div>
-                  {post.acceptance_status_at_post && (
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        acceptanceColors[post.acceptance_status_at_post] || acceptanceColors.unknown
-                      }`}
-                    >
-                      {acceptanceLabels[post.acceptance_status_at_post] || ''}
-                    </span>
-                  )}
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs text-gray-500">
+                    {new Date(post.created_at).toLocaleDateString('ja-JP', {
+                      year: 'numeric', month: 'long', day: 'numeric',
+                    })}
+                  </span>
                 </div>
+                {post.title && (
+                  <p className="font-bold text-gray-900 mb-1">{post.title}</p>
+                )}
                 <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
-                {post.media_url && post.media_type === 'image' && (
+                {/* 複数画像表示 */}
+                {post.facility_portal_post_media && post.facility_portal_post_media.length > 0 ? (
+                  <div className={`mt-3 grid gap-2 ${post.facility_portal_post_media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {post.facility_portal_post_media
+                      .sort((a: any, b: any) => a.sort_order - b.sort_order)
+                      .map((media: any) => (
+                        <img
+                          key={media.id}
+                          src={media.media_url}
+                          alt=""
+                          className="w-full rounded-lg object-cover max-h-64"
+                        />
+                      ))}
+                  </div>
+                ) : post.media_url && post.media_type === 'image' ? (
                   <img
                     src={post.media_url}
-                    alt="投稿画像"
+                    alt=""
                     className="mt-3 rounded-lg max-h-64 object-cover"
                   />
-                )}
+                ) : null}
               </div>
             ))}
           </div>
