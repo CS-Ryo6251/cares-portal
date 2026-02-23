@@ -159,13 +159,20 @@ export default function Sidebar({ searchParams }: SidebarProps) {
             {/* "All" option */}
             <a
               href={buildHref(searchParams, 'status', '')}
-              className={`block px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 !currentStatus
                   ? 'bg-gray-100 text-gray-900'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               すべて
+              {!currentStatus && (
+                <span className="ml-auto text-cares-600">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+              )}
             </a>
             {acceptanceStatuses.map((status) => {
               const isActive = currentStatus === status.key
