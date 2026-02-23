@@ -217,32 +217,45 @@ export default async function FacilityDetailPage({
           </span>
         </div>
 
-        {/* Address */}
-        <div className="flex items-center gap-1.5 text-base text-gray-600 mt-3">
-          <MapPin className="w-4 h-4 shrink-0 text-gray-400" />
-          <span>{f.address}</span>
-        </div>
-
-        {/* Contact info */}
-        <div className="flex flex-wrap gap-3 mt-4">
+        {/* Address & Phone */}
+        <div className="space-y-1.5 mt-3">
+          <div className="flex items-center gap-1.5 text-base text-gray-600">
+            <MapPin className="w-4 h-4 shrink-0 text-gray-400" />
+            <span>{f.address}</span>
+          </div>
           {phoneNumber && (
-            <a
-              href={`tel:${phoneNumber}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors"
-            >
-              <Phone className="w-4 h-4" />
-              {phoneNumber}
-            </a>
+            <div className="flex items-center gap-3">
+              <a
+                href={`tel:${phoneNumber}`}
+                className="inline-flex items-center gap-1.5 text-base text-gray-600 hover:text-green-700 transition-colors"
+              >
+                <Phone className="w-4 h-4 shrink-0 text-gray-400" />
+                <span>{phoneNumber}</span>
+              </a>
+              {facility.email && (
+                <a
+                  href={`mailto:${facility.email}`}
+                  className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>メール</span>
+                </a>
+              )}
+            </div>
           )}
-          {facility.email && (
+          {!phoneNumber && facility.email && (
             <a
               href={`mailto:${facility.email}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-1.5 text-base text-gray-600 hover:text-gray-700 transition-colors"
             >
-              <Mail className="w-4 h-4" />
-              メール
+              <Mail className="w-4 h-4 shrink-0 text-gray-400" />
+              <span>{facility.email}</span>
             </a>
           )}
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-2 mt-4">
           {facility.website && (
             <a
               href={facility.website}
@@ -252,6 +265,15 @@ export default async function FacilityDetailPage({
             >
               <Globe className="w-4 h-4" />
               Webサイト
+            </a>
+          )}
+          {facility.documents.length > 0 && (
+            <a
+              href="#documents"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              パンフレット
             </a>
           )}
           <InquiryButton facilityId={facility.facility_id} facilityName={f.name} />
@@ -446,7 +468,7 @@ export default async function FacilityDetailPage({
 
       {/* Documents / Pamphlets */}
       {facility.documents.length > 0 && (
-        <div className="mb-8">
+        <div id="documents" className="mb-8 scroll-mt-20">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-px flex-1 bg-gray-200" />
             <h2 className="text-lg font-bold text-gray-900 shrink-0">パンフレット</h2>
