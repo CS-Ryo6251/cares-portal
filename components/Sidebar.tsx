@@ -59,7 +59,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
   const currentQ = searchParams.q || ''
 
   return (
-    <div className="pl-3 pr-4 pt-1 pb-5 space-y-6">
+    <div className="px-4 pt-4 pb-5 space-y-6">
         {/* Search */}
         <div>
           <form method="GET" action="/">
