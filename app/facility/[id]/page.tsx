@@ -195,7 +195,7 @@ export default async function FacilityDetailPage({
             </p>
           </div>
           <span
-            className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${
+            className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border ${
               acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
             }`}
           >
@@ -214,7 +214,7 @@ export default async function FacilityDetailPage({
           {phoneNumber && (
             <a
               href={`tel:${phoneNumber}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm font-medium hover:bg-green-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors"
             >
               <Phone className="w-4 h-4" />
               {phoneNumber}
@@ -223,7 +223,7 @@ export default async function FacilityDetailPage({
           {facility.email && (
             <a
               href={`mailto:${facility.email}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
             >
               <Mail className="w-4 h-4" />
               メール
@@ -234,7 +234,7 @@ export default async function FacilityDetailPage({
               href={facility.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
             >
               <Globe className="w-4 h-4" />
               Webサイト
@@ -255,7 +255,7 @@ export default async function FacilityDetailPage({
             {facility.features.map((feature: string, i: number) => (
               <span
                 key={i}
-                className="px-3 py-1.5 bg-cares-50 text-cares-700 rounded-full text-sm font-medium"
+                className="px-3 py-1.5 bg-cares-50 text-cares-700 rounded-lg text-sm font-medium"
               >
                 {feature}
               </span>
@@ -284,7 +284,7 @@ export default async function FacilityDetailPage({
                 <a
                   key={cat.key}
                   href={href}
-                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-cares-600 text-white shadow-sm'
                       : 'bg-white text-gray-600 border border-gray-200 hover:border-cares-300 hover:text-cares-600'
@@ -310,7 +310,7 @@ export default async function FacilityDetailPage({
                 <div className="flex items-center gap-2 mb-3">
                   {post.category && postCategoryLabels[post.category] && (
                     <span
-                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${postCategoryLabels[post.category].color}`}
+                      className={`text-xs px-2.5 py-1 rounded-md font-medium ${postCategoryLabels[post.category].color}`}
                     >
                       {postCategoryLabels[post.category].label}
                     </span>
@@ -383,7 +383,7 @@ export default async function FacilityDetailPage({
                   {phoneNumber && (
                     <a
                       href={`tel:${phoneNumber}`}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-full text-base font-medium hover:bg-green-600 transition-colors"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-xl text-base font-medium hover:bg-green-600 transition-colors"
                     >
                       <Phone className="w-4 h-4" />
                       電話する
@@ -391,7 +391,7 @@ export default async function FacilityDetailPage({
                   )}
                   <a
                     href={`#comments-${post.id}`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-full text-base font-medium hover:bg-gray-200 transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-base font-medium hover:bg-gray-200 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path

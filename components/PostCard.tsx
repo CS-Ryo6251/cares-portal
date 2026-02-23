@@ -133,10 +133,10 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
           >
             {facility.name}
           </a>
-          <span className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cares-50 text-cares-700">
+          <span className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-cares-50 text-cares-700">
             {typeLabel}
           </span>
-          <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}>
+          <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${status.color}`}>
             {status.label}
           </span>
         </div>
@@ -144,7 +144,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
         {/* Category + date row */}
         <div className="flex items-center gap-2 mt-2">
           {category && (
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${category.color}`}>
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${category.color}`}>
               {category.label}
             </span>
           )}

@@ -167,7 +167,7 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
           <a
             key={filter.key}
             href={href}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cares-50 text-cares-700 rounded-full text-sm font-medium hover:bg-cares-100 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cares-50 text-cares-700 rounded-lg text-sm font-medium hover:bg-cares-100 transition-colors"
           >
             {filter.value}
             <X className="w-3.5 h-3.5" />
@@ -232,7 +232,7 @@ export default async function FeedPage({
                 <a
                   key={cat.key}
                   href={buildCategoryUrl(params, cat.key)}
-                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-cares-600 text-white shadow-sm'
                       : 'bg-white text-gray-600 border border-gray-200 hover:border-cares-300 hover:text-cares-600'
@@ -274,7 +274,7 @@ export default async function FeedPage({
             </p>
             <a
               href="/"
-              className="inline-flex items-center px-5 py-2.5 bg-cares-600 text-white rounded-full text-base font-medium hover:bg-cares-700 transition-colors"
+              className="inline-flex items-center px-5 py-2.5 bg-cares-600 text-white rounded-lg text-base font-medium hover:bg-cares-700 transition-colors"
             >
               すべての投稿を見る
             </a>

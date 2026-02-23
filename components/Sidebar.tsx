@@ -60,7 +60,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
 
   return (
     <aside className="hidden lg:block w-72 shrink-0 border-r border-gray-200 bg-white min-h-screen">
-      <div className="sticky top-14 p-5 space-y-7 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
+      <div className="sticky top-14 px-5 pt-3 pb-5 space-y-6 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
         {/* Search */}
         <div>
           <form method="GET" action="/">
@@ -93,7 +93,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
                 <a
                   key={cat.key || '__all__'}
                   href={buildHref(searchParams, 'category', cat.key)}
-                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     isActive
                       ? `${cat.color} ring-2 ring-offset-1 ring-cares-400`
                       : `${cat.color} opacity-70 hover:opacity-100`

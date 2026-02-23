@@ -140,7 +140,7 @@ export default function ForBusinessPage() {
       {/* Free Emphasis Banner */}
       <section className="bg-cares-50 py-12">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2 shadow-sm border border-cares-200 mb-4">
+          <div className="inline-flex items-center gap-2 bg-white rounded-lg px-5 py-2 shadow-sm border border-cares-200 mb-4">
             <CheckCircle2 className="w-5 h-5 text-cares-600" />
             <span className="font-semibold text-cares-700">完全無料</span>
           </div>
