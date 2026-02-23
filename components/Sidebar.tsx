@@ -74,7 +74,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
                 name="q"
                 defaultValue={currentQ}
                 placeholder="施設名・キーワードで検索"
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 focus:bg-white outline-none transition-colors placeholder:text-gray-400"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-cares-500 focus:border-cares-500 focus:bg-white outline-none transition-colors placeholder:text-gray-400"
               />
             </div>
           </form>
@@ -82,7 +82,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
 
         {/* Category filter */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
             カテゴリ
           </h3>
           <div className="space-y-1.5">
@@ -92,7 +92,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
                 <a
                   key={cat.key || '__all__'}
                   href={buildHref(searchParams, 'category', cat.key)}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
                     isActive
                       ? 'bg-gray-100 text-gray-900'
                       : 'text-gray-600 hover:bg-gray-50'
@@ -115,7 +115,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
 
         {/* Area filter */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
             エリア
           </h3>
           <form method="GET" action="/">
@@ -127,7 +127,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
               <select
                 name="area"
                 defaultValue={currentArea}
-                className="flex-1 min-w-0 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none appearance-none cursor-pointer"
+                className="flex-1 min-w-0 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none appearance-none cursor-pointer"
               >
                 <option value="">全国</option>
                 {prefecturesByRegion.map((group) => (
@@ -152,14 +152,14 @@ export default function Sidebar({ searchParams }: SidebarProps) {
 
         {/* Acceptance status filter */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
             受入状況
           </h3>
           <div className="space-y-1.5">
             {/* "All" option */}
             <a
               href={buildHref(searchParams, 'status', '')}
-              className={`block px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+              className={`block px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 !currentStatus
                   ? 'bg-gray-100 text-gray-900'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -173,7 +173,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
                 <a
                   key={status.key}
                   href={buildHref(searchParams, 'status', status.key)}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
                     isActive
                       ? 'bg-gray-100 text-gray-900'
                       : 'text-gray-600 hover:bg-gray-50'
