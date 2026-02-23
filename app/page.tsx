@@ -197,7 +197,7 @@ export default async function FeedPage({
   return (
     <div className="flex gap-0">
       {/* Sidebar - desktop only */}
-      <aside className="hidden lg:block w-72 shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-gray-100 bg-white">
+      <aside className="hidden lg:block w-72 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-100 bg-white">
         <Sidebar searchParams={params} />
       </aside>
 
