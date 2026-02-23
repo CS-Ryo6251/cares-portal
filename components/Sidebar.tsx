@@ -59,8 +59,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
   const currentQ = searchParams.q || ''
 
   return (
-    <aside className="hidden lg:block w-72 shrink-0 border-r border-gray-200 bg-white min-h-screen">
-      <div className="sticky top-14 px-5 pt-3 pb-5 space-y-6 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
+    <div className="pl-3 pr-4 pt-1 pb-5 space-y-6">
         {/* Search */}
         <div>
           <form method="GET" action="/">
@@ -198,7 +197,6 @@ export default function Sidebar({ searchParams }: SidebarProps) {
             </a>
           </div>
         )}
-      </div>
-    </aside>
+    </div>
   )
 }
