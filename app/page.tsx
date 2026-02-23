@@ -146,6 +146,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
         acceptance_status,
         is_published,
         phone,
+        icon_url,
         facilities!inner (
           name, address, service_type, phone
         )
@@ -231,6 +232,7 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
         name: facility.name,
         address: facility.address,
         facility_type: facility.service_type,
+        icon_url: profile.icon_url || null,
       },
       acceptanceStatus: profile.acceptance_status,
     }

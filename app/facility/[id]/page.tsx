@@ -15,6 +15,7 @@ import {
 import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
 import FloatingActions from './FloatingActions'
+import InquiryButton from './InquiryButton'
 
 const postCategoryLabels: Record<string, { label: string; color: string }> = {
   daily: { label: '日常', color: 'bg-green-100 text-green-700' },
@@ -188,11 +189,24 @@ export default async function FacilityDetailPage({
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 shadow-sm">
         {/* Name and status */}
         <div className="flex items-start justify-between gap-3 mb-2">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 leading-tight">{f.name}</h1>
-            <p className="text-base text-cares-600 font-medium mt-1">
-              {facilityTypeLabels[f.service_type] || f.service_type}
-            </p>
+          <div className="flex items-start gap-3 flex-1">
+            {facility.icon_url ? (
+              <img
+                src={facility.icon_url}
+                alt={f.name}
+                className="w-14 h-14 rounded-xl object-cover border border-gray-200 shrink-0"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-xl bg-cares-50 border border-cares-100 flex items-center justify-center shrink-0">
+                <span className="text-xl font-bold text-cares-600">{f.name.charAt(0)}</span>
+              </div>
+            )}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900 leading-tight">{f.name}</h1>
+              <p className="text-base text-cares-600 font-medium mt-1">
+                {facilityTypeLabels[f.service_type] || f.service_type}
+              </p>
+            </div>
           </div>
           <span
             className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border ${
@@ -240,6 +254,7 @@ export default async function FacilityDetailPage({
               Webサイト
             </a>
           )}
+          <InquiryButton facilityId={facility.facility_id} facilityName={f.name} />
         </div>
 
         {/* Overview */}
@@ -462,13 +477,8 @@ export default async function FacilityDetailPage({
         </div>
       )}
 
-      {/* Floating action buttons (fee simulator + inquiry) */}
-      <FloatingActions
-        fees={facility.fees}
-        hasFees={facility.fees.length > 0}
-        facilityId={facility.facility_id}
-        facilityName={f.name}
-      />
+      {/* Floating fee simulator button */}
+      <FloatingActions fees={facility.fees} />
     </div>
   )
 }

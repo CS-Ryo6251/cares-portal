@@ -1,4 +1,7 @@
-import FavoriteButton from './FavoriteButton'
+'use client'
+
+import { useState } from 'react'
+import CommentSection from './CommentSection'
 
 const categoryLabels: Record<string, { label: string; color: string }> = {
   daily: { label: '日常', color: 'bg-green-100 text-green-700' },
@@ -12,46 +15,36 @@ const categoryLabels: Record<string, { label: string; color: string }> = {
 }
 
 const facilityTypeLabels: Record<string, string> = {
-  // 訪問系
   訪問介護: '訪問介護',
   訪問入浴介護: '訪問入浴',
   訪問看護: '訪問看護',
   訪問リハビリテーション: '訪問リハ',
-  // 通所系
   通所介護: 'デイサービス',
   '通所介護（療養通所介護）': '療養通所',
   通所リハビリテーション: '通所リハ',
-  // 短期入所系
   短期入所生活介護: 'ショートステイ',
   '短期入所療養介護（介護老人保健施設）': 'SS(老健)',
   '短期入所療養介護（介護療養型医療施設）': 'SS(療養)',
   '短期入所療養介護（介護医療院）': 'SS(医療院)',
-  // 居住系
   認知症対応型共同生活介護: 'グループホーム',
   '特定施設入居者生活介護（有料老人ホーム）': '有料老人ホーム',
   '特定施設入居者生活介護（軽費老人ホーム）': '軽費老人ホーム',
   '特定施設入居者生活介護（サービス付き高齢者向け住宅）': 'サ高住',
-  // 福祉用具
   福祉用具貸与: '福祉用具貸与',
   特定福祉用具販売: '福祉用具販売',
-  // 居宅介護支援
   居宅介護支援: '居宅介護支援',
-  // 施設系
   介護老人福祉施設: '特養',
   介護老人保健施設: '老健',
   介護療養型医療施設: '介護療養型',
   介護医療院: '介護医療院',
   地域密着型介護老人福祉施設入所者生活介護: '地域密着型特養',
-  // 地域密着型
   夜間対応型訪問介護: '夜間訪問介護',
   認知症対応型通所介護: '認知症デイ',
   小規模多機能型居宅介護: '小規模多機能',
   '定期巡回・随時対応型訪問介護看護': '定期巡回',
   看護小規模多機能型居宅介護: '看多機',
   地域密着型通所介護: '地域密着デイ',
-  // その他
   地域包括支援センター: '地域包括',
-  // 旧データ互換
   居宅介護支援事業所: '居宅介護支援',
   特別養護老人ホーム: '特養',
   グループホーム: 'グループホーム',
@@ -89,6 +82,7 @@ type PostCardProps = {
     name: string
     address: string
     facility_type: string
+    icon_url?: string | null
   }
   acceptanceStatus: string
 }
@@ -115,6 +109,8 @@ function formatRelativeDate(dateStr: string): string {
 }
 
 export default function PostCard({ post, facility, acceptanceStatus }: PostCardProps) {
+  const [commentOpen, setCommentOpen] = useState(false)
+
   const category = post.category ? categoryLabels[post.category] : null
   const typeLabel = facilityTypeLabels[facility.facility_type] || facility.facility_type
   const status = acceptanceStatusMap[acceptanceStatus] || acceptanceStatusMap.unknown
@@ -130,6 +126,22 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       {/* Facility header */}
       <div className="px-5 pt-5 pb-3">
         <div className="flex items-center gap-2 flex-wrap">
+          {facility.icon_url ? (
+            <a href={facilityDetailUrl} className="shrink-0">
+              <img
+                src={facility.icon_url}
+                alt={facility.name}
+                className="w-9 h-9 rounded-lg object-cover border border-gray-200"
+              />
+            </a>
+          ) : (
+            <a
+              href={facilityDetailUrl}
+              className="shrink-0 w-9 h-9 rounded-lg bg-cares-50 border border-cares-100 flex items-center justify-center"
+            >
+              <span className="text-sm font-bold text-cares-600">{facility.name.charAt(0)}</span>
+            </a>
+          )}
           <a
             href={facilityDetailUrl}
             className="text-lg font-bold text-gray-900 hover:text-cares-600 transition-colors leading-snug"
@@ -165,13 +177,11 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       {/* Photo area */}
       {hasImages && (
         <div className="relative">
-          <a href={facilityDetailUrl}>
-            <img
-              src={sortedMedia[0].media_url}
-              alt={post.title || '投稿画像'}
-              className="w-full aspect-[4/3] object-cover"
-            />
-          </a>
+          <img
+            src={sortedMedia[0].media_url}
+            alt={post.title || '投稿画像'}
+            className="w-full aspect-[4/3] object-cover"
+          />
           {sortedMedia.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
               {sortedMedia.slice(0, 5).map((_, i) => (
@@ -202,12 +212,6 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
         <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed line-clamp-4">
           {post.content}
         </p>
-        <a
-          href={facilityDetailUrl}
-          className="inline-block mt-1.5 text-sm text-gray-400 hover:text-cares-600 transition-colors"
-        >
-          続きを読む
-        </a>
 
         {/* Link URL */}
         {post.link_url && (
@@ -228,23 +232,34 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       </div>
 
       {/* Action row */}
-      <div className="px-5 pb-4 pt-1 flex items-center gap-2 border-t border-gray-50">
-        <a
-          href={`${facilityDetailUrl}#comments`}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-sm font-medium transition-colors border border-gray-200"
+      <div className="px-5 pb-3 pt-1 border-t border-gray-50">
+        <button
+          onClick={() => setCommentOpen(!commentOpen)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-gray-500 hover:text-cares-600 text-sm font-medium transition-colors"
         >
-          <span aria-hidden="true">💬</span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
           コメント
-        </a>
-        <FavoriteButton postId={post.id} initialCount={post.favorite_count} />
-        <a
-          href={`${facilityDetailUrl}#inquiry`}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-sm font-medium transition-colors border border-gray-200"
-        >
-          <span aria-hidden="true">✉️</span>
-          気になる
-        </a>
+          {commentOpen && (
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+            </svg>
+          )}
+        </button>
       </div>
+
+      {/* Inline comment section */}
+      {commentOpen && (
+        <div className="px-5 pb-5 pt-2 border-t border-gray-100 bg-gray-50/50">
+          <CommentSection postId={post.id} facilityId={post.facility_id} />
+        </div>
+      )}
     </article>
   )
 }
