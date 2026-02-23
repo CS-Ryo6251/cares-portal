@@ -20,9 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="flex items-center gap-4 text-sm">
               <a href="/" className="text-gray-600 hover:text-gray-900">施設を探す</a>
               <a
-                href="https://app.carespace.jp"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/for-business"
                 className="text-cares-600 font-medium hover:text-cares-700"
               >
                 事業所の方はこちら
