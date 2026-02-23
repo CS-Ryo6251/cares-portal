@@ -85,20 +85,28 @@ export default function Sidebar({ searchParams }: SidebarProps) {
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
             カテゴリ
           </h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-1.5">
             {categories.map((cat) => {
               const isActive = currentCategory === cat.key
               return (
                 <a
                   key={cat.key || '__all__'}
                   href={buildHref(searchParams, 'category', cat.key)}
-                  className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isActive
-                      ? `${cat.color} ring-2 ring-offset-1 ring-cares-400`
-                      : `${cat.color} opacity-70 hover:opacity-100`
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
+                  <span className={`w-2.5 h-2.5 rounded-full ${cat.color.split(' ')[0]}`} />
                   {cat.label}
+                  {isActive && (
+                    <span className="ml-auto text-cares-600">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                  )}
                 </a>
               )
             })}
