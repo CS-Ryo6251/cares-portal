@@ -89,7 +89,6 @@ type PostCardProps = {
     name: string
     address: string
     facility_type: string
-    phone: string | null
   }
   acceptanceStatus: string
 }
@@ -230,15 +229,6 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
 
       {/* Action row */}
       <div className="px-5 pb-4 pt-1 flex items-center gap-2 border-t border-gray-50">
-        {facility.phone && (
-          <a
-            href={`tel:${facility.phone}`}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-cares-600 hover:bg-cares-700 text-white rounded-xl text-sm font-medium transition-colors"
-          >
-            <span aria-hidden="true">📞</span>
-            電話する
-          </a>
-        )}
         <a
           href={`${facilityDetailUrl}#comments`}
           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-sm font-medium transition-colors border border-gray-200"

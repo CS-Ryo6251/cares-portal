@@ -12,10 +12,9 @@ import {
   ExternalLink,
   ArrowLeft,
 } from 'lucide-react'
-import InquiryForm from './InquiryForm'
 import ViewTracker from '@/components/ViewTracker'
-import FeeSimulator from './FeeSimulator'
 import CommentSection from '@/components/CommentSection'
+import FloatingActions from './FloatingActions'
 
 const postCategoryLabels: Record<string, { label: string; color: string }> = {
   daily: { label: '日常', color: 'bg-green-100 text-green-700' },
@@ -387,15 +386,6 @@ export default async function FacilityDetailPage({
 
                 {/* Action buttons */}
                 <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-                  {phoneNumber && (
-                    <a
-                      href={`tel:${phoneNumber}`}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-xl text-base font-medium hover:bg-green-600 transition-colors"
-                    >
-                      <Phone className="w-4 h-4" />
-                      電話する
-                    </a>
-                  )}
                   <a
                     href={`#comments-${post.id}`}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-base font-medium hover:bg-gray-200 transition-colors"
@@ -439,20 +429,6 @@ export default async function FacilityDetailPage({
         )}
       </div>
 
-      {/* Fee Simulator */}
-      {facility.fees.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-px flex-1 bg-gray-200" />
-            <h2 className="text-lg font-bold text-gray-900 shrink-0">料金シミュレーション</h2>
-            <div className="h-px flex-1 bg-gray-200" />
-          </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <FeeSimulator fees={facility.fees} />
-          </div>
-        </div>
-      )}
-
       {/* Documents / Pamphlets */}
       {facility.documents.length > 0 && (
         <div className="mb-8">
@@ -486,17 +462,13 @@ export default async function FacilityDetailPage({
         </div>
       )}
 
-      {/* Inquiry Form */}
-      <div id="inquiry" className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-px flex-1 bg-gray-200" />
-          <h2 className="text-lg font-bold text-gray-900 shrink-0">問い合わせ</h2>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <InquiryForm facilityId={facility.facility_id} facilityName={f.name} />
-        </div>
-      </div>
+      {/* Floating action buttons (fee simulator + inquiry) */}
+      <FloatingActions
+        fees={facility.fees}
+        hasFees={facility.fees.length > 0}
+        facilityId={facility.facility_id}
+        facilityName={f.name}
+      />
     </div>
   )
 }

@@ -231,7 +231,6 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
         name: facility.name,
         address: facility.address,
         facility_type: facility.service_type,
-        phone: profile.phone || facility.phone,
       },
       acceptanceStatus: profile.acceptance_status,
     }
