@@ -12,9 +12,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-gray-50 text-gray-900 antialiased">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="px-6 h-14 flex items-center justify-between">
             <a href="/" className="flex items-center">
-              <img src="/logo.png" alt="Cares" className="h-9" />
+              <img src="/logo.png" alt="Cares" className="h-10" />
             </a>
             <nav className="flex items-center gap-4 text-sm">
               <a
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto flex">
+        <div className="flex">
           {/* Sidebar is rendered by page components (needs searchParams) */}
           <main className="flex-1 min-h-screen">{children}</main>
         </div>
