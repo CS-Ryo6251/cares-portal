@@ -1,8 +1,43 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
-import { MapPin, Phone, Mail, Globe, FileText, Clock, Download } from 'lucide-react'
+import Link from 'next/link'
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  FileText,
+  Clock,
+  Download,
+  ExternalLink,
+  ArrowLeft,
+} from 'lucide-react'
 import InquiryForm from './InquiryForm'
 import FeeSimulator from './FeeSimulator'
+import CommentSection from '@/components/CommentSection'
+
+const postCategoryLabels: Record<string, { label: string; color: string }> = {
+  daily: { label: '日常', color: 'bg-green-100 text-green-700' },
+  notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700' },
+  recruitment: { label: '求人', color: 'bg-purple-100 text-purple-700' },
+  event: { label: 'イベント', color: 'bg-orange-100 text-orange-700' },
+  volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700' },
+  availability: { label: '空き情報', color: 'bg-emerald-100 text-emerald-700' },
+  training: { label: '研修・セミナー', color: 'bg-indigo-100 text-indigo-700' },
+  other: { label: 'その他', color: 'bg-gray-100 text-gray-700' },
+}
+
+const allCategories = [
+  { key: '', label: '全て' },
+  { key: 'daily', label: '日常' },
+  { key: 'notice', label: 'お知らせ' },
+  { key: 'event', label: 'イベント' },
+  { key: 'availability', label: '空き情報' },
+  { key: 'recruitment', label: '求人' },
+  { key: 'volunteer', label: 'ボランティア' },
+  { key: 'training', label: '研修・セミナー' },
+  { key: 'other', label: 'その他' },
+]
 
 const acceptanceLabels: Record<string, string> = {
   accepting: '受入可能',
@@ -89,7 +124,7 @@ async function getFacilityDetail(facilityId: string) {
     .eq('facility_id', facilityId)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
-    .limit(10)
+    .limit(20)
 
   // 料金取得
   const { data: fees } = await supabase
@@ -116,10 +151,13 @@ async function getFacilityDetail(facilityId: string) {
 
 export default async function FacilityDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
   const { id } = await params
+  const sp = await searchParams
   const facility = await getFacilityDetail(id)
 
   if (!facility) {
@@ -127,49 +165,37 @@ export default async function FacilityDetailPage({
   }
 
   const f = facility.facilities as any
+  const phoneNumber = facility.phone || f.phone
+  const activeCategory = sp.category || ''
+
+  // Filter posts by category if selected
+  const filteredPosts = activeCategory
+    ? facility.posts.filter((post: any) => post.category === activeCategory)
+    : facility.posts
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* ヘッダー */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <a href="/" className="hover:text-cares-600">施設一覧</a>
-          <span>/</span>
-          <span className="text-gray-900">{f.name}</span>
-        </div>
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Back button */}
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 text-base text-gray-500 hover:text-cares-600 mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        フィードに戻る
+      </Link>
 
-        {/* 写真ギャラリー */}
-        {facility.photos && facility.photos.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-6 rounded-xl overflow-hidden">
-            {facility.photos.slice(0, 6).map((photo: string, i: number) => (
-              <div
-                key={i}
-                className={`${i === 0 ? 'col-span-2 row-span-2' : ''} aspect-video bg-gray-100`}
-              >
-                <img
-                  src={photo}
-                  alt={`${f.name} 写真${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 施設名・基本情報 */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div>
-            <p className="text-sm text-cares-600 font-medium mb-1">
+      {/* Facility profile header */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 shadow-sm">
+        {/* Name and status */}
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight">{f.name}</h1>
+            <p className="text-base text-cares-600 font-medium mt-1">
               {facilityTypeLabels[f.facility_type] || f.facility_type}
             </p>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{f.name}</h1>
-            <div className="flex items-center gap-1 text-sm text-gray-500">
-              <MapPin className="w-4 h-4" />
-              <span>{f.address}</span>
-            </div>
           </div>
           <span
-            className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${
+            className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${
               acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
             }`}
           >
@@ -177,42 +203,55 @@ export default async function FacilityDetailPage({
           </span>
         </div>
 
-        {/* 連絡先 */}
-        <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-600">
-          {(facility.phone || f.phone) && (
-            <a href={`tel:${facility.phone || f.phone}`} className="flex items-center gap-1 hover:text-cares-600">
+        {/* Address */}
+        <div className="flex items-center gap-1.5 text-base text-gray-600 mt-3">
+          <MapPin className="w-4 h-4 shrink-0 text-gray-400" />
+          <span>{f.address}</span>
+        </div>
+
+        {/* Contact info */}
+        <div className="flex flex-wrap gap-3 mt-4">
+          {phoneNumber && (
+            <a
+              href={`tel:${phoneNumber}`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm font-medium hover:bg-green-100 transition-colors"
+            >
               <Phone className="w-4 h-4" />
-              {facility.phone || f.phone}
+              {phoneNumber}
             </a>
           )}
           {facility.email && (
-            <a href={`mailto:${facility.email}`} className="flex items-center gap-1 hover:text-cares-600">
+            <a
+              href={`mailto:${facility.email}`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
               <Mail className="w-4 h-4" />
-              {facility.email}
+              メール
             </a>
           )}
           {facility.website && (
-            <a href={facility.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cares-600">
+            <a
+              href={facility.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
               <Globe className="w-4 h-4" />
               Webサイト
             </a>
           )}
         </div>
-      </div>
 
-      {/* 概要 */}
-      {facility.overview && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">施設概要</h2>
-          <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{facility.overview}</p>
-        </section>
-      )}
+        {/* Overview */}
+        {facility.overview && (
+          <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed mt-5 pt-5 border-t border-gray-100">
+            {facility.overview}
+          </p>
+        )}
 
-      {/* 特長 */}
-      {facility.features && facility.features.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">特長</h2>
-          <div className="flex flex-wrap gap-2">
+        {/* Features */}
+        {facility.features && facility.features.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
             {facility.features.map((feature: string, i: number) => (
               <span
                 key={i}
@@ -222,31 +261,79 @@ export default async function FacilityDetailPage({
               </span>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </div>
 
-      {/* 最新投稿 */}
-      {facility.posts.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">最新情報</h2>
-          <div className="space-y-4">
-            {facility.posts.map((post: any) => (
-              <div key={post.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-500">
+      {/* Posts section */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-gray-200" />
+          <h2 className="text-lg font-bold text-gray-900 shrink-0">投稿</h2>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        {/* Category tabs */}
+        {facility.posts.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+            {allCategories.map((cat) => {
+              const isActive = activeCategory === cat.key
+              const href = cat.key
+                ? `/facility/${id}?category=${cat.key}`
+                : `/facility/${id}`
+              return (
+                <a
+                  key={cat.key}
+                  href={href}
+                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-cares-600 text-white shadow-sm'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-cares-300 hover:text-cares-600'
+                  }`}
+                >
+                  {cat.label}
+                </a>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Posts list */}
+        <div className="space-y-6">
+          {filteredPosts.map((post: any) => (
+            <div
+              key={post.id}
+              id={`post-${post.id}`}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
+            >
+              <div className="p-6">
+                {/* Category and date */}
+                <div className="flex items-center gap-2 mb-3">
+                  {post.category && postCategoryLabels[post.category] && (
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${postCategoryLabels[post.category].color}`}
+                    >
+                      {postCategoryLabels[post.category].label}
+                    </span>
+                  )}
+                  <span className="text-sm text-gray-400">
                     {new Date(post.created_at).toLocaleDateString('ja-JP', {
-                      year: 'numeric', month: 'long', day: 'numeric',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
                     })}
                   </span>
                 </div>
-                {post.title && (
-                  <p className="font-bold text-gray-900 mb-1">{post.title}</p>
-                )}
-                <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
-                {/* 複数画像表示 */}
-                {post.facility_portal_post_media && post.facility_portal_post_media.length > 0 ? (
-                  <div className={`mt-3 grid gap-2 ${post.facility_portal_post_media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+
+                {/* Media */}
+                {post.facility_portal_post_media &&
+                post.facility_portal_post_media.length > 0 ? (
+                  <div
+                    className={`mb-4 grid gap-2 rounded-xl overflow-hidden ${
+                      post.facility_portal_post_media.length === 1
+                        ? 'grid-cols-1'
+                        : 'grid-cols-2'
+                    }`}
+                  >
                     {post.facility_portal_post_media
                       .sort((a: any, b: any) => a.sort_order - b.sort_order)
                       .map((media: any) => (
@@ -254,7 +341,7 @@ export default async function FacilityDetailPage({
                           key={media.id}
                           src={media.media_url}
                           alt=""
-                          className="w-full rounded-lg object-cover max-h-64"
+                          className="w-full rounded-xl object-cover max-h-80"
                         />
                       ))}
                   </div>
@@ -262,55 +349,147 @@ export default async function FacilityDetailPage({
                   <img
                     src={post.media_url}
                     alt=""
-                    className="mt-3 rounded-lg max-h-64 object-cover"
+                    className="mb-4 rounded-xl max-h-80 w-full object-cover"
                   />
                 ) : null}
+
+                {/* Title */}
+                {post.title && (
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 leading-snug">
+                    {post.title}
+                  </h3>
+                )}
+
+                {/* Content */}
+                <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  {post.content}
+                </p>
+
+                {/* Link */}
+                {post.link_url && (
+                  <a
+                    href={post.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-base text-cares-600 hover:text-cares-700 mt-3 font-medium"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    詳細を見る
+                  </a>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+                  {phoneNumber && (
+                    <a
+                      href={`tel:${phoneNumber}`}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-full text-base font-medium hover:bg-green-600 transition-colors"
+                    >
+                      <Phone className="w-4 h-4" />
+                      電話する
+                    </a>
+                  )}
+                  <a
+                    href={`#comments-${post.id}`}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-full text-base font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                    コメント
+                  </a>
+                </div>
               </div>
-            ))}
+
+              {/* Comments */}
+              <div
+                id={`comments-${post.id}`}
+                className="px-6 pb-6 pt-2 border-t border-gray-100 bg-gray-50/50"
+              >
+                <CommentSection postId={post.id} facilityId={facility.facility_id} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* No posts for this category */}
+        {filteredPosts.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+            </div>
+            <p className="text-base text-gray-500">
+              {activeCategory ? 'このカテゴリの投稿はありません' : 'まだ投稿がありません'}
+            </p>
           </div>
-        </section>
-      )}
+        )}
+      </div>
 
-      {/* 料金シミュレーション */}
+      {/* Fee Simulator */}
       {facility.fees.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">料金シミュレーション</h2>
-          <FeeSimulator fees={facility.fees} />
-        </section>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-gray-200" />
+            <h2 className="text-lg font-bold text-gray-900 shrink-0">料金シミュレーション</h2>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <FeeSimulator fees={facility.fees} />
+          </div>
+        </div>
       )}
 
-      {/* パンフレット・資料 */}
+      {/* Documents / Pamphlets */}
       {facility.documents.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">パンフレット・資料</h2>
-          <div className="space-y-2">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-gray-200" />
+            <h2 className="text-lg font-bold text-gray-900 shrink-0">パンフレット</h2>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+          <div className="space-y-3">
             {facility.documents.map((doc: any) => (
               <a
                 key={doc.id}
                 href={doc.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-cares-300 hover:bg-cares-50 transition-colors"
+                className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 hover:border-cares-300 hover:bg-cares-50 transition-colors shadow-sm"
               >
-                <FileText className="w-5 h-5 text-red-500 shrink-0" />
+                <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5 text-red-500" />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{doc.title}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-medium text-base text-gray-900 truncate">{doc.title}</p>
+                  <p className="text-sm text-gray-500">
                     PDF・{(doc.file_size / 1024 / 1024).toFixed(1)}MB
                   </p>
                 </div>
-                <Download className="w-4 h-4 text-gray-400 shrink-0" />
+                <Download className="w-5 h-5 text-gray-400 shrink-0" />
               </a>
             ))}
           </div>
-        </section>
+        </div>
       )}
 
-      {/* 問い合わせフォーム */}
-      <section className="mb-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">この施設に問い合わせる</h2>
-        <InquiryForm facilityId={facility.facility_id} facilityName={f.name} />
-      </section>
+      {/* Inquiry Form */}
+      <div id="inquiry" className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-gray-200" />
+          <h2 className="text-lg font-bold text-gray-900 shrink-0">問い合わせ</h2>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <InquiryForm facilityId={facility.facility_id} facilityName={f.name} />
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,22 +1,20 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import Link from 'next/link'
-import { Search, MapPin, Building2, Clock, ChevronRight } from 'lucide-react'
+import { Search, X } from 'lucide-react'
+import Sidebar from '@/components/Sidebar'
+import PostCard from '@/components/PostCard'
 
-type Facility = {
-  id: string
-  facility_id: string
-  overview: string
-  features: string[]
-  photos: string[]
-  acceptance_status: string
-  updated_at: string
-  facilities: {
-    id: string
-    name: string
-    address: string
-    facility_type: string
-  }
-}
+const postCategories = [
+  { key: '', label: '全て' },
+  { key: 'daily', label: '日常' },
+  { key: 'notice', label: 'お知らせ' },
+  { key: 'event', label: 'イベント' },
+  { key: 'availability', label: '空き情報' },
+  { key: 'recruitment', label: '求人' },
+  { key: 'volunteer', label: 'ボランティア' },
+  { key: 'training', label: '研修・セミナー' },
+  { key: 'other', label: 'その他' },
+]
 
 const acceptanceLabels: Record<string, string> = {
   accepting: '受入可能',
@@ -34,386 +32,262 @@ const acceptanceColors: Record<string, string> = {
   unknown: 'bg-gray-100 text-gray-600',
 }
 
-const facilityTypeLabels: Record<string, string> = {
-  // 訪問系
-  訪問介護: '訪問介護',
-  訪問入浴介護: '訪問入浴介護',
-  訪問看護: '訪問看護',
-  訪問リハビリテーション: '訪問リハ',
-  // 通所系
-  通所介護: 'デイサービス',
-  '通所介護（療養通所介護）': '療養通所介護',
-  通所リハビリテーション: '通所リハ',
-  // 短期入所系
-  短期入所生活介護: 'ショートステイ',
-  '短期入所療養介護（介護老人保健施設）': 'ショートステイ(老健)',
-  '短期入所療養介護（介護療養型医療施設）': 'ショートステイ(療養)',
-  '短期入所療養介護（介護医療院）': 'ショートステイ(医療院)',
-  // 居住系
-  認知症対応型共同生活介護: 'グループホーム',
-  '特定施設入居者生活介護（有料老人ホーム）': '有料老人ホーム',
-  '特定施設入居者生活介護（軽費老人ホーム）': '軽費老人ホーム',
-  '特定施設入居者生活介護（サービス付き高齢者向け住宅）': 'サ高住',
-  // 福祉用具
-  福祉用具貸与: '福祉用具貸与',
-  特定福祉用具販売: '福祉用具販売',
-  // 居宅介護支援
-  居宅介護支援: '居宅介護支援',
-  // 施設系
-  介護老人福祉施設: '特養',
-  介護老人保健施設: '老健',
-  介護療養型医療施設: '介護療養型',
-  介護医療院: '介護医療院',
-  地域密着型介護老人福祉施設入所者生活介護: '地域密着型特養',
-  // 地域密着型
-  夜間対応型訪問介護: '夜間対応型訪問介護',
-  認知症対応型通所介護: '認知症対応型デイ',
-  小規模多機能型居宅介護: '小規模多機能',
-  '定期巡回・随時対応型訪問介護看護': '定期巡回',
-  看護小規模多機能型居宅介護: '看多機',
-  地域密着型通所介護: '地域密着型デイ',
-  // その他
-  地域包括支援センター: '地域包括',
-  // 旧データ互換
-  居宅介護支援事業所: '居宅介護支援',
-  特別養護老人ホーム: '特養',
-  グループホーム: 'グループホーム',
-  有料老人ホーム: '有料老人ホーム',
-  サービス付き高齢者向け住宅: 'サ高住',
-}
-
-async function getFacilities(searchParams: { [key: string]: string | undefined }) {
+async function getFeedPosts(searchParams: { [key: string]: string | undefined }) {
   const supabase = getSupabaseClient()
 
   let query = supabase
-    .from('facility_portal_profiles')
+    .from('facility_portal_posts')
     .select(`
       id,
       facility_id,
-      overview,
-      features,
-      photos,
-      acceptance_status,
-      updated_at,
-      facilities!inner(
-        id,
-        name,
-        address,
-        facility_type
+      title,
+      content,
+      category,
+      link_url,
+      created_at,
+      facility_portal_post_media (
+        id, media_url, media_type, sort_order
+      ),
+      facility_portal_profiles!inner (
+        acceptance_status,
+        is_published,
+        phone,
+        facilities!inner (
+          name, address, facility_type, phone
+        )
       )
     `)
-    .eq('is_published', true)
-    .order('updated_at', { ascending: false })
+    .eq('status', 'published')
+    .eq('facility_portal_profiles.is_published', true)
+    .order('created_at', { ascending: false })
+    .limit(30)
 
-  if (searchParams.area) {
-    query = query.ilike('facilities.address', `%${searchParams.area}%`)
+  if (searchParams.category) {
+    query = query.eq('category', searchParams.category)
   }
 
-  if (searchParams.type) {
-    query = query.eq('facilities.facility_type', searchParams.type)
+  if (searchParams.area) {
+    query = query.ilike('facility_portal_profiles.facilities.address', `%${searchParams.area}%`)
   }
 
   if (searchParams.status) {
-    query = query.eq('acceptance_status', searchParams.status)
+    query = query.eq('facility_portal_profiles.acceptance_status', searchParams.status)
   }
 
   const { data, error } = await query
 
   if (error) {
-    console.error('施設取得エラー:', error)
+    console.error('Feed取得エラー:', error)
     return []
   }
 
-  let facilities = (data || []) as unknown as Facility[]
+  let posts = (data || []) as any[]
 
   // フリーワード検索（クライアント側フィルタ）
   if (searchParams.q) {
     const q = searchParams.q.toLowerCase()
-    facilities = facilities.filter(
-      (f) =>
-        f.facilities.name.toLowerCase().includes(q) ||
-        f.overview?.toLowerCase().includes(q) ||
-        f.facilities.address?.toLowerCase().includes(q)
-    )
+    posts = posts.filter((post) => {
+      const profile = post.facility_portal_profiles
+      const facility = profile?.facilities
+      return (
+        post.title?.toLowerCase().includes(q) ||
+        post.content?.toLowerCase().includes(q) ||
+        facility?.name?.toLowerCase().includes(q)
+      )
+    })
   }
 
-  return facilities
+  // PostCard用にデータをマッピング
+  return posts.map((post) => {
+    const profile = post.facility_portal_profiles
+    const facility = profile.facilities
+    return {
+      post: {
+        id: post.id,
+        facility_id: post.facility_id,
+        title: post.title,
+        content: post.content,
+        category: post.category,
+        link_url: post.link_url,
+        created_at: post.created_at,
+        facility_portal_post_media: post.facility_portal_post_media || [],
+      },
+      facility: {
+        name: facility.name,
+        address: facility.address,
+        facility_type: facility.facility_type,
+        phone: profile.phone || facility.phone,
+      },
+      acceptanceStatus: profile.acceptance_status,
+    }
+  })
 }
 
-export default async function HomePage({
+function buildCategoryUrl(currentParams: { [key: string]: string | undefined }, category: string) {
+  const params = new URLSearchParams()
+  if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.status) params.set('status', currentParams.status)
+  if (currentParams.q) params.set('q', currentParams.q)
+  if (category) params.set('category', category)
+  const qs = params.toString()
+  return qs ? `/?${qs}` : '/'
+}
+
+function ActiveFilters({ params }: { params: { [key: string]: string | undefined } }) {
+  const filters: { key: string; label: string; value: string }[] = []
+
+  if (params.category) {
+    const cat = postCategories.find((c) => c.key === params.category)
+    filters.push({ key: 'category', label: 'カテゴリ', value: cat?.label || params.category })
+  }
+  if (params.area) {
+    filters.push({ key: 'area', label: 'エリア', value: params.area })
+  }
+  if (params.status) {
+    const label = acceptanceLabels[params.status] || params.status
+    filters.push({ key: 'status', label: '受入状況', value: label })
+  }
+  if (params.q) {
+    filters.push({ key: 'q', label: '検索', value: params.q })
+  }
+
+  if (filters.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 mb-5">
+      <span className="text-sm text-gray-500">絞り込み:</span>
+      {filters.map((filter) => {
+        const newParams = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+          if (v && k !== filter.key) newParams.set(k, v)
+        })
+        const qs = newParams.toString()
+        const href = qs ? `/?${qs}` : '/'
+        return (
+          <a
+            key={filter.key}
+            href={href}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cares-50 text-cares-700 rounded-full text-sm font-medium hover:bg-cares-100 transition-colors"
+          >
+            {filter.value}
+            <X className="w-3.5 h-3.5" />
+          </a>
+        )
+      })}
+      {filters.length > 1 && (
+        <a
+          href="/"
+          className="text-sm text-gray-400 hover:text-gray-600 ml-1"
+        >
+          すべてクリア
+        </a>
+      )}
+    </div>
+  )
+}
+
+export default async function FeedPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
   const params = await searchParams
-  const facilities = await getFacilities(params)
+  const posts = await getFeedPosts(params)
 
   return (
-    <div>
-      {/* ヒーローセクション */}
-      <section className="bg-gradient-to-b from-cares-50 to-white py-12">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            介護施設のリアルタイム情報
-          </h1>
-          <p className="text-gray-600 mb-8">
-            空き状況・料金・施設の雰囲気がわかる。介護施設を探すならCares。
-          </p>
+    <div className="flex gap-0">
+      {/* Sidebar - desktop only */}
+      <aside className="hidden lg:block w-72 shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-gray-100 bg-white">
+        <Sidebar searchParams={params} />
+      </aside>
 
-          {/* 検索バー */}
-          <form method="GET" action="/" className="max-w-2xl mx-auto">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  name="q"
-                  defaultValue={params.q || ''}
-                  placeholder="施設名・エリア・キーワードで検索"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-6 py-3 bg-cares-600 text-white rounded-lg hover:bg-cares-700 font-medium"
-              >
-                検索
-              </button>
-            </div>
-
-            {/* フィルター */}
-            <div className="flex flex-wrap gap-3 mt-4 justify-center">
-              <select
-                name="area"
-                defaultValue={params.area || ''}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-              >
-                <option value="">全エリア</option>
-                <optgroup label="北海道・東北">
-                  <option value="北海道">北海道</option>
-                  <option value="青森県">青森県</option>
-                  <option value="岩手県">岩手県</option>
-                  <option value="宮城県">宮城県</option>
-                  <option value="秋田県">秋田県</option>
-                  <option value="山形県">山形県</option>
-                  <option value="福島県">福島県</option>
-                </optgroup>
-                <optgroup label="関東">
-                  <option value="茨城県">茨城県</option>
-                  <option value="栃木県">栃木県</option>
-                  <option value="群馬県">群馬県</option>
-                  <option value="埼玉県">埼玉県</option>
-                  <option value="千葉県">千葉県</option>
-                  <option value="東京都">東京都</option>
-                  <option value="神奈川県">神奈川県</option>
-                </optgroup>
-                <optgroup label="中部">
-                  <option value="新潟県">新潟県</option>
-                  <option value="富山県">富山県</option>
-                  <option value="石川県">石川県</option>
-                  <option value="福井県">福井県</option>
-                  <option value="山梨県">山梨県</option>
-                  <option value="長野県">長野県</option>
-                  <option value="岐阜県">岐阜県</option>
-                  <option value="静岡県">静岡県</option>
-                  <option value="愛知県">愛知県</option>
-                </optgroup>
-                <optgroup label="近畿">
-                  <option value="三重県">三重県</option>
-                  <option value="滋賀県">滋賀県</option>
-                  <option value="京都府">京都府</option>
-                  <option value="大阪府">大阪府</option>
-                  <option value="兵庫県">兵庫県</option>
-                  <option value="奈良県">奈良県</option>
-                  <option value="和歌山県">和歌山県</option>
-                </optgroup>
-                <optgroup label="中国">
-                  <option value="鳥取県">鳥取県</option>
-                  <option value="島根県">島根県</option>
-                  <option value="岡山県">岡山県</option>
-                  <option value="広島県">広島県</option>
-                  <option value="山口県">山口県</option>
-                </optgroup>
-                <optgroup label="四国">
-                  <option value="徳島県">徳島県</option>
-                  <option value="香川県">香川県</option>
-                  <option value="愛媛県">愛媛県</option>
-                  <option value="高知県">高知県</option>
-                </optgroup>
-                <optgroup label="九州・沖縄">
-                  <option value="福岡県">福岡県</option>
-                  <option value="佐賀県">佐賀県</option>
-                  <option value="長崎県">長崎県</option>
-                  <option value="熊本県">熊本県</option>
-                  <option value="大分県">大分県</option>
-                  <option value="宮崎県">宮崎県</option>
-                  <option value="鹿児島県">鹿児島県</option>
-                  <option value="沖縄県">沖縄県</option>
-                </optgroup>
-              </select>
-
-              <select
-                name="type"
-                defaultValue={params.type || ''}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-              >
-                <option value="">全種別</option>
-                <optgroup label="訪問系">
-                  <option value="訪問介護">訪問介護</option>
-                  <option value="訪問入浴介護">訪問入浴介護</option>
-                  <option value="訪問看護">訪問看護</option>
-                  <option value="訪問リハビリテーション">訪問リハビリテーション</option>
-                </optgroup>
-                <optgroup label="通所系">
-                  <option value="通所介護">通所介護（デイサービス）</option>
-                  <option value="通所介護（療養通所介護）">療養通所介護</option>
-                  <option value="通所リハビリテーション">通所リハビリテーション</option>
-                </optgroup>
-                <optgroup label="短期入所系">
-                  <option value="短期入所生活介護">短期入所生活介護（ショートステイ）</option>
-                  <option value="短期入所療養介護（介護老人保健施設）">短期入所療養介護（老健）</option>
-                  <option value="短期入所療養介護（介護療養型医療施設）">短期入所療養介護（療養）</option>
-                  <option value="短期入所療養介護（介護医療院）">短期入所療養介護（医療院）</option>
-                </optgroup>
-                <optgroup label="居住系">
-                  <option value="認知症対応型共同生活介護">グループホーム</option>
-                  <option value="特定施設入居者生活介護（有料老人ホーム）">有料老人ホーム</option>
-                  <option value="特定施設入居者生活介護（軽費老人ホーム）">軽費老人ホーム</option>
-                  <option value="特定施設入居者生活介護（サービス付き高齢者向け住宅）">サービス付き高齢者向け住宅</option>
-                </optgroup>
-                <optgroup label="福祉用具">
-                  <option value="福祉用具貸与">福祉用具貸与</option>
-                  <option value="特定福祉用具販売">特定福祉用具販売</option>
-                </optgroup>
-                <optgroup label="居宅介護支援">
-                  <option value="居宅介護支援">居宅介護支援</option>
-                </optgroup>
-                <optgroup label="施設系">
-                  <option value="介護老人福祉施設">介護老人福祉施設（特養）</option>
-                  <option value="介護老人保健施設">介護老人保健施設（老健）</option>
-                  <option value="介護療養型医療施設">介護療養型医療施設</option>
-                  <option value="介護医療院">介護医療院</option>
-                  <option value="地域密着型介護老人福祉施設入所者生活介護">地域密着型特養</option>
-                </optgroup>
-                <optgroup label="地域密着型">
-                  <option value="夜間対応型訪問介護">夜間対応型訪問介護</option>
-                  <option value="認知症対応型通所介護">認知症対応型通所介護</option>
-                  <option value="小規模多機能型居宅介護">小規模多機能型居宅介護</option>
-                  <option value="定期巡回・随時対応型訪問介護看護">定期巡回・随時対応型訪問介護看護</option>
-                  <option value="看護小規模多機能型居宅介護">看護小規模多機能型居宅介護</option>
-                  <option value="地域密着型通所介護">地域密着型通所介護</option>
-                </optgroup>
-                <optgroup label="その他">
-                  <option value="地域包括支援センター">地域包括支援センター</option>
-                </optgroup>
-              </select>
-
-              <select
-                name="status"
-                defaultValue={params.status || ''}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-              >
-                <option value="">受入状況</option>
-                <option value="accepting">受入可能</option>
-                <option value="limited">条件付き</option>
-                <option value="waitlist">待機あり</option>
-              </select>
-
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm text-cares-600 hover:text-cares-700 font-medium"
-              >
-                絞り込む
-              </button>
+      {/* Feed */}
+      <div className="flex-1 max-w-2xl mx-auto px-4 py-6">
+        {/* Mobile search bar */}
+        <div className="lg:hidden mb-4">
+          <form method="GET" action="/">
+            {/* Preserve existing filters */}
+            {params.category && <input type="hidden" name="category" value={params.category} />}
+            {params.area && <input type="hidden" name="area" value={params.area} />}
+            {params.status && <input type="hidden" name="status" value={params.status} />}
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                name="q"
+                defaultValue={params.q || ''}
+                placeholder="施設名・キーワードで検索"
+                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none shadow-sm"
+              />
             </div>
           </form>
         </div>
-      </section>
 
-      {/* 施設一覧 */}
-      <section className="max-w-6xl mx-auto px-4 py-8">
-        {facilities.length === 0 ? (
-          <div className="text-center py-16">
-            <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">条件に合う施設が見つかりませんでした</p>
-            <p className="text-sm text-gray-400 mt-1">
-              検索条件を変更して再度お試しください
-            </p>
-          </div>
-        ) : (
-          <>
-            <p className="text-sm text-gray-500 mb-4">
-              {facilities.length}件の施設が見つかりました
-            </p>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {facilities.map((f) => (
-                <Link
-                  key={f.id}
-                  href={`/facility/${f.facility_id}`}
-                  className="block bg-white rounded-xl border border-gray-200 hover:border-cares-300 hover:shadow-md transition-all p-5"
+        {/* Mobile category pills */}
+        <div className="lg:hidden mb-5 -mx-4 px-4">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {postCategories.map((cat) => {
+              const isActive = (params.category || '') === cat.key
+              return (
+                <a
+                  key={cat.key}
+                  href={buildCategoryUrl(params, cat.key)}
+                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-cares-600 text-white shadow-sm'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-cares-300 hover:text-cares-600'
+                  }`}
                 >
-                  {/* 写真 */}
-                  {f.photos && f.photos.length > 0 && (
-                    <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-gray-100">
-                      <img
-                        src={f.photos[0]}
-                        alt={f.facilities.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
+                  {cat.label}
+                </a>
+              )
+            })}
+          </div>
+        </div>
 
-                  {/* 施設名 & 種別 */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-bold text-gray-900 line-clamp-1">
-                      {f.facilities.name}
-                    </h3>
-                    <span
-                      className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
-                        acceptanceColors[f.acceptance_status] || acceptanceColors.unknown
-                      }`}
-                    >
-                      {acceptanceLabels[f.acceptance_status] || '要問合せ'}
-                    </span>
-                  </div>
+        {/* Active filters */}
+        <ActiveFilters params={params} />
 
-                  {/* 種別 */}
-                  <p className="text-xs text-cares-600 font-medium mb-1">
-                    {facilityTypeLabels[f.facilities.facility_type] || f.facilities.facility_type}
-                  </p>
+        {/* Post feed */}
+        <div className="space-y-6">
+          {posts.map((item) => (
+            <PostCard
+              key={item.post.id}
+              post={item.post}
+              facility={item.facility}
+              acceptanceStatus={item.acceptanceStatus}
+            />
+          ))}
+        </div>
 
-                  {/* 住所 */}
-                  <div className="flex items-center gap-1 text-sm text-gray-500 mb-2">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                    <span className="line-clamp-1">{f.facilities.address}</span>
-                  </div>
-
-                  {/* 概要 */}
-                  {f.overview && (
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                      {f.overview}
-                    </p>
-                  )}
-
-                  {/* 更新日時 */}
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>
-                        {new Date(f.updated_at).toLocaleDateString('ja-JP')} 更新
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-0.5 text-cares-600">
-                      <span>詳細を見る</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
+        {/* Empty state */}
+        {posts.length === 0 && (
+          <div className="text-center py-20">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
             </div>
-          </>
+            <p className="text-lg font-medium text-gray-600 mb-2">投稿がありません</p>
+            <p className="text-base text-gray-400 mb-6">
+              条件を変更して再度お試しください
+            </p>
+            <a
+              href="/"
+              className="inline-flex items-center px-5 py-2.5 bg-cares-600 text-white rounded-full text-base font-medium hover:bg-cares-700 transition-colors"
+            >
+              すべての投稿を見る
+            </a>
+          </div>
         )}
-      </section>
+
+        {/* Feed footer */}
+        {posts.length > 0 && (
+          <div className="text-center py-8 text-sm text-gray-400">
+            {posts.length}件の投稿を表示中
+          </div>
+        )}
+      </div>
     </div>
   )
 }
