@@ -4,6 +4,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Cares — 介護施設のリアルタイム情報ポータル',
   description: '空き状況・料金・施設の雰囲気がわかる。介護施設を探すならCares。',
+  icons: {
+    icon: '/favicon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
