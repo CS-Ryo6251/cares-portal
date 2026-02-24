@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Search } from 'lucide-react'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -28,13 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="text-sm sm:text-base font-bold text-cares-600 whitespace-nowrap">介護施設ノート</span>
             </a>
             <nav className="flex items-center gap-3 sm:gap-4 text-sm">
-              <a
-                href="/directory"
-                className="inline-flex items-center gap-1.5 text-gray-500 hover:text-cares-600 font-medium"
-              >
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">施設を探す</span>
-              </a>
               <a
                 href="/for-business"
                 className="text-gray-500 hover:text-cares-600 font-medium"

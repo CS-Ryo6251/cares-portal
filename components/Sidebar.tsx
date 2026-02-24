@@ -82,8 +82,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
           </form>
         </div>
 
-        {/* Category filter — hidden on facilities view */}
-        {currentView !== 'facilities' && (
+        {/* Category filter */}
         <div>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
             カテゴリ
@@ -115,7 +114,6 @@ export default function Sidebar({ searchParams }: SidebarProps) {
             })}
           </div>
         </div>
-        )}
 
         {/* Area filter */}
         <div>

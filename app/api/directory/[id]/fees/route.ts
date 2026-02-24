@@ -9,8 +9,6 @@ function getIpHash(request: NextRequest): string {
   return crypto.createHash('sha256').update(ip).digest('hex')
 }
 
-const ALLOWED_FEE_TYPES = ['admission', 'monthly', 'daily', 'insurance_copay', 'other']
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -45,8 +43,12 @@ export async function POST(
     const body = await request.json()
     const { fee_type, amount_min, amount_max, description } = body
 
-    if (!fee_type || !ALLOWED_FEE_TYPES.includes(fee_type)) {
-      return NextResponse.json({ error: '料金種別を選択してください' }, { status: 400 })
+    if (!fee_type || typeof fee_type !== 'string' || fee_type.trim().length === 0) {
+      return NextResponse.json({ error: '料金種別を入力してください' }, { status: 400 })
+    }
+
+    if (fee_type.length > 50) {
+      return NextResponse.json({ error: '料金種別は50文字以内で入力してください' }, { status: 400 })
     }
 
     if (amount_min == null && amount_max == null && !description) {
@@ -97,7 +99,7 @@ export async function POST(
       .from('cares_listing_fees')
       .insert({
         listing_id: id,
-        fee_type,
+        fee_type: fee_type.trim(),
         amount_min: amount_min != null ? Math.round(amount_min) : null,
         amount_max: amount_max != null ? Math.round(amount_max) : null,
         description: description?.trim() || null,

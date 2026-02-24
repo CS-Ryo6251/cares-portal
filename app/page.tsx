@@ -3,9 +3,7 @@ import Link from 'next/link'
 import { Search, X } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
-import FacilityCard from '@/components/FacilityCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
-import DirectoryBanner from '@/components/DirectoryBanner'
 
 const postCategories = [
   { key: '', label: 'すべて' },
@@ -250,22 +248,13 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   const supabase = getSupabaseClient()
 
   let query = supabase
-    .from('facility_portal_profiles')
-    .select(`
-      facility_id,
-      acceptance_status,
-      is_published,
-      icon_url,
-      overview,
-      facilities!inner (
-        name, address, service_type
-      )
-    `)
-    .eq('is_published', true)
+    .from('cares_listings')
+    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, updated_at')
+    .order('updated_at', { ascending: false, nullsFirst: false })
     .limit(50)
 
   if (searchParams.area) {
-    query = query.ilike('facilities.address', `%${searchParams.area}%`)
+    query = query.ilike('address', `%${searchParams.area}%`)
   }
 
   if (searchParams.status) {
@@ -284,31 +273,20 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   // フリーワード検索（クライアント側フィルタ）
   if (searchParams.q) {
     const q = searchParams.q.toLowerCase()
-    facilities = facilities.filter((item) => {
-      const f = item.facilities
-      return (
-        f?.name?.toLowerCase().includes(q) ||
-        f?.address?.toLowerCase().includes(q) ||
-        item.overview?.toLowerCase().includes(q)
-      )
-    })
+    facilities = facilities.filter((item) =>
+      item.facility_name?.toLowerCase().includes(q) ||
+      item.address?.toLowerCase().includes(q)
+    )
   }
 
-  // 名前順ソート
-  facilities.sort((a, b) => {
-    const nameA = a.facilities?.name || ''
-    const nameB = b.facilities?.name || ''
-    return nameA.localeCompare(nameB, 'ja')
-  })
-
-  return facilities.map((item) => ({
-    facility_id: item.facility_id,
-    name: item.facilities.name,
-    address: item.facilities.address,
-    service_type: item.facilities.service_type,
-    icon_url: item.icon_url || null,
+  return facilities.map((item: any) => ({
+    id: item.id,
+    facility_name: item.facility_name,
+    service_type: item.service_type,
+    address: item.address,
     acceptance_status: item.acceptance_status,
-    overview: item.overview || null,
+    is_owner_verified: item.is_owner_verified,
+    source: item.source,
   }))
 }
 
@@ -431,9 +409,6 @@ export default async function FeedPage({
 
         {/* Geolocation banner */}
         <GeolocationBanner />
-
-        {/* Directory banner */}
-        <DirectoryBanner />
 
         {/* Tab switcher */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
@@ -565,23 +540,43 @@ export default async function FeedPage({
         {/* Facility list */}
         {currentView === 'facilities' && (
         <>
-          {/* Directory link */}
-          <a
-            href="/directory"
-            className="flex items-center justify-between px-5 py-4 bg-white border border-gray-200 rounded-2xl mb-4 hover:border-cares-300 hover:shadow-sm transition-all group"
-          >
-            <div>
-              <p className="text-sm font-bold text-gray-900">全国18万件の事業所データベースで検索</p>
-              <p className="text-xs text-gray-500 mt-0.5">介護サービス情報公表システムの全データを検索できます</p>
-            </div>
-            <svg className="w-5 h-5 text-gray-400 group-hover:text-cares-600 shrink-0 ml-3 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
-
           <div className="space-y-4">
-            {facilities.map((item) => (
-              <FacilityCard key={item.facility_id} facility={item} />
+            {facilities.map((item: any) => (
+              <a
+                key={item.id}
+                href={`/directory/${item.id}`}
+                className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="px-5 py-5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="shrink-0 w-9 h-9 rounded-lg bg-cares-50 border border-cares-100 flex items-center justify-center">
+                      <span className="text-sm font-bold text-cares-600">{item.facility_name?.charAt(0) || '?'}</span>
+                    </span>
+                    <span className="text-lg font-bold text-gray-900 leading-snug">
+                      {item.facility_name}
+                    </span>
+                    {item.is_owner_verified && (
+                      <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
+                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                        公式
+                      </span>
+                    )}
+                    {item.service_type && (
+                      <span className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-cares-50 text-cares-700">
+                        {item.service_type}
+                      </span>
+                    )}
+                    {item.acceptance_status && acceptanceColors[item.acceptance_status] && (
+                      <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${acceptanceColors[item.acceptance_status]}`}>
+                        {acceptanceLabels[item.acceptance_status]}
+                      </span>
+                    )}
+                  </div>
+                  {item.address && (
+                    <p className="text-sm text-gray-500 mt-2">{item.address}</p>
+                  )}
+                </div>
+              </a>
             ))}
           </div>
 
@@ -598,7 +593,7 @@ export default async function FeedPage({
                 条件を変更して再度お試しください
               </p>
               <a
-                href="/?view=facilities"
+                href="/"
                 className="inline-flex items-center px-5 py-2.5 bg-cares-600 text-white rounded-lg text-base font-medium hover:bg-cares-700 transition-colors"
               >
                 すべての施設を見る

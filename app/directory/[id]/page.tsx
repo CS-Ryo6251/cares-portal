@@ -24,6 +24,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import DirectoryDisclaimer from '@/components/DirectoryDisclaimer'
 import DirectoryDetailClient from './DirectoryDetailClient'
+import EditButton from './EditButton'
 import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
 import FloatingActions from '@/app/facility/[id]/FloatingActions'
@@ -319,7 +320,13 @@ export default async function DirectoryDetailPage({
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.facility_name}</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.facility_name}</h1>
+                    <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500 text-white">
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                      公式
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {f.service_type && <p className="text-xs sm:text-sm text-white/80 font-medium">{f.service_type}</p>}
                     <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold ${statusColor}`}>
@@ -338,9 +345,17 @@ export default async function DirectoryDetailPage({
           {!(isOwnerVerified && portalProfile?.cover_image_url) && (
             <>
               <div className="flex items-start justify-between gap-3 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                  {f.facility_name}
-                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                    {f.facility_name}
+                  </h1>
+                  {isOwnerVerified && (
+                    <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                      公式
+                    </span>
+                  )}
+                </div>
                 <span className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold ${statusColor}`}>
                   {statusLabel}
                 </span>
@@ -393,6 +408,14 @@ export default async function DirectoryDetailPage({
                 </a>
               </div>
             )}
+            {f.email && (
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 shrink-0 text-gray-400" />
+                <a href={`mailto:${f.email}`} className="text-base text-gray-600 hover:text-cares-600 transition-colors">
+                  {f.email}
+                </a>
+              </div>
+            )}
             {f.corporation_name && (
               <div className="flex items-center gap-2 text-base text-gray-600">
                 <Building2 className="w-4 h-4 shrink-0 text-gray-400" />
@@ -440,6 +463,24 @@ export default async function DirectoryDetailPage({
               )}
             </>
           )}
+
+          {/* Edit proposal button at bottom of header */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <EditButton
+              listingId={f.id}
+              currentValues={{
+                facility_name: f.facility_name,
+                address: f.address,
+                phone: f.phone,
+                fax: f.fax,
+                email: f.email,
+                website_url: f.website_url,
+                service_type: f.service_type,
+                capacity: f.capacity ? String(f.capacity) : null,
+                corporation_name: f.corporation_name,
+              }}
+            />
+          </div>
         </div>
 
         {/* ===== VACANCY SECTION ===== */}
@@ -478,16 +519,6 @@ export default async function DirectoryDetailPage({
             listingId={f.id}
             facilityName={f.facility_name}
             isOwnerVerified={isOwnerVerified}
-            currentValues={{
-              facility_name: f.facility_name,
-              address: f.address,
-              phone: f.phone,
-              fax: f.fax,
-              website_url: f.website_url,
-              service_type: f.service_type,
-              capacity: f.capacity ? String(f.capacity) : null,
-              corporation_name: f.corporation_name,
-            }}
           />
 
           {/* Vacancy disclaimer */}

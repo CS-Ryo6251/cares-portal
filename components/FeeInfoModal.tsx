@@ -3,14 +3,6 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
-const FEE_TYPES = [
-  { value: 'admission', label: '入居一時金' },
-  { value: 'monthly', label: '月額費用' },
-  { value: 'daily', label: '日額費用' },
-  { value: 'insurance_copay', label: '介護保険自己負担' },
-  { value: 'other', label: 'その他' },
-]
-
 type FeeInfoModalProps = {
   listingId: string
   onClose: () => void
@@ -67,7 +59,7 @@ export default function FeeInfoModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 p-6 animate-slide-in-right">
+      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 p-6 max-h-[90vh] overflow-y-auto animate-slide-in-right">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600"
@@ -93,18 +85,14 @@ export default function FeeInfoModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 料金種別 <span className="text-red-500">*</span>
               </label>
-              <select
+              <input
+                type="text"
                 value={feeType}
                 onChange={(e) => setFeeType(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none bg-white"
-              >
-                <option value="">選択してください</option>
-                {FEE_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+                placeholder="例: 入居一時金、月額費用、食費、管理費、など"
+                maxLength={50}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none"
+              />
             </div>
 
             {/* Amount range */}
@@ -154,7 +142,7 @@ export default function FeeInfoModal({
 
             <button
               onClick={handleSubmit}
-              disabled={!feeType || (!amountMin && !amountMax && !description.trim()) || submitting}
+              disabled={!feeType.trim() || (!amountMin && !amountMax && !description.trim()) || submitting}
               className="w-full px-4 py-3 bg-cares-600 text-white rounded-xl text-base font-semibold hover:bg-cares-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {submitting ? '送信中...' : '投稿する'}

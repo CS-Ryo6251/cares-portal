@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { MessageSquare, Banknote } from 'lucide-react'
 import VacancyReportModal from '@/components/VacancyReportModal'
-import EditProposalModal from '@/components/EditProposalModal'
+
 import OwnerClaimModal from '@/components/OwnerClaimModal'
 import ProfessionalNoteModal from '@/components/ProfessionalNoteModal'
 import FeeInfoModal from '@/components/FeeInfoModal'
@@ -24,6 +24,10 @@ const FEE_TYPE_LABELS: Record<string, string> = {
   daily: '日額費用',
   insurance_copay: '介護保険自己負担',
   other: 'その他',
+}
+
+function getFeeTypeLabel(feeType: string): string {
+  return FEE_TYPE_LABELS[feeType] || feeType
 }
 
 function formatAmount(min: number | null, max: number | null): string {
@@ -69,17 +73,14 @@ type DirectoryDetailClientProps = {
   listingId: string
   facilityName: string
   isOwnerVerified: boolean
-  currentValues: Record<string, string | null>
 }
 
 export default function DirectoryDetailClient({
   listingId,
   facilityName,
   isOwnerVerified,
-  currentValues,
 }: DirectoryDetailClientProps) {
   const [showVacancy, setShowVacancy] = useState(false)
-  const [showEdit, setShowEdit] = useState(false)
   const [showClaim, setShowClaim] = useState(false)
   const [showNote, setShowNote] = useState(false)
   const [showFee, setShowFee] = useState(false)
@@ -121,14 +122,8 @@ export default function DirectoryDetailClient({
         空き情報を投稿する
       </button>
 
-      {/* Action buttons */}
-      <div className="flex gap-3 mt-4">
-        <button
-          onClick={() => setShowEdit(true)}
-          className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          情報の修正を提案する
-        </button>
+      {/* Share button */}
+      <div className="mt-4">
         <button
           onClick={() => {
             if (navigator.share) {
@@ -164,7 +159,7 @@ export default function DirectoryDetailClient({
               <div key={fee.id} className="flex items-start justify-between gap-3 py-2 border-b border-gray-50 last:border-0">
                 <div>
                   <span className="text-sm font-medium text-gray-900">
-                    {FEE_TYPE_LABELS[fee.fee_type] || fee.fee_type}
+                    {getFeeTypeLabel(fee.fee_type)}
                   </span>
                   {fee.description && (
                     <p className="text-xs text-gray-500 mt-0.5">{fee.description}</p>
@@ -260,13 +255,6 @@ export default function DirectoryDetailClient({
         <VacancyReportModal
           listingId={listingId}
           onClose={() => setShowVacancy(false)}
-        />
-      )}
-      {showEdit && (
-        <EditProposalModal
-          listingId={listingId}
-          currentValues={currentValues}
-          onClose={() => setShowEdit(false)}
         />
       )}
       {showClaim && (

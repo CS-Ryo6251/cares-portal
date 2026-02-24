@@ -8,6 +8,7 @@ const editableFields = [
   { value: 'address', label: '住所' },
   { value: 'phone', label: '電話番号' },
   { value: 'fax', label: 'FAX' },
+  { value: 'email', label: 'メールアドレス' },
   { value: 'website_url', label: 'ウェブサイト' },
   { value: 'service_type', label: 'サービス種別' },
   { value: 'capacity', label: '定員' },

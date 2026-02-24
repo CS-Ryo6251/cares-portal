@@ -7,6 +7,7 @@ const ALLOWED_FIELDS = [
   'address',
   'phone',
   'fax',
+  'email',
   'website_url',
   'service_type',
   'capacity',
