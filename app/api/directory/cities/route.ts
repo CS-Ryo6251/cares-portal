@@ -36,7 +36,9 @@ export async function GET(request: NextRequest) {
       // Then try 市 or 区 (e.g. 天童市, 渋谷区)
       match = afterPref.match(/^(.+?[市区])/)
       if (match) {
-        citySet.add(match[1])
+        // Fix: 町市 or 村市 ending means 市 is a sub-area, not municipality boundary
+        // e.g. 市川三郷町市(場) → should be 市川三郷町
+        citySet.add(match[1].replace(/([町村])市$/, '$1'))
       }
     }
   }
