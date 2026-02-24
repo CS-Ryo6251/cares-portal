@@ -454,6 +454,11 @@ export default async function FacilityDetailPage({
                   <Phone className="w-4 h-4 shrink-0 text-gray-400" />
                   <span>{phoneNumber}</span>
                 </a>
+                {facility.fax && (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-gray-400">
+                    <span>FAX: {facility.fax}</span>
+                  </span>
+                )}
                 {facility.email && (
                   <a
                     href={`mailto:${facility.email}`}
