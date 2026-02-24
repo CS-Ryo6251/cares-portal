@@ -25,10 +25,14 @@ export async function GET(request: NextRequest) {
   const citySet = new Set<string>()
   for (const row of data || []) {
     if (!row.address) continue
-    // Remove prefecture prefix, then match city (市), ward (区), town (町), village (村)
-    // Handle: 郡+町/村 pattern (e.g. 丹生郡越前町)
-    const afterPref = row.address.replace(/^.+?[県都府道]/, '')
-    const match = afterPref.match(/^(.+?[市区町村])/)
+    // Remove prefecture prefix + trim whitespace (full-width & half-width)
+    const afterPref = row.address.replace(/^.+?[県都府道]/, '').replace(/^[\s\u3000]+/, '')
+    // Try 郡+町/村 first (e.g. 西村山郡大江町, 丹生郡越前町)
+    let match = afterPref.match(/^(.+?郡.+?[町村])/)
+    if (!match) {
+      // Then try 市 or 区 (e.g. 天童市, 渋谷区)
+      match = afterPref.match(/^(.+?[市区])/)
+    }
     if (match) {
       citySet.add(match[1])
     }
