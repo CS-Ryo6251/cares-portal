@@ -30,8 +30,9 @@ export async function GET(request: NextRequest) {
     // Try 郡+町/村 first (e.g. 西村山郡大江町, 丹生郡越前町)
     let match = afterPref.match(/^(.+?郡.+?[町村])/)
     if (match) {
-      // Remove stray 市 before 郡 (data artifact: 市西村山郡 → 西村山郡)
-      citySet.add(match[1].replace(/^市(?=.+郡)/, ''))
+      // Clean up: remove stray 市 before 郡 + normalize whitespace inside 郡 names
+      const cleaned = match[1].replace(/^市(?=.+郡)/, '').replace(/[\s\u3000]+/g, '')
+      citySet.add(cleaned)
     } else {
       // Then try 市 or 区 (e.g. 天童市, 渋谷区)
       match = afterPref.match(/^(.+?[市区])/)
