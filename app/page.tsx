@@ -13,7 +13,6 @@ const postCategories = [
   { key: 'recruitment', label: '求人' },
   { key: 'staff', label: 'スタッフ紹介' },
   { key: 'volunteer', label: 'ボランティア' },
-  { key: 'training', label: '研修・セミナー' },
   { key: 'other', label: 'その他' },
 ]
 
@@ -159,7 +158,11 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
     .limit(30)
 
   if (searchParams.category) {
-    query = query.eq('category', searchParams.category)
+    if (searchParams.category === 'event') {
+      query = query.in('category', ['event', 'training'])
+    } else {
+      query = query.eq('category', searchParams.category)
+    }
   }
 
   if (searchParams.area) {

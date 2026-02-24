@@ -17,7 +17,6 @@ import {
   Users,
   Smile,
   Handshake,
-  BookOpen,
   FileText,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -34,7 +33,7 @@ const postCategoryLabels: Record<string, { label: string; color: string; Icon: L
   recruitment: { label: '求人', color: 'bg-purple-100 text-purple-700', Icon: Users, dot: 'bg-purple-400' },
   staff: { label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700', Icon: Smile, dot: 'bg-pink-400' },
   volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700', Icon: Handshake, dot: 'bg-teal-400' },
-  training: { label: '研修・セミナー', color: 'bg-indigo-100 text-indigo-700', Icon: BookOpen, dot: 'bg-indigo-400' },
+  training: { label: 'イベント', color: 'bg-orange-100 text-orange-700', Icon: PartyPopper, dot: 'bg-orange-400' },
   other: { label: 'その他', color: 'bg-gray-100 text-gray-700', Icon: FileText, dot: 'bg-gray-400' },
 }
 
@@ -47,7 +46,6 @@ const allCategories = [
   { key: 'recruitment', label: '求人' },
   { key: 'staff', label: 'スタッフ紹介' },
   { key: 'volunteer', label: 'ボランティア' },
-  { key: 'training', label: '研修・セミナー' },
   { key: 'other', label: 'その他' },
 ]
 
@@ -296,17 +294,20 @@ export default async function FacilityDetailPage({
   const phoneNumber = facility.phone || f.phone
   const activeCategory = sp.category || ''
 
-  // Group posts by category
+  // Group posts by category (training → event に統合)
   const postsByCategory: Record<string, any[]> = {}
   for (const post of facility.posts) {
-    const cat = post.category || 'other'
+    const cat = post.category === 'training' ? 'event' : (post.category || 'other')
     if (!postsByCategory[cat]) postsByCategory[cat] = []
     postsByCategory[cat].push(post)
   }
 
-  // Filter posts for specific category view
+  // Filter posts for specific category view (event にはtraining投稿も含む)
   const filteredPosts = activeCategory
-    ? facility.posts.filter((post: any) => post.category === activeCategory)
+    ? facility.posts.filter((post: any) => {
+        if (activeCategory === 'event') return post.category === 'event' || post.category === 'training'
+        return post.category === activeCategory
+      })
     : facility.posts
 
   const serviceTypeLabel = facilityTypeLabels[f.service_type] || f.service_type
