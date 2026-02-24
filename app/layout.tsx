@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 href="/for-business"
                 className="text-gray-500 hover:text-cares-600 font-medium"
               >
-                介護事業所の方はこちら
+                掲載をご希望の方はこちら
               </a>
             </nav>
           </div>
