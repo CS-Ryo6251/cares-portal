@@ -8,10 +8,30 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Cares — みんなでつくる介護施設ノート',
-  description: 'エリアの施設情報・空き状況・料金をいつでも確認・更新。ケアマネ・MSWの施設探しを効率化。',
+  title: {
+    default: 'Cares — みんなでつくる介護施設ノート',
+    template: '%s — Cares',
+  },
+  description: '全国18万件の介護事業所の空き状況・料金・専門職メモをみんなで共有。ケアマネ・MSW・ご家族の施設探しを効率化する介護施設情報プラットフォーム。',
   icons: {
     icon: '/favicon.png',
+  },
+  metadataBase: new URL('https://cares.carespace.jp'),
+  openGraph: {
+    type: 'website',
+    locale: 'ja_JP',
+    siteName: 'Cares — みんなでつくる介護施設ノート',
+    title: 'Cares — みんなでつくる介護施設ノート',
+    description: '全国18万件の介護事業所の空き状況・料金・専門職メモをみんなで共有。施設探しをもっとかんたんに。',
+    url: 'https://cares.carespace.jp',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cares — みんなでつくる介護施設ノート',
+    description: '全国18万件の介護事業所の空き状況・料金・専門職メモをみんなで共有。施設探しをもっとかんたんに。',
+  },
+  alternates: {
+    canonical: 'https://cares.carespace.jp',
   },
 }
 

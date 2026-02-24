@@ -461,7 +461,7 @@ export default async function FeedPage({
             介護施設の情報をみんなで共有して、施設探しをもっとかんたんに。
           </p>
           <p className="text-base font-bold text-cares-600 mt-1">
-            あなたの情報が誰かの笑顔に
+            あなたの情報が誰かの笑顔へ
           </p>
         </div>
 

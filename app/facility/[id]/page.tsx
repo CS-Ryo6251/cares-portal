@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import {
   MapPin,
   Phone,
@@ -274,6 +275,38 @@ function PostCard({ post, facilityId }: { post: any; facilityId: string }) {
       </div>
     </div>
   )
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const facility = await getFacilityDetail(id)
+  if (!facility) return { title: '施設が見つかりません' }
+
+  const f = facility.facility
+  const name = f.name
+  const serviceType = f.service_type || '介護事業所'
+  const cityMatch = f.address?.replace(/^.+?[県都府道]/, '').match(/^(.+?[市区町村])/)
+  const city = cityMatch ? cityMatch[1] : ''
+  const title = `${name}（${serviceType}）${city ? ` | ${city}` : ''}`
+  const description = `${city ? `${city}の` : ''}${name}の公式ページ。投稿・空き状況・料金情報をチェック。${f.address || ''}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${name} — Cares`,
+      description,
+      url: `https://cares.carespace.jp/facility/${id}`,
+      type: 'website',
+    },
+    alternates: {
+      canonical: `https://cares.carespace.jp/facility/${id}`,
+    },
+  }
 }
 
 export default async function FacilityDetailPage({

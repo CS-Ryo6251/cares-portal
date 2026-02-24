@@ -181,9 +181,25 @@ export async function generateMetadata({
   if (!data) return { title: '事業所が見つかりません — Cares' }
 
   const f = data.facility
+  // Extract city from address for SEO (e.g. "福井県鯖江市..." → "鯖江市")
+  const cityMatch = f.address?.replace(/^.+?[県都府道]/, '').match(/^(.+?[市区町村])/)
+  const city = cityMatch ? cityMatch[1] : ''
+  const areaPrefix = city ? `${city}の` : ''
+  const title = `${f.facility_name}（${f.service_type || '介護事業所'}）${city ? ` | ${city}` : ''}`
+  const description = `${areaPrefix}${f.facility_name}の空き状況・料金・専門職メモ。${f.service_type || '介護事業所'}。${f.address || ''}`
+
   return {
-    title: `${f.facility_name} — Cares みんなでつくる介護施設ノート`,
-    description: `${f.facility_name}（${f.service_type || '介護事業所'}）の施設情報・空き状況・料金。${f.address || ''}`,
+    title,
+    description,
+    openGraph: {
+      title: `${f.facility_name} — Cares`,
+      description,
+      url: `https://cares.carespace.jp/directory/${id}`,
+      type: 'website',
+    },
+    alternates: {
+      canonical: `https://cares.carespace.jp/directory/${id}`,
+    },
   }
 }
 
