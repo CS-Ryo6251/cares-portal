@@ -12,6 +12,7 @@ const categories = [
   { key: 'event', label: 'イベント', color: 'bg-orange-100 text-orange-700' },
   { key: 'volunteer', label: 'ボランティア', color: 'bg-teal-100 text-teal-700' },
   { key: 'availability', label: '空き情報', color: 'bg-emerald-100 text-emerald-700' },
+  { key: 'staff', label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700' },
   { key: 'training', label: '研修・セミナー', color: 'bg-indigo-100 text-indigo-700' },
   { key: 'other', label: 'その他', color: 'bg-gray-100 text-gray-700' },
 ]

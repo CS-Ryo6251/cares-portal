@@ -10,6 +10,7 @@ const categoryLabels: Record<string, { label: string; color: string }> = {
   event: { label: 'イベント', color: 'bg-orange-100 text-orange-700' },
   volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700' },
   availability: { label: '空き情報', color: 'bg-emerald-100 text-emerald-700' },
+  staff: { label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700' },
   training: { label: '研修・セミナー', color: 'bg-indigo-100 text-indigo-700' },
   other: { label: 'その他', color: 'bg-gray-100 text-gray-700' },
 }

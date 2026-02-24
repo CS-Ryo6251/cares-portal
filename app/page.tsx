@@ -11,6 +11,7 @@ const postCategories = [
   { key: 'event', label: 'イベント' },
   { key: 'availability', label: '空き情報' },
   { key: 'recruitment', label: '求人' },
+  { key: 'staff', label: 'スタッフ紹介' },
   { key: 'volunteer', label: 'ボランティア' },
   { key: 'training', label: '研修・セミナー' },
   { key: 'other', label: 'その他' },
