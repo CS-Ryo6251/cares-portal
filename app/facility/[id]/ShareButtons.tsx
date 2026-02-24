@@ -4,8 +4,9 @@ import { useState } from 'react'
 
 export default function ShareButtons({ facilityName, facilityId }: { facilityName: string; facilityId: string }) {
   const [copied, setCopied] = useState(false)
-  const url = `https://cares-portal.vercel.app/facility/${facilityId}`
-  const text = `${facilityName}の施設情報 — Cares`
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const url = `${origin}/facility/${facilityId}`
+  const shareText = `${facilityName}の施設情報 — Cares\n${url}`
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(url)
@@ -19,7 +20,7 @@ export default function ShareButtons({ facilityName, facilityId }: { facilityNam
 
       {/* LINE */}
       <a
-        href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`}
+        href={`https://line.me/R/share?text=${encodeURIComponent(shareText)}`}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#06C755]/10 hover:bg-[#06C755]/20 transition-colors"
@@ -32,7 +33,7 @@ export default function ShareButtons({ facilityName, facilityId }: { facilityNam
 
       {/* メール */}
       <a
-        href={`mailto:?subject=${encodeURIComponent(text)}&body=${encodeURIComponent(`${facilityName}の情報はこちらからご覧いただけます。\n\n${url}`)}`}
+        href={`mailto:?subject=${encodeURIComponent(`${facilityName}の施設情報 — Cares`)}&body=${encodeURIComponent(`${facilityName}の情報はこちらからご覧いただけます。\n\n${url}`)}`}
         className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
         title="メールで送る"
       >
