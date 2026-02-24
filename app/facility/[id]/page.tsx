@@ -302,124 +302,51 @@ export default async function FacilityDetailPage({
   const serviceTypeLabel = facilityTypeLabels[f.service_type] || f.service_type
 
   return (
-    <div className="flex gap-0">
-      {/* ===== SIDEBAR (desktop only) ===== */}
-      <aside className="hidden lg:block w-64 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-100 bg-white">
-        <div className="px-4 pt-5 pb-6 space-y-5">
-          {/* Back link */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-cares-600 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            フィードに戻る
-          </Link>
-
-          {/* Facility mini profile */}
-          <div className="pb-4 border-b border-gray-100">
-            <div className="flex items-center gap-2.5 mb-2">
-              {facility.icon_url ? (
-                <img
-                  src={facility.icon_url}
-                  alt={f.name}
-                  className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-lg bg-cares-50 border border-cares-100 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-bold text-cares-600">{f.name.charAt(0)}</span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">{f.name}</p>
-                <p className="text-xs text-gray-500">{serviceTypeLabel}</p>
-              </div>
-            </div>
-            <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border ${
-                acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
-              }`}
-            >
-              {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
-            </span>
-          </div>
-
-          {/* Category navigation */}
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-              カテゴリ
-            </h3>
-            <div className="space-y-1">
-              {allCategories.map((cat) => {
-                const isActive = activeCategory === cat.key
-                const count = cat.key ? (postsByCategory[cat.key]?.length || 0) : facility.posts.length
-                const catInfo = cat.key ? postCategoryLabels[cat.key] : null
-                const href = cat.key
-                  ? `/facility/${id}?category=${cat.key}`
-                  : `/facility/${id}`
-                return (
-                  <a
-                    key={cat.key || '__all__'}
-                    href={href}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                      isActive
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {catInfo ? (
-                      <span className={`w-2 h-2 rounded-full ${catInfo.dot}`} />
-                    ) : (
-                      <span className="w-2 h-2 rounded-full bg-gray-300" />
-                    )}
-                    <span className="flex-1">{cat.label}</span>
-                    {count > 0 && (
-                      <span className="text-xs text-gray-400 tabular-nums">{count}</span>
-                    )}
-                    {isActive && (
-                      <svg className="w-4 h-4 text-cares-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </a>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Quick actions in sidebar */}
-          <div className="pt-3 border-t border-gray-100 space-y-2">
-            {facility.documents.length > 0 && (
+    <>
+      {/* ===== FLOATING CATEGORY NAV (desktop only) ===== */}
+      {facility.posts.length > 0 && (
+        <nav className="hidden xl:flex fixed left-4 top-1/2 -translate-y-1/2 z-40 flex-col bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/60 py-2 px-1.5 space-y-0.5">
+          {allCategories.map((cat) => {
+            const isActive = activeCategory === cat.key
+            const count = cat.key ? (postsByCategory[cat.key]?.length || 0) : facility.posts.length
+            const catInfo = cat.key ? postCategoryLabels[cat.key] : null
+            const href = cat.key
+              ? `/facility/${id}?category=${cat.key}`
+              : `/facility/${id}`
+            return (
               <a
-                href={facility.documents[0].file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-xl transition-colors font-medium"
+                key={cat.key || '__all__'}
+                href={href}
+                title={`${cat.label}${count > 0 ? ` (${count})` : ''}`}
+                className={`group flex items-center gap-2 pl-2.5 pr-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-cares-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                }`}
               >
-                <Download className="w-4 h-4 text-gray-400" />
-                パンフレット
+                {catInfo ? (
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white/70' : catInfo.dot}`} />
+                ) : (
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white/70' : 'bg-gray-300'}`} />
+                )}
+                <span>{cat.label}</span>
+                {count > 0 && (
+                  <span className={`text-[10px] tabular-nums ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
+                    {count}
+                  </span>
+                )}
               </a>
-            )}
-            {facility.website && (
-              <a
-                href={facility.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-xl transition-colors font-medium"
-              >
-                <Globe className="w-4 h-4 text-gray-400" />
-                Webサイト
-              </a>
-            )}
-          </div>
-        </div>
-      </aside>
+            )
+          })}
+        </nav>
+      )}
 
       {/* ===== MAIN CONTENT ===== */}
-      <div className="flex-1 max-w-2xl mx-auto px-4 py-6">
-        {/* Mobile back button */}
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Back button */}
         <Link
           href="/"
-          className="lg:hidden inline-flex items-center gap-1.5 text-base text-gray-500 hover:text-cares-600 mb-4 transition-colors"
+          className="inline-flex items-center gap-1.5 text-base text-gray-500 hover:text-cares-600 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           フィードに戻る
@@ -536,32 +463,30 @@ export default async function FacilityDetailPage({
             )}
           </div>
 
-          {/* Action buttons (mobile: show all, desktop: only inquiry since sidebar has others) */}
+          {/* Action buttons */}
           <div className="flex flex-wrap gap-2 mt-4">
-            <span className="lg:hidden contents">
-              {facility.website && (
-                <a
-                  href={facility.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-                >
-                  <Globe className="w-4 h-4" />
-                  Webサイト
-                </a>
-              )}
-              {facility.documents.length > 0 && (
-                <a
-                  href={facility.documents[0].file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  パンフレット
-                </a>
-              )}
-            </span>
+            {facility.website && (
+              <a
+                href={facility.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <Globe className="w-4 h-4" />
+                Webサイト
+              </a>
+            )}
+            {facility.documents.length > 0 && (
+              <a
+                href={facility.documents[0].file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                パンフレット
+              </a>
+            )}
             <InquiryButton facilityId={facility.facility_id} facilityName={f.name} />
           </div>
 
@@ -589,7 +514,7 @@ export default async function FacilityDetailPage({
 
         {/* Mobile category tabs */}
         {facility.posts.length > 0 && (
-          <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+          <div className="xl:hidden flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
             {allCategories.map((cat) => {
               const isActive = activeCategory === cat.key
               const count = cat.key ? (postsByCategory[cat.key]?.length || 0) : facility.posts.length
@@ -673,6 +598,6 @@ export default async function FacilityDetailPage({
         {/* Floating fee simulator button */}
         <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} />
       </div>
-    </div>
+    </>
   )
 }
