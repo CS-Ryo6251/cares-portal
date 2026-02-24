@@ -29,12 +29,15 @@ export async function GET(request: NextRequest) {
     const afterPref = row.address.replace(/^.+?[県都府道]/, '').replace(/^[\s\u3000]+/, '')
     // Try 郡+町/村 first (e.g. 西村山郡大江町, 丹生郡越前町)
     let match = afterPref.match(/^(.+?郡.+?[町村])/)
-    if (!match) {
+    if (match) {
+      // Remove stray 市 before 郡 (data artifact: 市西村山郡 → 西村山郡)
+      citySet.add(match[1].replace(/^市(?=.+郡)/, ''))
+    } else {
       // Then try 市 or 区 (e.g. 天童市, 渋谷区)
       match = afterPref.match(/^(.+?[市区])/)
-    }
-    if (match) {
-      citySet.add(match[1])
+      if (match) {
+        citySet.add(match[1])
+      }
     }
   }
 
