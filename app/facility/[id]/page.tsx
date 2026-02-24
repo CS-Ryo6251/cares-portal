@@ -24,6 +24,7 @@ import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
 import FloatingActions from './FloatingActions'
 import InquiryButton from './InquiryButton'
+import ShareButtons from './ShareButtons'
 
 const postCategoryLabels: Record<string, { label: string; color: string; Icon: LucideIcon; dot: string }> = {
   notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700', Icon: Megaphone, dot: 'bg-blue-400' },
@@ -318,8 +319,30 @@ export default async function FacilityDetailPage({
     ? `${new Date(activityDate).getFullYear()}/${String(new Date(activityDate).getMonth() + 1).padStart(2, '0')}/${String(new Date(activityDate).getDate()).padStart(2, '0')} 更新`
     : null
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: f.name,
+    description: facility.overview || `${f.name}（${serviceTypeLabel}）の施設情報`,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: f.address,
+      addressCountry: 'JP',
+    },
+    ...(phoneNumber ? { telephone: phoneNumber } : {}),
+    ...(facility.website ? { url: facility.website } : {}),
+    ...(facility.icon_url ? { image: facility.icon_url } : {}),
+    ...(facility.cover_image_url ? { photo: facility.cover_image_url } : {}),
+    additionalType: 'https://schema.org/MedicalBusiness',
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ===== FLOATING CATEGORY NAV (desktop only) ===== */}
       {facility.posts.length > 0 && (
         <nav className="hidden xl:flex fixed left-4 top-1/2 -translate-y-1/2 z-40 flex-col bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/60 py-3 px-2 space-y-1">
@@ -576,6 +599,9 @@ export default async function FacilityDetailPage({
               </span>
             )}
           </div>
+
+          {/* Share buttons */}
+          <ShareButtons facilityName={f.name} facilityId={facility.facility_id} />
 
           {/* Overview */}
           {facility.overview && (
