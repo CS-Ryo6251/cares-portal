@@ -312,14 +312,10 @@ export default async function FacilityDetailPage({
 
   const serviceTypeLabel = facilityTypeLabels[f.service_type] || f.service_type
 
-  // 最終更新日: プロフィール更新 or 最新投稿のどちらか新しい方
-  const profileUpdated = facility.updated_at ? new Date(facility.updated_at) : null
-  const latestPostDate = facility.posts.length > 0 ? new Date(facility.posts[0].created_at) : null
-  const lastUpdated = [profileUpdated, latestPostDate]
-    .filter((d): d is Date => d !== null)
-    .sort((a, b) => b.getTime() - a.getTime())[0] || null
-  const lastUpdatedLabel = lastUpdated
-    ? `${lastUpdated.getFullYear()}/${String(lastUpdated.getMonth() + 1).padStart(2, '0')}/${String(lastUpdated.getDate()).padStart(2, '0')} 更新`
+  // 最終更新日: last_activity_at（トリガーで自動更新）をフォールバック付きで使用
+  const activityDate = facility.last_activity_at || facility.updated_at
+  const lastUpdatedLabel = activityDate
+    ? `${new Date(activityDate).getFullYear()}/${String(new Date(activityDate).getMonth() + 1).padStart(2, '0')}/${String(new Date(activityDate).getDate()).padStart(2, '0')} 更新`
     : null
 
   return (
