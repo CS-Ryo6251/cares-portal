@@ -401,35 +401,37 @@ export default async function FacilityDetailPage({
             </div>
           </div>
         ) : (
-          /* No cover image: clean header for visitors */
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 flex-1">
+          /* No cover image: gradient hero for visitors */
+          <div className="relative rounded-2xl overflow-hidden mb-6 shadow-sm">
+            <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-cares-600 via-cares-500 to-emerald-400" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-5">
+              <div className="flex items-end gap-3">
                 {facility.icon_url ? (
                   <img
                     src={facility.icon_url}
                     alt={f.name}
-                    className="w-14 h-14 rounded-xl object-cover border border-gray-200 shrink-0"
+                    className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-xl bg-cares-50 border border-cares-100 flex items-center justify-center shrink-0">
-                    <span className="text-xl font-bold text-cares-600">{f.name.charAt(0)}</span>
+                  <div className="w-16 h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
+                    <span className="text-2xl font-bold text-cares-600">{f.name.charAt(0)}</span>
                   </div>
                 )}
-                <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-900 leading-tight">{f.name}</h1>
-                  <p className="text-base text-cares-600 font-medium mt-1">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
+                  <p className="text-sm text-white/80 font-medium mt-0.5">
                     {serviceTypeLabel}
                   </p>
                 </div>
+                <span
+                  className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border backdrop-blur-sm ${
+                    acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
+                  }`}
+                >
+                  {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
+                </span>
               </div>
-              <span
-                className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border ${
-                  acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
-                }`}
-              >
-                {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
-              </span>
             </div>
           </div>
         )}
