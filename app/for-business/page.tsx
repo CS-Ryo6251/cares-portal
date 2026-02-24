@@ -12,7 +12,6 @@ import {
   Search,
   Clock,
   BadgeCheck,
-  Quote,
   ChevronRight,
 } from 'lucide-react'
 import FaqSection from './FaqSection'
@@ -85,30 +84,18 @@ const benefits = [
   },
 ]
 
-const testimonials = [
+const backstoryPoints = [
   {
-    quote:
-      'ホームページを作るお金も時間もなかったのですが、Caresに登録してから近隣のケアマネさんから「見ました」と連絡が来るようになりました。空き情報をすぐ出せるのが特に助かっています。',
-    name: '田中 真紀',
-    role: 'デイサービス 施設長',
-    area: '埼玉県',
-    highlight: 'ケアマネから連絡が来るようになった',
+    text: 'ホームページの制作・維持には数十万円。更新するたびに外注費がかかる。でも情報が古いままでは、施設の魅力が伝わらない。',
   },
   {
-    quote:
-      'スタッフのイベント写真を投稿し始めてから、見学希望の問い合わせが増えました。「Caresで雰囲気を見て安心した」と言ってもらえることが増えています。',
-    name: '佐々木 健一',
-    role: '有料老人ホーム 管理者',
-    area: '神奈川県',
-    highlight: '見学問い合わせが増えた',
+    text: '介護業界に特化した「自分たちのことを知ってもらうためのツール」がない。一般的なSNSでは、ケアマネや家族に必要な情報が届かない。',
   },
   {
-    quote:
-      'ITが苦手で不安でしたが、登録はあっという間。写真を撮って投稿するだけなので、スタッフでも無理なく続けられています。料金シミュレーターが特に好評です。',
-    name: '山本 洋子',
-    role: 'グループホーム 代表',
-    area: '愛知県',
-    highlight: 'ITが苦手でもすぐ使えた',
+    text: '営業先で「パンフレットありますか？」と聞かれる。見学前に「料金はどれくらいですか？」と問い合わせが来る。その都度、紙を渡したり電話で説明したり。',
+  },
+  {
+    text: 'だったら、施設の情報・パンフレット・料金をすべてまとめたページを、誰でも無料で簡単に持てるようにしよう。それがCaresの出発点です。',
   },
 ]
 
@@ -132,7 +119,7 @@ const steps = [
   {
     number: '3',
     icon: Globe,
-    title: '公開してケアマネに届く',
+    title: '公開してみんなに届く',
     description:
       '「公開」ボタンを押すだけ。情報を更新するたびに、ケアマネや家族に届き続けます。',
     time: '即時公開',
@@ -327,43 +314,36 @@ export default function ForBusinessPage() {
         </div>
       </section>
 
-      {/* ===== TESTIMONIALS ===== */}
+      {/* ===== BACKSTORY ===== */}
       <section className="py-12 sm:py-20 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-4">
+        <div className="max-w-3xl mx-auto px-4">
           <p className="text-center text-cares-600 font-semibold text-sm mb-3 tracking-wide">
-            VOICE
+            STORY
           </p>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
-            掲載施設の声
+            Caresが生まれた理由
           </h2>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {testimonials.map((t) => (
+          <div className="space-y-6">
+            {backstoryPoints.map((point, i) => (
               <div
-                key={t.name}
-                className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col"
+                key={i}
+                className={`relative bg-white rounded-xl border border-gray-200 p-5 sm:p-6 ${
+                  i === backstoryPoints.length - 1
+                    ? 'border-cares-200 bg-cares-50/30'
+                    : ''
+                }`}
               >
-                <Quote className="w-8 h-8 text-cares-200 mb-3" />
-                {/* Highlight badge */}
-                <span className="inline-flex self-start items-center px-3 py-1 bg-cares-50 text-cares-700 rounded-full text-xs font-medium mb-3">
-                  {t.highlight}
-                </span>
-                <p className="text-sm text-gray-700 leading-relaxed flex-1 mb-4">
-                  {t.quote}
+                <p className={`text-sm sm:text-base leading-relaxed ${
+                  i === backstoryPoints.length - 1
+                    ? 'text-gray-900 font-medium'
+                    : 'text-gray-700'
+                }`}>
+                  {point.text}
                 </p>
-                <div className="border-t border-gray-100 pt-4 mt-auto">
-                  <p className="text-sm font-semibold text-gray-900">{t.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {t.role} / {t.area}
-                  </p>
-                </div>
               </div>
             ))}
           </div>
-
-          <p className="text-center text-xs text-gray-400 mt-6">
-            ※ 掲載事例は今後追加予定です
-          </p>
         </div>
       </section>
 
