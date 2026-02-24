@@ -432,7 +432,7 @@ export default async function FeedPage({
         {/* Site intro */}
         <div className="mb-5 text-center">
           <p className="text-base font-bold text-gray-700 leading-relaxed">
-            介護施設の空き状況・料金・専門職メモをみんなで共有して、施設探しをもっとかんたんに。
+            介護施設の情報をみんなで共有して、施設探しをもっとかんたんに。
           </p>
           <p className="text-base font-bold text-cares-600 mt-1">
             あなたの情報が誰かの笑顔に
