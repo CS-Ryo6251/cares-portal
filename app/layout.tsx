@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Search } from 'lucide-react'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -8,8 +9,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Cares — 介護施設のリアルタイム情報ポータル',
-  description: '空き状況・料金・施設の雰囲気がわかる。介護施設を探すならCares。',
+  title: 'Cares — 介護施設ノート',
+  description: 'エリアの施設情報・空き状況・料金をいつでも確認・更新。ケアマネ・MSWの施設探しを効率化。',
   icons: {
     icon: '/favicon.png',
   },
@@ -22,10 +23,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
           <div className="px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-            <a href="/" className="flex items-center">
+            <a href="/" className="flex items-center gap-2">
               <img src="/logo.png" alt="Cares" className="h-10 sm:h-12" />
+              <span className="text-sm sm:text-base font-bold text-cares-600 whitespace-nowrap">介護施設ノート</span>
             </a>
-            <nav className="flex items-center gap-4 text-sm">
+            <nav className="flex items-center gap-3 sm:gap-4 text-sm">
+              <a
+                href="/directory"
+                className="inline-flex items-center gap-1.5 text-gray-500 hover:text-cares-600 font-medium"
+              >
+                <Search className="w-4 h-4" />
+                <span className="hidden sm:inline">施設を探す</span>
+              </a>
               <a
                 href="/for-business"
                 className="text-gray-500 hover:text-cares-600 font-medium"
@@ -45,6 +54,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Footer */}
         <footer className="bg-white border-t border-gray-200 py-6">
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-400">
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <a href="/directory" className="hover:text-cares-600 transition-colors">施設を探す</a>
+              <span className="text-gray-200">|</span>
+              <a href="/for-business" className="hover:text-cares-600 transition-colors">施設掲載</a>
+            </div>
             <p>&copy; {new Date().getFullYear()} 株式会社CARESPACE</p>
           </div>
         </footer>

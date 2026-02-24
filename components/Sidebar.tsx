@@ -57,7 +57,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
   const currentArea = searchParams.area || ''
   const currentStatus = searchParams.status || ''
   const currentQ = searchParams.q || ''
-  const currentView = searchParams.view || ''
+  const currentView = searchParams.view || 'facilities'
 
   return (
     <div className="px-4 pt-4 pb-5 space-y-6">
@@ -65,7 +65,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
         <div>
           <form method="GET" action="/">
             {/* Preserve existing filters */}
-            {currentView && <input type="hidden" name="view" value={currentView} />}
+            {currentView === 'posts' && <input type="hidden" name="view" value="posts" />}
             {currentCategory && <input type="hidden" name="category" value={currentCategory} />}
             {currentArea && <input type="hidden" name="area" value={currentArea} />}
             {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
@@ -124,7 +124,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
           </h3>
           <form method="GET" action="/">
             {/* Preserve other filters */}
-            {currentView && <input type="hidden" name="view" value={currentView} />}
+            {currentView === 'posts' && <input type="hidden" name="view" value="posts" />}
             {currentQ && <input type="hidden" name="q" value={currentQ} />}
             {currentCategory && <input type="hidden" name="category" value={currentCategory} />}
             {currentStatus && <input type="hidden" name="status" value={currentStatus} />}

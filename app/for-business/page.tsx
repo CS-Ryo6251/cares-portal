@@ -10,6 +10,11 @@ import {
   CalendarX,
   Wallet,
   ChevronRight,
+  Search,
+  Database,
+  BadgeCheck,
+  Radio,
+  MessageSquare,
 } from 'lucide-react'
 import FaqSection from './FaqSection'
 
@@ -39,7 +44,7 @@ const pains = [
 ]
 
 const stats = [
-  { number: '全国対応', label: '利用エリア' },
+  { number: '182,000件+', label: '掲載事業所数' },
   { number: '¥0', label: '利用料金' },
   { number: '無制限', label: '投稿回数' },
   { number: 'QR対応', label: '施設ページ共有' },
@@ -125,6 +130,11 @@ const faqItems = [
     question: '空き情報はどれくらいの頻度で更新すればいいですか？',
     answer:
       '頻度に決まりはありませんが、空き状況が変わったタイミングでの更新をおすすめしています。「今日空きが出た」という情報ほど、ケアマネジャーや家族にとって価値が高くなります。',
+  },
+  {
+    question: '事業所データベースとは何ですか？',
+    answer:
+      '厚生労働省の介護サービス情報公表システムに基づく全国約18万件の事業所情報をもとに、ケアマネジャーやMSW、ご家族が事業所を検索できるデータベースです。オーナー登録をすることで、公式マークが付与され、空き状況の発信やお問い合わせの受付が可能になります。',
   },
 ]
 
@@ -282,6 +292,45 @@ export default function ForBusinessPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== DIRECTORY ===== */}
+      <section className="py-12 sm:py-20 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-10 text-center">
+            <div className="w-14 h-14 bg-cares-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Database className="w-7 h-7 text-cares-600" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+              全国18万件の事業所データベースに掲載
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-8 max-w-xl mx-auto">
+              介護情報公表システムのデータをもとに、ケアマネ・MSW・ご家族が事業所を検索できます。
+            </p>
+            <div className="space-y-3 text-left max-w-md mx-auto mb-8">
+              <div className="flex items-start gap-3">
+                <BadgeCheck className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-sm sm:text-base text-gray-700">オーナー登録で「公式マーク」を取得</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <Radio className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-sm sm:text-base text-gray-700">空き状況をリアルタイムで発信</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <MessageSquare className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-sm sm:text-base text-gray-700">ケアマネからの直接お問い合わせ</p>
+              </div>
+            </div>
+            <a
+              href="/directory"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-cares-600 text-white rounded-xl hover:bg-cares-700 font-semibold text-sm sm:text-base transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              施設を探す
+              <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </section>

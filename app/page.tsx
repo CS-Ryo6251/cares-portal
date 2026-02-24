@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import FacilityCard from '@/components/FacilityCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
+import DirectoryBanner from '@/components/DirectoryBanner'
 
 const postCategories = [
   { key: '', label: 'すべて' },
@@ -377,7 +378,7 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
 
 function buildTabUrl(currentParams: { [key: string]: string | undefined }, view: string) {
   const params = new URLSearchParams()
-  if (view === 'facilities') params.set('view', 'facilities')
+  if (view === 'posts') params.set('view', 'posts')
   // Preserve q, area, status — reset category and sort when switching tabs
   if (currentParams.q) params.set('q', currentParams.q)
   if (currentParams.area) params.set('area', currentParams.area)
@@ -393,7 +394,7 @@ export default async function FeedPage({
 }) {
   const params = await searchParams
   const currentSort = params.sort || 'recommended'
-  const currentView = params.view || 'posts'
+  const currentView = params.view || 'facilities'
 
   const posts = currentView === 'posts' ? await getFeedPosts(params) : []
   const facilities = currentView === 'facilities' ? await getFacilities(params) : []
@@ -411,7 +412,7 @@ export default async function FeedPage({
         <div className="lg:hidden mb-4">
           <form method="GET" action="/">
             {/* Preserve existing filters */}
-            {currentView === 'facilities' && <input type="hidden" name="view" value="facilities" />}
+            {currentView === 'posts' && <input type="hidden" name="view" value="posts" />}
             {params.category && <input type="hidden" name="category" value={params.category} />}
             {params.area && <input type="hidden" name="area" value={params.area} />}
             {params.status && <input type="hidden" name="status" value={params.status} />}
@@ -431,18 +432,11 @@ export default async function FeedPage({
         {/* Geolocation banner */}
         <GeolocationBanner />
 
+        {/* Directory banner */}
+        <DirectoryBanner />
+
         {/* Tab switcher */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
-          <a
-            href={buildTabUrl(params, 'posts')}
-            className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              currentView === 'posts'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            投稿
-          </a>
           <a
             href={buildTabUrl(params, 'facilities')}
             className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
@@ -452,6 +446,16 @@ export default async function FeedPage({
             }`}
           >
             施設
+          </a>
+          <a
+            href={buildTabUrl(params, 'posts')}
+            className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              currentView === 'posts'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            投稿
           </a>
         </div>
 
@@ -561,6 +565,20 @@ export default async function FeedPage({
         {/* Facility list */}
         {currentView === 'facilities' && (
         <>
+          {/* Directory link */}
+          <a
+            href="/directory"
+            className="flex items-center justify-between px-5 py-4 bg-white border border-gray-200 rounded-2xl mb-4 hover:border-cares-300 hover:shadow-sm transition-all group"
+          >
+            <div>
+              <p className="text-sm font-bold text-gray-900">全国18万件の事業所データベースで検索</p>
+              <p className="text-xs text-gray-500 mt-0.5">介護サービス情報公表システムの全データを検索できます</p>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-cares-600 shrink-0 ml-3 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+
           <div className="space-y-4">
             {facilities.map((item) => (
               <FacilityCard key={item.facility_id} facility={item} />
