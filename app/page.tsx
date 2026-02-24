@@ -18,19 +18,25 @@ const postCategories = [
 ]
 
 const acceptanceLabels: Record<string, string> = {
-  accepting: '受入可能',
-  limited: '条件付き受入可',
+  has_vacancy: '空きあり',
+  no_vacancy: '空きなし',
+  unknown: '確認中',
+  // Legacy values from government data
+  accepting: '空きあり',
+  limited: '条件付き',
   waitlist: '待機あり',
-  not_accepting: '受入停止中',
-  unknown: '要問合せ',
+  not_accepting: '空きなし',
 }
 
 const acceptanceColors: Record<string, string> = {
+  has_vacancy: 'bg-green-100 text-green-700',
+  no_vacancy: 'bg-red-100 text-red-700',
+  unknown: 'bg-gray-100 text-gray-600',
+  // Legacy values from government data
   accepting: 'bg-green-100 text-green-700',
   limited: 'bg-yellow-100 text-yellow-700',
   waitlist: 'bg-orange-100 text-orange-700',
   not_accepting: 'bg-red-100 text-red-700',
-  unknown: 'bg-gray-100 text-gray-600',
 }
 
 function calculateScore(post: any, userArea: string | undefined): number {
@@ -409,6 +415,14 @@ export default async function FeedPage({
 
         {/* Geolocation banner */}
         <GeolocationBanner />
+
+        {/* Site intro */}
+        <div className="mb-5 text-center">
+          <h1 className="text-lg font-bold text-gray-900 mb-1">みんなでつくる介護施設ノート</h1>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            全国18万件の介護事業所データベース。空き状況・料金・口コミをみんなで共有して、施設探しをもっとかんたんに。
+          </p>
+        </div>
 
         {/* Tab switcher */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-4">

@@ -54,11 +54,13 @@ const facilityTypeLabels: Record<string, string> = {
 }
 
 const acceptanceStatusMap: Record<string, { label: string; color: string }> = {
-  accepting: { label: '受入可能', color: 'bg-green-100 text-green-700' },
+  has_vacancy: { label: '空きあり', color: 'bg-green-100 text-green-700' },
+  no_vacancy: { label: '空きなし', color: 'bg-red-100 text-red-700' },
+  unknown: { label: '確認中', color: 'bg-gray-100 text-gray-600' },
+  accepting: { label: '空きあり', color: 'bg-green-100 text-green-700' },
   limited: { label: '条件付き', color: 'bg-yellow-100 text-yellow-700' },
   waitlist: { label: '待機あり', color: 'bg-orange-100 text-orange-700' },
-  not_accepting: { label: '受入停止中', color: 'bg-red-100 text-red-700' },
-  unknown: { label: '要問合せ', color: 'bg-gray-100 text-gray-600' },
+  not_accepting: { label: '空きなし', color: 'bg-red-100 text-red-700' },
 }
 
 type PostCardProps = {
@@ -149,6 +151,10 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
           >
             {facility.name}
           </a>
+          <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            公式
+          </span>
           <span className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-cares-50 text-cares-700">
             {typeLabel}
           </span>

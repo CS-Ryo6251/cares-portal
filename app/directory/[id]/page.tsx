@@ -32,19 +32,23 @@ import InquiryButton from '@/app/facility/[id]/InquiryButton'
 import ShareButtons from '@/app/facility/[id]/ShareButtons'
 
 const acceptanceLabels: Record<string, string> = {
-  accepting: '受入可能',
-  limited: '条件付き受入可',
+  has_vacancy: '空きあり',
+  no_vacancy: '空きなし',
+  unknown: '確認中',
+  accepting: '空きあり',
+  limited: '条件付き',
   waitlist: '待機あり',
-  not_accepting: '受入停止中',
-  unknown: '要問合せ',
+  not_accepting: '空きなし',
 }
 
 const acceptanceColors: Record<string, string> = {
+  has_vacancy: 'bg-green-100 text-green-700',
+  no_vacancy: 'bg-red-100 text-red-700',
+  unknown: 'bg-gray-100 text-gray-600',
   accepting: 'bg-green-100 text-green-700',
   limited: 'bg-yellow-100 text-yellow-700',
   waitlist: 'bg-orange-100 text-orange-700',
   not_accepting: 'bg-red-100 text-red-700',
-  unknown: 'bg-gray-100 text-gray-600',
 }
 
 const postCategoryLabels: Record<string, { label: string; color: string; Icon: LucideIcon; dot: string }> = {
@@ -178,7 +182,7 @@ export async function generateMetadata({
 
   const f = data.facility
   return {
-    title: `${f.facility_name} — Cares 介護施設ノート`,
+    title: `${f.facility_name} — Cares みんなでつくる介護施設ノート`,
     description: `${f.facility_name}（${f.service_type || '介護事業所'}）の施設情報・空き状況・料金。${f.address || ''}`,
   }
 }
@@ -292,7 +296,7 @@ export default async function DirectoryDetailPage({
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Back link */}
         <Link
-          href="/directory"
+          href="/"
           className="inline-flex items-center gap-1.5 text-base text-gray-500 hover:text-cares-600 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -422,7 +426,7 @@ export default async function DirectoryDetailPage({
                 <span>{f.corporation_name}</span>
               </div>
             )}
-            {f.capacity && (
+            {f.capacity > 0 && (
               <div className="flex items-center gap-2 text-base text-gray-600">
                 <Users className="w-4 h-4 shrink-0 text-gray-400" />
                 <span>定員: {f.capacity}名</span>

@@ -8,7 +8,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Cares — 介護施設ノート',
+  title: 'Cares — みんなでつくる介護施設ノート',
   description: 'エリアの施設情報・空き状況・料金をいつでも確認・更新。ケアマネ・MSWの施設探しを効率化。',
   icons: {
     icon: '/favicon.png',
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
             <a href="/" className="flex items-center gap-2">
               <img src="/logo.png" alt="Cares" className="h-10 sm:h-12" />
-              <span className="text-sm sm:text-base font-bold text-cares-600 whitespace-nowrap">介護施設ノート</span>
+              <span className="text-sm sm:text-base font-bold text-cares-600 whitespace-nowrap">みんなでつくる介護施設ノート</span>
             </a>
             <nav className="flex items-center gap-3 sm:gap-4 text-sm">
               <a
