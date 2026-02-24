@@ -9,9 +9,6 @@ import {
   Users,
   CalendarX,
   Wallet,
-  Search,
-  Clock,
-  BadgeCheck,
   ChevronRight,
 } from 'lucide-react'
 import FaqSection from './FaqSection'
@@ -55,10 +52,7 @@ const benefits = [
     description:
       '施設の概要、写真、料金、パンフレット——すべてが1つのページにまとまります。QRコードを名刺やチラシに載せるだけで、ケアマネや家族にいつでも最新情報を共有できます。ホームページがなくても大丈夫です。',
     result: '名刺・チラシから施設情報にすぐアクセス',
-    gradient: 'from-blue-50 to-indigo-50',
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
-    icon: Search,
+    image: '/benefit-01.jpg',
   },
   {
     number: '02',
@@ -66,10 +60,7 @@ const benefits = [
     description:
       '空きが出たその日に投稿するだけで、「今すぐ入居先を探している」家族やケアマネに届きます。電話やFAXで個別に連絡する手間がなくなり、空き期間が短縮します。',
     result: '空き室の埋まるスピードが上がる',
-    gradient: 'from-emerald-50 to-teal-50',
-    iconBg: 'bg-emerald-100',
-    iconColor: 'text-emerald-600',
-    icon: Clock,
+    image: '/benefit-02.jpg',
   },
   {
     number: '03',
@@ -77,10 +68,7 @@ const benefits = [
     description:
       '日常の様子、行事・イベント、スタッフ紹介——更新のたびに、施設の「らしさ」が伝わります。広告費ゼロで、あなたの施設を選ぶ理由を作り続けられます。',
     result: '施設ブランドの形成と入居検討者の信頼獲得',
-    gradient: 'from-orange-50 to-amber-50',
-    iconBg: 'bg-orange-100',
-    iconColor: 'text-orange-600',
-    icon: BadgeCheck,
+    image: '/benefit-03.jpg',
   },
 ]
 
@@ -147,7 +135,7 @@ export default function ForBusinessPage() {
       <section className="relative overflow-hidden py-16 sm:py-24 md:py-32">
         {/* Background image */}
         <img
-          src="/hero-care.png"
+          src="/hero-care.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -269,16 +257,13 @@ export default function ForBusinessPage() {
                   i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
                 } md:flex`}
               >
-                {/* Image placeholder */}
-                <div
-                  className={`md:w-2/5 h-48 sm:h-56 md:h-auto bg-gradient-to-br ${benefit.gradient} flex items-center justify-center relative overflow-hidden`}
-                >
-                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl ${benefit.iconBg} flex items-center justify-center shadow-sm`}>
-                    <benefit.icon className={`w-10 h-10 sm:w-12 sm:h-12 ${benefit.iconColor}`} />
-                  </div>
-                  {/* Decorative circles */}
-                  <div className={`absolute -bottom-8 -right-8 w-32 h-32 ${benefit.iconBg} rounded-full opacity-30`} />
-                  <div className={`absolute -top-4 -left-4 w-16 h-16 ${benefit.iconBg} rounded-full opacity-20`} />
+                {/* Photo */}
+                <div className="md:w-2/5 h-48 sm:h-56 md:h-auto relative overflow-hidden bg-gray-100">
+                  <img
+                    src={benefit.image}
+                    alt={benefit.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 {/* Content */}
@@ -393,8 +378,15 @@ export default function ForBusinessPage() {
       </section>
 
       {/* ===== FINAL CTA ===== */}
-      <section className="py-16 sm:py-24 bg-gradient-to-b from-white via-cares-50/30 to-cares-50">
-        <div className="max-w-3xl mx-auto px-4 text-center">
+      <section className="relative py-16 sm:py-24 overflow-hidden">
+        <img
+          src="/cta-care.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-white/75 backdrop-blur-[2px]" />
+
+        <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
             今日、あなたの施設を
             <br />
@@ -413,7 +405,7 @@ export default function ForBusinessPage() {
 
           {/* Trust signals */}
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-6">
-            {['クレジットカード不要', 'いつでも削除・退会可能', '審査は最短1営業日'].map((signal) => (
+            {['クレジットカード不要', 'いつでも削除・退会可能', '登録後すぐに掲載開始'].map((signal) => (
               <span key={signal} className="flex items-center gap-1.5 text-sm text-gray-500">
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
                 {signal}
