@@ -418,9 +418,8 @@ export default async function FeedPage({
 
         {/* Site intro */}
         <div className="mb-5 text-center">
-          <h1 className="text-lg font-bold text-gray-900 mb-1">みんなでつくる介護施設ノート</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
-            全国18万件の介護事業所データベース。空き状況・料金・口コミをみんなで共有して、施設探しをもっとかんたんに。
+            介護施設の空き状況・料金・専門職メモをみんなで共有して、施設探しをもっとかんたんに。あなたの情報が誰かの笑顔に
           </p>
         </div>
 
