@@ -258,7 +258,7 @@ export default function ForBusinessPage() {
                 } md:flex`}
               >
                 {/* Photo */}
-                <div className="md:w-2/5 h-48 sm:h-56 md:h-auto relative overflow-hidden bg-gray-100">
+                <div className="md:w-2/5 h-48 sm:h-56 md:h-64 relative overflow-hidden bg-gray-100">
                   <img
                     src={benefit.image}
                     alt={benefit.title}
