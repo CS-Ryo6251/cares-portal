@@ -177,7 +177,13 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
   }
 
   if (searchParams.status) {
-    query = query.eq('facility_portal_profiles.acceptance_status', searchParams.status)
+    const statusMap: Record<string, string[]> = {
+      has_vacancy: ['has_vacancy', 'accepting'],
+      no_vacancy: ['no_vacancy', 'not_accepting'],
+      unknown: ['unknown', 'limited', 'waitlist'],
+    }
+    const values = statusMap[searchParams.status] || [searchParams.status]
+    query = query.in('facility_portal_profiles.acceptance_status', values)
   }
 
   const { data, error } = await query
@@ -264,7 +270,14 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   }
 
   if (searchParams.status) {
-    query = query.eq('acceptance_status', searchParams.status)
+    // New values + legacy values mapping
+    const statusMap: Record<string, string[]> = {
+      has_vacancy: ['has_vacancy', 'accepting'],
+      no_vacancy: ['no_vacancy', 'not_accepting'],
+      unknown: ['unknown', 'limited', 'waitlist'],
+    }
+    const values = statusMap[searchParams.status] || [searchParams.status]
+    query = query.in('acceptance_status', values)
   }
 
   const { data, error } = await query
@@ -418,8 +431,11 @@ export default async function FeedPage({
 
         {/* Site intro */}
         <div className="mb-5 text-center">
-          <p className="text-sm text-gray-500 leading-relaxed">
-            介護施設の空き状況・料金・専門職メモをみんなで共有して、施設探しをもっとかんたんに。あなたの情報が誰かの笑顔に
+          <p className="text-base font-bold text-gray-700 leading-relaxed">
+            介護施設の空き状況・料金・専門職メモをみんなで共有して、施設探しをもっとかんたんに。
+          </p>
+          <p className="text-base font-bold text-cares-600 mt-1">
+            あなたの情報が誰かの笑顔に
           </p>
         </div>
 
