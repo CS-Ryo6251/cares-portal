@@ -9,23 +9,33 @@ import {
   Download,
   ExternalLink,
   ArrowLeft,
+  Shield,
+  Megaphone,
+  Leaf,
+  PartyPopper,
+  BedDouble,
+  Users,
+  Smile,
+  Handshake,
+  BookOpen,
+  FileText,
 } from 'lucide-react'
-import { Shield } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
 import FloatingActions from './FloatingActions'
 import InquiryButton from './InquiryButton'
 
-const postCategoryLabels: Record<string, { label: string; color: string; icon: string; dot: string }> = {
-  notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700', icon: '📢', dot: 'bg-blue-400' },
-  daily: { label: '日常', color: 'bg-green-100 text-green-700', icon: '🌿', dot: 'bg-green-400' },
-  event: { label: 'イベント', color: 'bg-orange-100 text-orange-700', icon: '🎉', dot: 'bg-orange-400' },
-  availability: { label: '空き情報', color: 'bg-emerald-100 text-emerald-700', icon: '🛏️', dot: 'bg-emerald-400' },
-  recruitment: { label: '求人', color: 'bg-purple-100 text-purple-700', icon: '👥', dot: 'bg-purple-400' },
-  staff: { label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700', icon: '😊', dot: 'bg-pink-400' },
-  volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700', icon: '🤝', dot: 'bg-teal-400' },
-  training: { label: '研修・セミナー', color: 'bg-indigo-100 text-indigo-700', icon: '📚', dot: 'bg-indigo-400' },
-  other: { label: 'その他', color: 'bg-gray-100 text-gray-700', icon: '📝', dot: 'bg-gray-400' },
+const postCategoryLabels: Record<string, { label: string; color: string; Icon: LucideIcon; dot: string }> = {
+  notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700', Icon: Megaphone, dot: 'bg-blue-400' },
+  daily: { label: '日常', color: 'bg-green-100 text-green-700', Icon: Leaf, dot: 'bg-green-400' },
+  event: { label: 'イベント', color: 'bg-orange-100 text-orange-700', Icon: PartyPopper, dot: 'bg-orange-400' },
+  availability: { label: '空き情報', color: 'bg-emerald-100 text-emerald-700', Icon: BedDouble, dot: 'bg-emerald-400' },
+  recruitment: { label: '求人', color: 'bg-purple-100 text-purple-700', Icon: Users, dot: 'bg-purple-400' },
+  staff: { label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700', Icon: Smile, dot: 'bg-pink-400' },
+  volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700', Icon: Handshake, dot: 'bg-teal-400' },
+  training: { label: '研修・セミナー', color: 'bg-indigo-100 text-indigo-700', Icon: BookOpen, dot: 'bg-indigo-400' },
+  other: { label: 'その他', color: 'bg-gray-100 text-gray-700', Icon: FileText, dot: 'bg-gray-400' },
 }
 
 const allCategories = [
@@ -559,11 +569,12 @@ export default async function FacilityDetailPage({
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
               {activeCategory && postCategoryLabels[activeCategory] ? (
-                <span className="text-2xl">{postCategoryLabels[activeCategory].icon}</span>
+                (() => {
+                  const CategoryIcon = postCategoryLabels[activeCategory].Icon
+                  return <CategoryIcon className="w-7 h-7 text-gray-400" />
+                })()
               ) : (
-                <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
+                <FileText className="w-7 h-7 text-gray-300" />
               )}
             </div>
             <p className="text-base text-gray-500">
