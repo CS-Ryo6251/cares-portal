@@ -173,7 +173,21 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
   }
 
   if (searchParams.area) {
-    query = query.ilike('facility_portal_profiles.facilities.address', `%${searchParams.area}%`)
+    const area = searchParams.area
+    if (area.includes(':')) {
+      // Prefecture:city1,city2 format — filter by each city
+      const [pref, citiesStr] = area.split(':')
+      const cities = citiesStr.split(',').filter(Boolean)
+      if (cities.length > 0) {
+        // OR filter: address contains any of the cities
+        const cityFilters = cities.map(c => `address.ilike.%${pref}${c}%`).join(',')
+        query = query.or(cityFilters, { referencedTable: 'facility_portal_profiles.facilities' })
+      } else {
+        query = query.ilike('facility_portal_profiles.facilities.address', `%${pref}%`)
+      }
+    } else {
+      query = query.ilike('facility_portal_profiles.facilities.address', `%${area}%`)
+    }
   }
 
   if (searchParams.status) {
@@ -266,7 +280,19 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     .limit(50)
 
   if (searchParams.area) {
-    query = query.ilike('address', `%${searchParams.area}%`)
+    const area = searchParams.area
+    if (area.includes(':')) {
+      const [pref, citiesStr] = area.split(':')
+      const cities = citiesStr.split(',').filter(Boolean)
+      if (cities.length > 0) {
+        const cityFilters = cities.map(c => `address.ilike.%${pref}${c}%`).join(',')
+        query = query.or(cityFilters)
+      } else {
+        query = query.ilike('address', `%${pref}%`)
+      }
+    } else {
+      query = query.ilike('address', `%${area}%`)
+    }
   }
 
   if (searchParams.status) {

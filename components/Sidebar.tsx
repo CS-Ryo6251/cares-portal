@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react'
+import AreaFilter from './AreaFilter'
 
 type SidebarProps = {
   searchParams: { [key: string]: string | undefined }
@@ -22,15 +23,6 @@ const acceptanceStatuses = [
   { key: 'unknown', label: '確認中', color: 'bg-gray-100 text-gray-600' },
 ]
 
-const prefecturesByRegion = [
-  { region: '北海道・東北', prefectures: ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'] },
-  { region: '関東', prefectures: ['茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県'] },
-  { region: '中部', prefectures: ['新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県'] },
-  { region: '近畿', prefectures: ['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'] },
-  { region: '中国', prefectures: ['鳥取県', '島根県', '岡山県', '広島県', '山口県'] },
-  { region: '四国', prefectures: ['徳島県', '香川県', '愛媛県', '高知県'] },
-  { region: '九州・沖縄', prefectures: ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'] },
-]
 
 function buildHref(
   currentParams: { [key: string]: string | undefined },
@@ -87,37 +79,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
             エリア
           </h3>
-          <form method="GET" action="/">
-            {/* Preserve other filters */}
-            {currentView === 'posts' && <input type="hidden" name="view" value="posts" />}
-            {currentQ && <input type="hidden" name="q" value={currentQ} />}
-            {currentCategory && <input type="hidden" name="category" value={currentCategory} />}
-            {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
-            <div className="flex gap-2">
-              <select
-                name="area"
-                defaultValue={currentArea}
-                className="flex-1 min-w-0 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none appearance-none cursor-pointer"
-              >
-                <option value="">全国</option>
-                {prefecturesByRegion.map((group) => (
-                  <optgroup key={group.region} label={group.region}>
-                    {group.prefectures.map((pref) => (
-                      <option key={pref} value={pref}>
-                        {pref}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="shrink-0 px-3 py-2.5 bg-cares-600 text-white rounded-xl text-sm font-medium hover:bg-cares-700 transition-colors"
-              >
-                絞込
-              </button>
-            </div>
-          </form>
+          <AreaFilter />
         </div>
 
         {/* Acceptance status filter */}
