@@ -84,20 +84,6 @@ const benefits = [
   },
 ]
 
-const backstoryPoints = [
-  {
-    text: 'ホームページの制作・維持には数十万円。更新するたびに外注費がかかる。でも情報が古いままでは、施設の魅力が伝わらない。',
-  },
-  {
-    text: '介護業界に特化した「自分たちのことを知ってもらうためのツール」がない。一般的なSNSでは、ケアマネや家族に必要な情報が届かない。',
-  },
-  {
-    text: '営業先で「パンフレットありますか？」と聞かれる。見学前に「料金はどれくらいですか？」と問い合わせが来る。その都度、紙を渡したり電話で説明したり。',
-  },
-  {
-    text: 'だったら、施設の情報・パンフレット・料金をすべてまとめたページを、誰でも無料で簡単に持てるようにしよう。それがCaresの出発点です。',
-  },
-]
 
 const steps = [
   {
@@ -319,25 +305,29 @@ export default function ForBusinessPage() {
             Caresが生まれた理由
           </h2>
 
-          <div className="space-y-6">
-            {backstoryPoints.map((point, i) => (
-              <div
-                key={i}
-                className={`relative bg-white rounded-xl border border-gray-200 p-5 sm:p-6 ${
-                  i === backstoryPoints.length - 1
-                    ? 'border-cares-200 bg-cares-50/30'
-                    : ''
-                }`}
-              >
-                <p className={`text-sm sm:text-base leading-relaxed ${
-                  i === backstoryPoints.length - 1
-                    ? 'text-gray-900 font-medium'
-                    : 'text-gray-700'
-                }`}>
-                  {point.text}
-                </p>
-              </div>
-            ))}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 md:p-10">
+            {/* Founder photo */}
+            <div className="flex justify-center mb-6">
+              <img
+                src="/founder.jpg"
+                alt="創業者"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-cares-100 shadow-sm"
+              />
+            </div>
+
+            <p className="text-sm sm:text-base text-gray-700 leading-loose text-center">
+              ホームページの制作・維持には数十万円。更新のたびに外注費がかかる。でも情報が古いままでは、施設の魅力は伝わらない。介護業界に特化した「自分たちのことを知ってもらうためのツール」もない。一般的なSNSでは、ケアマネや家族に必要な情報が届かない。
+            </p>
+            <p className="text-sm sm:text-base text-gray-700 leading-loose text-center mt-4">
+              営業先では「パンフレットありますか？」と聞かれ、見学前には「料金はどれくらいですか？」と問い合わせが来る。その都度、紙を渡したり電話で説明したり。
+            </p>
+            <p className="text-sm sm:text-base text-gray-900 font-medium leading-loose text-center mt-4">
+              だったら、施設の情報・パンフレット・料金をすべてまとめたページを、誰でも無料で簡単に持てるようにしよう。それがCaresの出発点です。
+            </p>
+
+            <p className="text-center text-sm text-gray-500 mt-6">
+              三浦 亮 — 株式会社CARESPACE 代表取締役
+            </p>
           </div>
         </div>
       </section>
