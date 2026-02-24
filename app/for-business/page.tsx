@@ -144,17 +144,26 @@ export default function ForBusinessPage() {
   return (
     <div>
       {/* ===== HERO ===== */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-cares-50/50 to-white py-16 sm:py-24 md:py-32">
+      <section className="relative overflow-hidden py-16 sm:py-24 md:py-32">
+        {/* Background image */}
+        <img
+          src="/hero-care.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/50" />
+
         <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <p className="inline-flex items-center gap-2 px-4 py-1.5 bg-cares-100 text-cares-700 rounded-full text-sm font-medium mb-6">
+          <p className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
             介護施設の経営者・管理者の方へ
           </p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-6 drop-shadow-sm">
             ケアマネに選ばれる施設は、
             <br />
-            <span className="text-cares-600">「見える」</span>施設です。
+            <span className="text-cares-300">「見える」</span>施設です。
           </h1>
-          <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-white/80 mb-8 max-w-2xl mx-auto leading-relaxed">
             空き状況、日常の様子、イベント情報——
             <br className="hidden sm:block" />
             Caresに掲載するだけで、近くのケアマネジャーや
@@ -163,34 +172,31 @@ export default function ForBusinessPage() {
           </p>
 
           {/* Free badge */}
-          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-5 py-2 mb-8">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <span className="font-semibold text-green-700 text-sm">掲載・利用 すべて完全無料</span>
+          <div className="inline-flex items-center gap-2 bg-green-500/20 backdrop-blur-sm border border-green-300/40 rounded-full px-5 py-2 mb-8">
+            <CheckCircle2 className="w-5 h-5 text-green-300" />
+            <span className="font-semibold text-green-100 text-sm">掲載・利用 すべて完全無料</span>
           </div>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
             <a
               href="https://app.carespace.jp/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-cares-600 text-white rounded-xl hover:bg-cares-700 font-semibold text-base sm:text-lg transition-colors shadow-lg shadow-cares-600/20"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-cares-600 text-white rounded-xl hover:bg-cares-700 font-semibold text-base sm:text-lg transition-colors shadow-lg shadow-black/30"
             >
               いますぐ無料で掲載を始める
               <ArrowRight className="w-5 h-5" />
             </a>
             <a
               href="https://app.carespace.jp"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-cares-700 border-2 border-cares-200 rounded-xl hover:border-cares-400 font-semibold text-base sm:text-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl hover:bg-white/20 font-semibold text-base sm:text-lg transition-colors"
             >
               ログインはこちら
             </a>
           </div>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-white/50">
             クレジットカード不要。登録はかんたんです。
           </p>
         </div>
-
-        {/* Background decoration */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-radial from-cares-100/30 to-transparent rounded-full blur-3xl -z-0" />
       </section>
 
       {/* ===== PAIN RECOGNITION ===== */}
