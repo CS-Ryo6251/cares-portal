@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { Search, X } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
+import FacilityCard from '@/components/FacilityCard'
+import GeolocationBanner from '@/components/GeolocationBanner'
 
 const postCategories = [
   { key: '', label: 'すべて' },
@@ -243,8 +245,75 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
   })
 }
 
+async function getFacilities(searchParams: { [key: string]: string | undefined }) {
+  const supabase = getSupabaseClient()
+
+  let query = supabase
+    .from('facility_portal_profiles')
+    .select(`
+      facility_id,
+      acceptance_status,
+      is_published,
+      icon_url,
+      overview,
+      facilities!inner (
+        name, address, service_type
+      )
+    `)
+    .eq('is_published', true)
+    .limit(50)
+
+  if (searchParams.area) {
+    query = query.ilike('facilities.address', `%${searchParams.area}%`)
+  }
+
+  if (searchParams.status) {
+    query = query.eq('acceptance_status', searchParams.status)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('施設取得エラー:', error)
+    return []
+  }
+
+  let facilities = (data || []) as any[]
+
+  // フリーワード検索（クライアント側フィルタ）
+  if (searchParams.q) {
+    const q = searchParams.q.toLowerCase()
+    facilities = facilities.filter((item) => {
+      const f = item.facilities
+      return (
+        f?.name?.toLowerCase().includes(q) ||
+        f?.address?.toLowerCase().includes(q) ||
+        item.overview?.toLowerCase().includes(q)
+      )
+    })
+  }
+
+  // 名前順ソート
+  facilities.sort((a, b) => {
+    const nameA = a.facilities?.name || ''
+    const nameB = b.facilities?.name || ''
+    return nameA.localeCompare(nameB, 'ja')
+  })
+
+  return facilities.map((item) => ({
+    facility_id: item.facility_id,
+    name: item.facilities.name,
+    address: item.facilities.address,
+    service_type: item.facilities.service_type,
+    icon_url: item.icon_url || null,
+    acceptance_status: item.acceptance_status,
+    overview: item.overview || null,
+  }))
+}
+
 function buildCategoryUrl(currentParams: { [key: string]: string | undefined }, category: string) {
   const params = new URLSearchParams()
+  if (currentParams.view) params.set('view', currentParams.view)
   if (currentParams.area) params.set('area', currentParams.area)
   if (currentParams.status) params.set('status', currentParams.status)
   if (currentParams.q) params.set('q', currentParams.q)
@@ -296,7 +365,7 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
       })}
       {filters.length > 1 && (
         <a
-          href="/"
+          href={params.view ? `/?view=${params.view}` : '/'}
           className="text-sm text-gray-400 hover:text-gray-600 ml-1"
         >
           すべてクリア
@@ -306,6 +375,17 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
   )
 }
 
+function buildTabUrl(currentParams: { [key: string]: string | undefined }, view: string) {
+  const params = new URLSearchParams()
+  if (view === 'facilities') params.set('view', 'facilities')
+  // Preserve q, area, status — reset category and sort when switching tabs
+  if (currentParams.q) params.set('q', currentParams.q)
+  if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.status) params.set('status', currentParams.status)
+  const qs = params.toString()
+  return qs ? `/?${qs}` : '/'
+}
+
 export default async function FeedPage({
   searchParams,
 }: {
@@ -313,7 +393,10 @@ export default async function FeedPage({
 }) {
   const params = await searchParams
   const currentSort = params.sort || 'recommended'
-  const posts = await getFeedPosts(params)
+  const currentView = params.view || 'posts'
+
+  const posts = currentView === 'posts' ? await getFeedPosts(params) : []
+  const facilities = currentView === 'facilities' ? await getFacilities(params) : []
 
   return (
     <div className="flex gap-0">
@@ -328,6 +411,7 @@ export default async function FeedPage({
         <div className="lg:hidden mb-4">
           <form method="GET" action="/">
             {/* Preserve existing filters */}
+            {currentView === 'facilities' && <input type="hidden" name="view" value="facilities" />}
             {params.category && <input type="hidden" name="category" value={params.category} />}
             {params.area && <input type="hidden" name="area" value={params.area} />}
             {params.status && <input type="hidden" name="status" value={params.status} />}
@@ -344,7 +428,35 @@ export default async function FeedPage({
           </form>
         </div>
 
-        {/* Mobile category pills */}
+        {/* Geolocation banner */}
+        <GeolocationBanner />
+
+        {/* Tab switcher */}
+        <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
+          <a
+            href={buildTabUrl(params, 'posts')}
+            className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              currentView === 'posts'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            投稿
+          </a>
+          <a
+            href={buildTabUrl(params, 'facilities')}
+            className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              currentView === 'facilities'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            施設
+          </a>
+        </div>
+
+        {/* Mobile category pills — posts tab only */}
+        {currentView === 'posts' && (
         <div className="lg:hidden mb-5 -mx-4 px-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {postCategories.map((cat) => {
@@ -365,8 +477,10 @@ export default async function FeedPage({
             })}
           </div>
         </div>
+        )}
 
-        {/* Sort selector */}
+        {/* Sort selector — posts tab only */}
+        {currentView === 'posts' && (
         <div className="flex items-center gap-3 mb-4">
           {[
             { key: 'recommended', label: 'おすすめ' },
@@ -395,48 +509,92 @@ export default async function FeedPage({
             )
           })}
         </div>
+        )}
 
         {/* Active filters */}
         <ActiveFilters params={params} />
 
         {/* Post feed */}
-        <div className="space-y-6">
-          {posts.map((item) => (
-            <PostCard
-              key={item.post.id}
-              post={item.post}
-              facility={item.facility}
-              acceptanceStatus={item.acceptanceStatus}
-            />
-          ))}
-        </div>
-
-        {/* Empty state */}
-        {posts.length === 0 && (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-              </svg>
-            </div>
-            <p className="text-lg font-medium text-gray-600 mb-2">投稿がありません</p>
-            <p className="text-base text-gray-400 mb-6">
-              条件を変更して再度お試しください
-            </p>
-            <a
-              href="/"
-              className="inline-flex items-center px-5 py-2.5 bg-cares-600 text-white rounded-lg text-base font-medium hover:bg-cares-700 transition-colors"
-            >
-              すべての投稿を見る
-            </a>
+        {currentView === 'posts' && (
+        <>
+          <div className="space-y-6">
+            {posts.map((item) => (
+              <PostCard
+                key={item.post.id}
+                post={item.post}
+                facility={item.facility}
+                acceptanceStatus={item.acceptanceStatus}
+              />
+            ))}
           </div>
+
+          {/* Empty state */}
+          {posts.length === 0 && (
+            <div className="text-center py-20">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+              </div>
+              <p className="text-lg font-medium text-gray-600 mb-2">投稿がありません</p>
+              <p className="text-base text-gray-400 mb-6">
+                条件を変更して再度お試しください
+              </p>
+              <a
+                href="/"
+                className="inline-flex items-center px-5 py-2.5 bg-cares-600 text-white rounded-lg text-base font-medium hover:bg-cares-700 transition-colors"
+              >
+                すべての投稿を見る
+              </a>
+            </div>
+          )}
+
+          {/* Feed footer */}
+          {posts.length > 0 && (
+            <div className="text-center py-8 text-sm text-gray-400">
+              {posts.length}件の投稿を表示中
+            </div>
+          )}
+        </>
         )}
 
-        {/* Feed footer */}
-        {posts.length > 0 && (
-          <div className="text-center py-8 text-sm text-gray-400">
-            {posts.length}件の投稿を表示中
+        {/* Facility list */}
+        {currentView === 'facilities' && (
+        <>
+          <div className="space-y-4">
+            {facilities.map((item) => (
+              <FacilityCard key={item.facility_id} facility={item} />
+            ))}
           </div>
+
+          {/* Empty state */}
+          {facilities.length === 0 && (
+            <div className="text-center py-20">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <p className="text-lg font-medium text-gray-600 mb-2">施設が見つかりません</p>
+              <p className="text-base text-gray-400 mb-6">
+                条件を変更して再度お試しください
+              </p>
+              <a
+                href="/?view=facilities"
+                className="inline-flex items-center px-5 py-2.5 bg-cares-600 text-white rounded-lg text-base font-medium hover:bg-cares-700 transition-colors"
+              >
+                すべての施設を見る
+              </a>
+            </div>
+          )}
+
+          {/* Footer */}
+          {facilities.length > 0 && (
+            <div className="text-center py-8 text-sm text-gray-400">
+              {facilities.length}件の施設を表示中
+            </div>
+          )}
+        </>
         )}
       </div>
     </div>

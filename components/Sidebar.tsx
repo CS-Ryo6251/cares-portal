@@ -57,6 +57,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
   const currentArea = searchParams.area || ''
   const currentStatus = searchParams.status || ''
   const currentQ = searchParams.q || ''
+  const currentView = searchParams.view || ''
 
   return (
     <div className="px-4 pt-4 pb-5 space-y-6">
@@ -64,6 +65,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
         <div>
           <form method="GET" action="/">
             {/* Preserve existing filters */}
+            {currentView && <input type="hidden" name="view" value={currentView} />}
             {currentCategory && <input type="hidden" name="category" value={currentCategory} />}
             {currentArea && <input type="hidden" name="area" value={currentArea} />}
             {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
@@ -80,7 +82,8 @@ export default function Sidebar({ searchParams }: SidebarProps) {
           </form>
         </div>
 
-        {/* Category filter */}
+        {/* Category filter — hidden on facilities view */}
+        {currentView !== 'facilities' && (
         <div>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
             カテゴリ
@@ -112,6 +115,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
             })}
           </div>
         </div>
+        )}
 
         {/* Area filter */}
         <div>
@@ -120,6 +124,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
           </h3>
           <form method="GET" action="/">
             {/* Preserve other filters */}
+            {currentView && <input type="hidden" name="view" value={currentView} />}
             {currentQ && <input type="hidden" name="q" value={currentQ} />}
             {currentCategory && <input type="hidden" name="category" value={currentCategory} />}
             {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
