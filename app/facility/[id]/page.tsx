@@ -316,7 +316,7 @@ export default async function FacilityDetailPage({
     <>
       {/* ===== FLOATING CATEGORY NAV (desktop only) ===== */}
       {facility.posts.length > 0 && (
-        <nav className="hidden xl:flex fixed left-4 top-1/2 -translate-y-1/2 z-40 flex-col bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/60 py-2 px-1.5 space-y-0.5">
+        <nav className="hidden xl:flex fixed left-4 top-1/2 -translate-y-1/2 z-40 flex-col bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/60 py-3 px-2 space-y-1">
           {allCategories.map((cat) => {
             const isActive = activeCategory === cat.key
             const count = cat.key ? (postsByCategory[cat.key]?.length || 0) : facility.posts.length
@@ -329,20 +329,20 @@ export default async function FacilityDetailPage({
                 key={cat.key || '__all__'}
                 href={href}
                 title={`${cat.label}${count > 0 ? ` (${count})` : ''}`}
-                className={`group flex items-center gap-2 pl-2.5 pr-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`group flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
                   isActive
                     ? 'bg-cares-600 text-white shadow-sm'
                     : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
                 }`}
               >
                 {catInfo ? (
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white/70' : catInfo.dot}`} />
+                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isActive ? 'bg-white/70' : catInfo.dot}`} />
                 ) : (
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white/70' : 'bg-gray-300'}`} />
+                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isActive ? 'bg-white/70' : 'bg-gray-300'}`} />
                 )}
                 <span>{cat.label}</span>
                 {count > 0 && (
-                  <span className={`text-[10px] tabular-nums ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
+                  <span className={`text-xs tabular-nums ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
                     {count}
                   </span>
                 )}
