@@ -500,7 +500,7 @@ export default async function FeedPage({
               <a
                 key={sort.key}
                 href={href}
-                className={`text-sm font-semibold transition-colors ${
+                className={`text-sm font-semibold transition-colors px-2 py-1.5 rounded-lg ${
                   isActive ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >

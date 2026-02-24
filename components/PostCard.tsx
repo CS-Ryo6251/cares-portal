@@ -125,7 +125,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
   return (
     <article className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
       {/* Facility header */}
-      <div className="px-5 pt-5 pb-3">
+      <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
         <div className="flex items-center gap-2 flex-wrap">
           {facility.icon_url ? (
             <a href={facilityDetailUrl} className="shrink-0">
@@ -204,7 +204,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       )}
 
       {/* Content */}
-      <div className="px-5 py-4">
+      <div className="px-4 sm:px-5 py-4">
         {post.title && (
           <h3 className="text-lg font-bold text-gray-900 mb-1.5 leading-snug">
             {post.title}
@@ -233,10 +233,10 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       </div>
 
       {/* Action row */}
-      <div className="px-5 pb-3 pt-1 border-t border-gray-50">
+      <div className="px-4 sm:px-5 pb-3 pt-1 border-t border-gray-50">
         <button
           onClick={() => setCommentOpen(!commentOpen)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-gray-500 hover:text-cares-600 text-sm font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2.5 text-gray-500 hover:text-cares-600 text-sm font-medium transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -257,7 +257,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
 
       {/* Inline comment section */}
       {commentOpen && (
-        <div className="px-5 pb-5 pt-2 border-t border-gray-100 bg-gray-50/50">
+        <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-2 border-t border-gray-100 bg-gray-50/50">
           <CommentSection postId={post.id} facilityId={post.facility_id} />
         </div>
       )}

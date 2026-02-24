@@ -169,9 +169,9 @@ function PostCard({ post, facilityId }: { post: any; facilityId: string }) {
       className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
     >
       <ViewTracker postId={post.id} />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Category and date */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           {catInfo && (
             <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${catInfo.color}`}>
               {catInfo.label}
@@ -249,7 +249,7 @@ function PostCard({ post, facilityId }: { post: any; facilityId: string }) {
         <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
           <a
             href={`#comments-${post.id}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-base font-medium hover:bg-gray-200 transition-colors"
+            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm sm:text-base font-medium hover:bg-gray-200 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -267,7 +267,7 @@ function PostCard({ post, facilityId }: { post: any; facilityId: string }) {
       {/* Comments */}
       <div
         id={`comments-${post.id}`}
-        className="px-6 pb-6 pt-2 border-t border-gray-100 bg-gray-50/50"
+        className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 border-t border-gray-100 bg-gray-50/50"
       >
         <CommentSection postId={post.id} facilityId={facilityId} />
       </div>
@@ -372,32 +372,34 @@ export default async function FacilityDetailPage({
               className="w-full h-48 sm:h-56 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <div className="flex items-end gap-3">
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+              <div className="flex items-end gap-2 sm:gap-3 flex-wrap">
                 {facility.icon_url ? (
                   <img
                     src={facility.icon_url}
                     alt={f.name}
-                    className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
-                    <span className="text-2xl font-bold text-cares-600">{f.name.charAt(0)}</span>
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
+                    <span className="text-xl sm:text-2xl font-bold text-cares-600">{f.name.charAt(0)}</span>
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
-                  <p className="text-sm text-white/80 font-medium mt-0.5">
-                    {serviceTypeLabel}
-                  </p>
+                  <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <p className="text-xs sm:text-sm text-white/80 font-medium">
+                      {serviceTypeLabel}
+                    </p>
+                    <span
+                      className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold border backdrop-blur-sm ${
+                        acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
+                      }`}
+                    >
+                      {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
+                    </span>
+                  </div>
                 </div>
-                <span
-                  className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border backdrop-blur-sm ${
-                    acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
-                  }`}
-                >
-                  {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
-                </span>
               </div>
             </div>
           </div>
@@ -406,39 +408,41 @@ export default async function FacilityDetailPage({
           <div className="relative rounded-2xl overflow-hidden mb-6 shadow-sm">
             <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-cares-600 via-cares-500 to-emerald-400" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <div className="flex items-end gap-3">
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+              <div className="flex items-end gap-2 sm:gap-3 flex-wrap">
                 {facility.icon_url ? (
                   <img
                     src={facility.icon_url}
                     alt={f.name}
-                    className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
-                    <span className="text-2xl font-bold text-cares-600">{f.name.charAt(0)}</span>
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
+                    <span className="text-xl sm:text-2xl font-bold text-cares-600">{f.name.charAt(0)}</span>
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
-                  <p className="text-sm text-white/80 font-medium mt-0.5">
-                    {serviceTypeLabel}
-                  </p>
+                  <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <p className="text-xs sm:text-sm text-white/80 font-medium">
+                      {serviceTypeLabel}
+                    </p>
+                    <span
+                      className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold border backdrop-blur-sm ${
+                        acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
+                      }`}
+                    >
+                      {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
+                    </span>
+                  </div>
                 </div>
-                <span
-                  className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border backdrop-blur-sm ${
-                    acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
-                  }`}
-                >
-                  {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
-                </span>
               </div>
             </div>
           </div>
         )}
 
         {/* Info & Actions card */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 mb-6 shadow-sm">
           {/* Address & Phone */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-base text-gray-600">
@@ -446,7 +450,7 @@ export default async function FacilityDetailPage({
               <span>{f.address}</span>
             </div>
             {phoneNumber && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
                 <a
                   href={`tel:${phoneNumber}`}
                   className="inline-flex items-center gap-1.5 text-base text-gray-600 hover:text-green-700 transition-colors"
@@ -509,7 +513,7 @@ export default async function FacilityDetailPage({
           </div>
 
           {/* SNS Icons */}
-          <div className="flex items-center gap-1.5 mt-3">
+          <div className="flex items-center gap-1.5 mt-3 flex-wrap">
             {facility.sns_x ? (
               <a href={facility.sns_x} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                 <svg className="w-4 h-4 text-gray-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -581,7 +585,7 @@ export default async function FacilityDetailPage({
 
         {/* Mobile category tabs */}
         {facility.posts.length > 0 && (
-          <div className="xl:hidden flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+          <div className="xl:hidden flex gap-2 overflow-x-auto pb-3 mb-4 -mx-4 px-4 scrollbar-hide">
             {allCategories.map((cat) => {
               const isActive = activeCategory === cat.key
               const count = cat.key ? (postsByCategory[cat.key]?.length || 0) : facility.posts.length
@@ -592,7 +596,7 @@ export default async function FacilityDetailPage({
                 <a
                   key={cat.key}
                   href={href}
-                  className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-cares-600 text-white shadow-sm'
                       : 'bg-white text-gray-600 border border-gray-200 hover:border-cares-300 hover:text-cares-600'

@@ -61,7 +61,7 @@ export default function InquiryForm({ facilityId, facilityName }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           お名前 <span className="text-red-500">*</span>

@@ -231,7 +231,7 @@ export default function FeeSimulator({ fees }: Props) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
       {/* シミュレーション条件 */}
       {(availableCareLevels.length > 0 || hasDailyOrPerUse || hasPerMeal || hasPerHour) && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
@@ -271,7 +271,7 @@ export default function FeeSimulator({ fees }: Props) {
                   max={31}
                   value={daysPerMonth}
                   onChange={(e) => setDaysPerMonth(parseInt(e.target.value))}
-                  className="w-full accent-cares-600"
+                  className="w-full h-2 accent-cares-600 cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-gray-400">
                   <span>1日</span>
@@ -332,7 +332,7 @@ export default function FeeSimulator({ fees }: Props) {
             <Calculator className="w-5 h-5 text-cares-600" />
             <span className="font-semibold text-gray-900">月額合計目安</span>
           </div>
-          <span className="text-2xl font-bold text-cares-700">
+          <span className="text-xl sm:text-2xl font-bold text-cares-700">
             {totalMonthly > 0 ? `¥${totalMonthly.toLocaleString()}` : '---'}
           </span>
         </div>
@@ -347,12 +347,12 @@ export default function FeeSimulator({ fees }: Props) {
           <h3 className="text-sm font-semibold text-gray-700 mb-3">初期費用</h3>
           <div className="space-y-2">
             {initialCostFees.map((fee) => (
-              <div key={fee.id} className="flex items-center justify-between py-1.5 border-b border-gray-100">
-                <div>
+              <div key={fee.id} className="flex items-start justify-between gap-2 py-1.5 border-b border-gray-100">
+                <div className="min-w-0">
                   <span className="text-sm text-gray-700">{fee.item_name}</span>
                   {fee.notes && <p className="text-xs text-gray-400 mt-0.5">{fee.notes}</p>}
                 </div>
-                <span className="text-sm font-medium text-gray-900">{formatFeeDisplay(fee)}</span>
+                <span className="text-sm font-medium text-gray-900 shrink-0">{formatFeeDisplay(fee)}</span>
               </div>
             ))}
           </div>

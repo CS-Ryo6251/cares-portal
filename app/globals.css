@@ -10,3 +10,12 @@
 .animate-slide-in-right {
   animation: slide-in-right 0.25s ease-out;
 }
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

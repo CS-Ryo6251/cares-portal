@@ -31,10 +31,19 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
 
   return (
     <>
-      {/* Floating button - right side, vertical text */}
+      {/* Mobile: bottom-fixed horizontal button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-cares-600 text-white rounded-l-xl shadow-lg hover:bg-cares-700 transition-all px-2 py-5"
+        className="md:hidden fixed bottom-4 left-4 right-4 z-40 bg-cares-600 text-white rounded-xl shadow-lg hover:bg-cares-700 transition-all px-4 py-3.5 flex items-center justify-center gap-2"
+      >
+        <Calculator className="w-5 h-5" />
+        <span className="text-sm font-semibold">料金シミュレーション</span>
+      </button>
+
+      {/* Desktop: right-side vertical button */}
+      <button
+        onClick={() => setOpen(true)}
+        className="hidden md:block fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-cares-600 text-white rounded-l-xl shadow-lg hover:bg-cares-700 transition-all px-2 py-5"
         style={{ writingMode: 'vertical-rl' }}
       >
         <span className="flex items-center gap-1.5 text-sm font-medium tracking-wider">
@@ -50,20 +59,20 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
             className="fixed inset-0 bg-black/30 z-50"
             onClick={() => setOpen(false)}
           />
-          <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto animate-slide-in-right">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between z-10">
+          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:h-full md:w-full md:max-w-md bg-white shadow-2xl z-50 overflow-y-auto animate-slide-in-right">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between z-10">
               <div className="flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-cares-600" />
-                <h2 className="text-lg font-bold text-gray-900">料金シミュレーション</h2>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900">料金シミュレーション</h2>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors -mr-1"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <div className="p-5">
+            <div className="p-4 sm:p-5 pb-20 md:pb-5">
               <p className="text-sm text-gray-500 mb-4">
                 条件を設定すると自動で月額料金を計算します
               </p>

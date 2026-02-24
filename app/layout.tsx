@@ -1,5 +1,11 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
 
 export const metadata: Metadata = {
   title: 'Cares — 介護施設のリアルタイム情報ポータル',
@@ -15,16 +21,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-gray-50 text-gray-900 antialiased">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div className="px-6 h-16 flex items-center justify-between">
+          <div className="px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
             <a href="/" className="flex items-center">
-              <img src="/logo.png" alt="Cares" className="h-12" />
+              <img src="/logo.png" alt="Cares" className="h-10 sm:h-12" />
             </a>
             <nav className="flex items-center gap-4 text-sm">
               <a
                 href="/for-business"
                 className="text-gray-500 hover:text-cares-600 font-medium"
               >
-                掲載をご希望の方はこちら
+                <span className="hidden sm:inline">掲載をご希望の方はこちら</span>
+                <span className="sm:hidden">施設掲載</span>
               </a>
             </nav>
           </div>
@@ -32,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <div className="flex">
           {/* Sidebar is rendered by page components (needs searchParams) */}
-          <main className="flex-1 min-h-screen">{children}</main>
+          <main className="flex-1 min-w-0 min-h-screen">{children}</main>
         </div>
 
         {/* Footer */}
