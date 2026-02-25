@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
 
   // 認証必須ページへの未ログインアクセスをリダイレクト
   const path = request.nextUrl.pathname
-  const protectedPaths = ['/account', '/favorites', '/notifications']
+  const protectedPaths = ['/account', '/favorites', '/my-actions', '/notifications']
 
   if (protectedPaths.some(p => path.startsWith(p))) {
     const { data: { user } } = await supabase.auth.getUser()

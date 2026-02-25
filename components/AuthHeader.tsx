@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createAuthClient } from '@/lib/supabase-auth'
-import { Bell, Heart, Settings, LogOut, ChevronDown, User } from 'lucide-react'
+import { Bell, ClipboardList, Settings, LogOut, ChevronDown, User } from 'lucide-react'
 
 const PROFESSION_LABELS: Record<string, string> = {
   care_manager: 'ケアマネ',
@@ -152,12 +152,12 @@ export default function AuthHeader() {
             </div>
 
             <a
-              href="/favorites"
+              href="/my-actions"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
               onClick={() => setMenuOpen(false)}
             >
-              <Heart className="w-4 h-4" />
-              お気に入り
+              <ClipboardList className="w-4 h-4" />
+              Myアクション
             </a>
 
             <a
