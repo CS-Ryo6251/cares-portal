@@ -3,42 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Heart, Search, X, BarChart3, MapPin } from 'lucide-react'
 import Link from 'next/link'
-
-const facilityTypeLabels: Record<string, string> = {
-  訪問介護: '訪問介護',
-  訪問入浴介護: '訪問入浴',
-  訪問看護: '訪問看護',
-  訪問リハビリテーション: '訪問リハ',
-  通所介護: 'デイサービス',
-  通所リハビリテーション: '通所リハ',
-  短期入所生活介護: 'ショートステイ',
-  認知症対応型共同生活介護: 'グループホーム',
-  '特定施設入居者生活介護（有料老人ホーム）': '有料老人ホーム',
-  '特定施設入居者生活介護（サービス付き高齢者向け住宅）': 'サ高住',
-  福祉用具貸与: '福祉用具貸与',
-  居宅介護支援: '居宅介護支援',
-  介護老人福祉施設: '特養',
-  介護老人保健施設: '老健',
-  介護医療院: '介護医療院',
-  小規模多機能型居宅介護: '小規模多機能',
-  看護小規模多機能型居宅介護: '看多機',
-  '定期巡回・随時対応型訪問介護看護': '定期巡回',
-  地域密着型通所介護: '地域密着デイ',
-  地域包括支援センター: '地域包括',
-  居宅介護支援事業所: '居宅介護支援',
-  特別養護老人ホーム: '特養',
-  グループホーム: 'グループホーム',
-  有料老人ホーム: '有料老人ホーム',
-  サービス付き高齢者向け住宅: 'サ高住',
-}
-
-const acceptanceStatusMap: Record<string, { label: string; color: string }> = {
-  accepting: { label: '受入可能', color: 'bg-green-100 text-green-700' },
-  limited: { label: '条件付き', color: 'bg-yellow-100 text-yellow-700' },
-  waitlist: { label: '待機あり', color: 'bg-orange-100 text-orange-700' },
-  not_accepting: { label: '受入停止中', color: 'bg-red-100 text-red-700' },
-  unknown: { label: '要問合せ', color: 'bg-gray-100 text-gray-600' },
-}
+import { facilityTypeLabels, acceptanceStatusMap } from '@/lib/constants'
 
 type Listing = {
   id: string

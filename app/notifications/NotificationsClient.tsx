@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Bell, MessageSquare, Heart, Info, CheckCheck, Loader2 } from 'lucide-react'
+import { formatRelativeDate } from '@/lib/constants'
 
 interface Notification {
   id: string
@@ -34,24 +35,6 @@ function buildResourceUrl(resourceType: string | null, resourceId: string | null
     default:
       return null
   }
-}
-
-function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-
-  if (diffMin < 1) return 'たった今'
-  if (diffMin < 60) return `${diffMin}分前`
-
-  const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) return `${diffHours}時間前`
-
-  const diffDays = Math.floor(diffHours / 24)
-  if (diffDays < 7) return `${diffDays}日前`
-
-  return date.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })
 }
 
 function getDateGroup(dateStr: string): string {
@@ -241,7 +224,7 @@ export default function NotificationsClient() {
                           </p>
                         )}
                         <p className="text-xs text-gray-300 mt-1">
-                          {formatRelativeTime(notification.created_at)}
+                          {formatRelativeDate(notification.created_at)}
                         </p>
                       </div>
                     </button>

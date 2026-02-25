@@ -122,6 +122,15 @@ export async function DELETE() {
       return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
     }
 
+    // auth.usersからも削除（GDPR対応）
+    const serviceClient = getSupabaseServiceClient()
+    const { error: authDeleteError } = await serviceClient.auth.admin.deleteUser(user.id)
+
+    if (authDeleteError) {
+      console.error('auth.users削除エラー:', authDeleteError)
+      // プロフィールは既に削除済み。auth側の失敗はログのみ
+    }
+
     // サインアウト
     await supabase.auth.signOut()
 

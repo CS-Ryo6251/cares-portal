@@ -155,6 +155,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // 認証チェック: バッチ計算は管理者のみ
+    const authHeader = request.headers.get('authorization')
+    const expectedKey = process.env.SCORE_API_KEY
+    if (!expectedKey || authHeader !== `Bearer ${expectedKey}`) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    }
+
     const body = await request.json().catch(() => ({}))
     const mode = body.mode || 'uncalculated'  // 'uncalculated' | 'all'
     const batchSize = Math.min(body.batch_size || 100, 500)

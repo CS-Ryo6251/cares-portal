@@ -1,11 +1,12 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import Link from 'next/link'
-import { Search, X } from 'lucide-react'
+import { Search, X, SlidersHorizontal } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import CompletenessBar from '@/components/CompletenessBar'
+import { vacancyStatusMap, facilityTypeLabels } from '@/lib/constants'
 
 const postCategories = [
   { key: '', label: 'すべて' },
@@ -19,27 +20,18 @@ const postCategories = [
   { key: 'other', label: 'その他' },
 ]
 
-const acceptanceLabels: Record<string, string> = {
-  has_vacancy: '空きあり',
-  no_vacancy: '空きなし',
-  unknown: '確認中',
-  // Legacy values from government data
-  accepting: '空きあり',
-  limited: '条件付き',
-  waitlist: '待機あり',
-  not_accepting: '空きなし',
-}
-
-const acceptanceColors: Record<string, string> = {
-  has_vacancy: 'bg-green-100 text-green-700',
-  no_vacancy: 'bg-red-100 text-red-700',
-  unknown: 'bg-gray-100 text-gray-600',
-  // Legacy values from government data
-  accepting: 'bg-green-100 text-green-700',
-  limited: 'bg-yellow-100 text-yellow-700',
-  waitlist: 'bg-orange-100 text-orange-700',
-  not_accepting: 'bg-red-100 text-red-700',
-}
+const serviceTypeFilters = [
+  { key: '', label: 'すべて' },
+  { key: '居宅介護支援', label: '居宅介護支援' },
+  { key: '通所介護', label: 'デイサービス' },
+  { key: '介護老人福祉施設', label: '特養' },
+  { key: '介護老人保健施設', label: '老健' },
+  { key: '認知症対応型共同生活介護', label: 'グループホーム' },
+  { key: '訪問介護', label: '訪問介護' },
+  { key: '訪問看護', label: '訪問看護' },
+  { key: '小規模多機能型居宅介護', label: '小規模多機能' },
+  { key: '短期入所生活介護', label: 'ショートステイ' },
+]
 
 function calculateScore(post: any, userArea: string | undefined): number {
   // 鮮度スコア (40%)
@@ -317,6 +309,11 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     query = query.in('acceptance_status', values)
   }
 
+  // サービス種別フィルター
+  if (searchParams.service_type) {
+    query = query.eq('service_type', searchParams.service_type)
+  }
+
   // フリーワード検索（サーバー側フィルタ）
   if (searchParams.q) {
     const q = searchParams.q
@@ -354,7 +351,20 @@ function buildCategoryUrl(currentParams: { [key: string]: string | undefined }, 
   if (currentParams.area) params.set('area', currentParams.area)
   if (currentParams.status) params.set('status', currentParams.status)
   if (currentParams.q) params.set('q', currentParams.q)
+  if (currentParams.service_type) params.set('service_type', currentParams.service_type)
   if (category) params.set('category', category)
+  const qs = params.toString()
+  return qs ? `/?${qs}` : '/'
+}
+
+function buildServiceTypeUrl(currentParams: { [key: string]: string | undefined }, serviceType: string) {
+  const params = new URLSearchParams()
+  if (currentParams.view) params.set('view', currentParams.view)
+  if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.status) params.set('status', currentParams.status)
+  if (currentParams.q) params.set('q', currentParams.q)
+  if (serviceType) params.set('service_type', serviceType)
+  // ページをリセット
   const qs = params.toString()
   return qs ? `/?${qs}` : '/'
 }
@@ -366,12 +376,16 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
     const cat = postCategories.find((c) => c.key === params.category)
     filters.push({ key: 'category', label: 'カテゴリ', value: cat?.label || params.category })
   }
+  if (params.service_type) {
+    const st = serviceTypeFilters.find((s) => s.key === params.service_type)
+    filters.push({ key: 'service_type', label: 'サービス種別', value: st?.label || params.service_type })
+  }
   if (params.area) {
     filters.push({ key: 'area', label: 'エリア', value: params.area })
   }
   if (params.status) {
-    const label = acceptanceLabels[params.status] || params.status
-    filters.push({ key: 'status', label: '受入状況', value: label })
+    const statusInfo = vacancyStatusMap[params.status]
+    filters.push({ key: 'status', label: '受入状況', value: statusInfo?.label || params.status })
   }
   if (params.q) {
     filters.push({ key: 'q', label: '検索', value: params.q })
@@ -415,10 +429,11 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
 function buildTabUrl(currentParams: { [key: string]: string | undefined }, view: string) {
   const params = new URLSearchParams()
   if (view === 'posts') params.set('view', 'posts')
-  // Preserve q, area, status — reset category and sort when switching tabs
+  // Preserve q, area, status, service_type — reset category and sort when switching tabs
   if (currentParams.q) params.set('q', currentParams.q)
   if (currentParams.area) params.set('area', currentParams.area)
   if (currentParams.status) params.set('status', currentParams.status)
+  if (currentParams.service_type) params.set('service_type', currentParams.service_type)
   const qs = params.toString()
   return qs ? `/?${qs}` : '/'
 }
@@ -429,6 +444,7 @@ function buildPageUrl(currentParams: { [key: string]: string | undefined }, page
   if (currentParams.area) params.set('area', currentParams.area)
   if (currentParams.status) params.set('status', currentParams.status)
   if (currentParams.q) params.set('q', currentParams.q)
+  if (currentParams.service_type) params.set('service_type', currentParams.service_type)
   if (page > 1) params.set('page', String(page))
   const qs = params.toString()
   return qs ? `/?${qs}` : '/'
@@ -513,6 +529,30 @@ export default async function FeedPage({
             投稿
           </a>
         </div>
+
+        {/* Service type pills — facilities tab */}
+        {currentView === 'facilities' && (
+        <div className="mb-5 -mx-4 px-4">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {serviceTypeFilters.map((st) => {
+              const isActive = (params.service_type || '') === st.key
+              return (
+                <a
+                  key={st.key}
+                  href={buildServiceTypeUrl(params, st.key)}
+                  className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-gray-800 text-white shadow-sm'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400 hover:text-gray-800'
+                  }`}
+                >
+                  {st.label}
+                </a>
+              )
+            })}
+          </div>
+        </div>
+        )}
 
         {/* Mobile category pills — posts tab only */}
         {currentView === 'posts' && (
@@ -644,9 +684,9 @@ export default async function FeedPage({
                         {item.service_type}
                       </span>
                     )}
-                    {item.acceptance_status && acceptanceColors[item.acceptance_status] && (
-                      <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${acceptanceColors[item.acceptance_status]}`}>
-                        {acceptanceLabels[item.acceptance_status]}
+                    {item.acceptance_status && vacancyStatusMap[item.acceptance_status] && (
+                      <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${vacancyStatusMap[item.acceptance_status].color}`}>
+                        {vacancyStatusMap[item.acceptance_status].label}
                       </span>
                     )}
                   </div>

@@ -37,8 +37,20 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID
+
   return (
     <html lang="ja">
+      {gaId && (
+        <head>
+          <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`,
+            }}
+          />
+        </head>
+      )}
       <body className="notebook-bg text-gray-900 antialiased">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -70,6 +82,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-400">
             <div className="flex items-center justify-center gap-4 mb-3">
               <a href="/directory" className="hover:text-cares-600 transition-colors">施設を探す</a>
+              <span className="text-gray-200">|</span>
+              <a href="/area" className="hover:text-cares-600 transition-colors">エリアから探す</a>
               <span className="text-gray-200">|</span>
               <a href="/for-business" className="hover:text-cares-600 transition-colors">施設掲載</a>
             </div>

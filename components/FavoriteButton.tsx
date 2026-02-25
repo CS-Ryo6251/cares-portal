@@ -46,7 +46,7 @@ export default function FavoriteButton({ listingId, variant = 'button' }: Favori
       const res = await fetch('/api/favorites', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listingId }),
+        body: JSON.stringify({ listing_id: listingId }),
       })
 
       if (res.ok) {

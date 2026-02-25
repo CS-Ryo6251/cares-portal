@@ -108,7 +108,13 @@ function LoginForm() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
+          <div className="mt-4 text-center">
+            <a href="/forgot-password" className="text-sm text-gray-400 hover:text-gray-600 hover:underline">
+              パスワードをお忘れですか？
+            </a>
+          </div>
+
+          <div className="mt-4 text-center text-sm text-gray-500">
             アカウントをお持ちでない方{' '}
             <a href={`/signup${redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : ''}`} className="text-gray-700 font-medium hover:underline">
               新規登録はこちら

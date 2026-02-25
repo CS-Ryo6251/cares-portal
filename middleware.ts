@@ -25,28 +25,22 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // セッションをリフレッシュ（期限切れ防止）
-  await supabase.auth.getUser()
+  // セッションをリフレッシュ + ユーザー取得（1回のみ）
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // 認証必須ページへの未ログインアクセスをリダイレクト
   const path = request.nextUrl.pathname
   const protectedPaths = ['/account', '/favorites', '/my-actions', '/notifications']
 
-  if (protectedPaths.some(p => path.startsWith(p))) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('redirect', path)
-      return NextResponse.redirect(loginUrl)
-    }
+  // 認証必須ページへの未ログインアクセスをリダイレクト
+  if (!user && protectedPaths.some(p => path.startsWith(p))) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirect', path)
+    return NextResponse.redirect(loginUrl)
   }
 
   // ログイン済みユーザーが /login, /signup にアクセスしたらトップにリダイレクト
-  if (path === '/login' || path === '/signup') {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+  if (user && (path === '/login' || path === '/signup')) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return supabaseResponse

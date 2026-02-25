@@ -3,66 +3,7 @@
 import { useState } from 'react'
 import CommentSection from './CommentSection'
 import ServiceTypeIcon from './ServiceTypeIcon'
-
-const categoryLabels: Record<string, { label: string; color: string }> = {
-  daily: { label: '日常', color: 'bg-green-100 text-green-700' },
-  notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700' },
-  recruitment: { label: '求人', color: 'bg-purple-100 text-purple-700' },
-  event: { label: 'イベント', color: 'bg-orange-100 text-orange-700' },
-  volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700' },
-  availability: { label: '空き情報', color: 'bg-emerald-100 text-emerald-700' },
-  staff: { label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700' },
-  training: { label: 'イベント', color: 'bg-orange-100 text-orange-700' },
-  other: { label: 'その他', color: 'bg-gray-100 text-gray-700' },
-}
-
-const facilityTypeLabels: Record<string, string> = {
-  訪問介護: '訪問介護',
-  訪問入浴介護: '訪問入浴',
-  訪問看護: '訪問看護',
-  訪問リハビリテーション: '訪問リハ',
-  通所介護: 'デイサービス',
-  '通所介護（療養通所介護）': '療養通所',
-  通所リハビリテーション: '通所リハ',
-  短期入所生活介護: 'ショートステイ',
-  '短期入所療養介護（介護老人保健施設）': 'SS(老健)',
-  '短期入所療養介護（介護療養型医療施設）': 'SS(療養)',
-  '短期入所療養介護（介護医療院）': 'SS(医療院)',
-  認知症対応型共同生活介護: 'グループホーム',
-  '特定施設入居者生活介護（有料老人ホーム）': '有料老人ホーム',
-  '特定施設入居者生活介護（軽費老人ホーム）': '軽費老人ホーム',
-  '特定施設入居者生活介護（サービス付き高齢者向け住宅）': 'サ高住',
-  福祉用具貸与: '福祉用具貸与',
-  特定福祉用具販売: '福祉用具販売',
-  居宅介護支援: '居宅介護支援',
-  介護老人福祉施設: '特養',
-  介護老人保健施設: '老健',
-  介護療養型医療施設: '介護療養型',
-  介護医療院: '介護医療院',
-  地域密着型介護老人福祉施設入所者生活介護: '地域密着型特養',
-  夜間対応型訪問介護: '夜間訪問介護',
-  認知症対応型通所介護: '認知症デイ',
-  小規模多機能型居宅介護: '小規模多機能',
-  '定期巡回・随時対応型訪問介護看護': '定期巡回',
-  看護小規模多機能型居宅介護: '看多機',
-  地域密着型通所介護: '地域密着デイ',
-  地域包括支援センター: '地域包括',
-  居宅介護支援事業所: '居宅介護支援',
-  特別養護老人ホーム: '特養',
-  グループホーム: 'グループホーム',
-  有料老人ホーム: '有料老人ホーム',
-  サービス付き高齢者向け住宅: 'サ高住',
-}
-
-const acceptanceStatusMap: Record<string, { label: string; color: string }> = {
-  has_vacancy: { label: '空きあり', color: 'bg-green-100 text-green-700' },
-  no_vacancy: { label: '空きなし', color: 'bg-red-100 text-red-700' },
-  unknown: { label: '確認中', color: 'bg-gray-100 text-gray-600' },
-  accepting: { label: '空きあり', color: 'bg-green-100 text-green-700' },
-  limited: { label: '条件付き', color: 'bg-yellow-100 text-yellow-700' },
-  waitlist: { label: '待機あり', color: 'bg-orange-100 text-orange-700' },
-  not_accepting: { label: '空きなし', color: 'bg-red-100 text-red-700' },
-}
+import { facilityTypeLabels, vacancyStatusMap, postCategoryLabels, formatRelativeDate } from '@/lib/constants'
 
 type PostCardProps = {
   post: {
@@ -91,33 +32,12 @@ type PostCardProps = {
   acceptanceStatus: string
 }
 
-function formatRelativeDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMinutes = Math.floor(diffMs / (1000 * 60))
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffMinutes < 1) return 'たった今'
-  if (diffMinutes < 60) return `${diffMinutes}分前`
-  if (diffHours < 24) return `${diffHours}時間前`
-  if (diffDays < 7) return `${diffDays}日前`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}週間前`
-
-  return date.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
 export default function PostCard({ post, facility, acceptanceStatus }: PostCardProps) {
   const [commentOpen, setCommentOpen] = useState(false)
 
-  const category = post.category ? categoryLabels[post.category] : null
+  const category = post.category ? postCategoryLabels[post.category] : null
   const typeLabel = facilityTypeLabels[facility.facility_type] || facility.facility_type
-  const status = acceptanceStatusMap[acceptanceStatus] || acceptanceStatusMap.unknown
+  const status = vacancyStatusMap[acceptanceStatus] || vacancyStatusMap.unknown
   const facilityDetailUrl = `/facility/${post.facility_id}`
 
   const sortedMedia = post.facility_portal_post_media

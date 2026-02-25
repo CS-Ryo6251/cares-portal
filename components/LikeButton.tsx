@@ -23,10 +23,10 @@ export default function LikeButton({ postId, initialLikeCount }: LikeButtonProps
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUserId(user.id)
-        const res = await fetch(`/api/likes/status?postId=${postId}`)
+        const res = await fetch(`/api/likes/status?post_ids=${postId}`)
         if (res.ok) {
           const data = await res.json()
-          setLiked(data.liked)
+          setLiked(data.liked_ids?.includes(postId) || false)
         }
       }
     }
@@ -47,7 +47,7 @@ export default function LikeButton({ postId, initialLikeCount }: LikeButtonProps
       const res = await fetch('/api/likes', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId }),
+        body: JSON.stringify({ post_id: postId }),
       })
 
       if (res.ok) {

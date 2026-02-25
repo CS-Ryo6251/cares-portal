@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient, getSupabaseServiceClient } from '@/lib/supabase'
+import crypto from 'crypto'
+
+function getIpHash(request: NextRequest): string {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || 'unknown'
+  return crypto.createHash('sha256').update(ip).digest('hex')
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,6 +57,21 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseServiceClient()
 
+    // レート制限: IP毎に1日10件まで
+    const ipHash = getIpHash(request)
+    const oneDayAgo = new Date()
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1)
+
+    const { count } = await supabase
+      .from('facility_portal_post_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('commenter_ip_hash', ipHash)
+      .gte('created_at', oneDayAgo.toISOString())
+
+    if ((count || 0) >= 10) {
+      return NextResponse.json({ error: '1日の投稿上限に達しました' }, { status: 429 })
+    }
+
     const { data, error } = await supabase
       .from('facility_portal_post_comments')
       .insert({
@@ -56,6 +79,7 @@ export async function POST(request: NextRequest) {
         facility_id,
         commenter_name,
         comment_text,
+        commenter_ip_hash: ipHash,
       })
       .select('*')
       .single()
