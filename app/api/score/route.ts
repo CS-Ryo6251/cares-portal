@@ -207,10 +207,8 @@ export async function POST(request: NextRequest) {
         await serviceClient
           .from('cares_listings')
           .update({
-            completeness_score: result.score,
+            completeness_score: Math.round(result.score),
             completeness_tier: result.tier,
-            completeness_breakdown: result.breakdown,
-            completeness_category_scores: result.categoryScores,
             completeness_calculated_at: new Date().toISOString(),
           })
           .eq('id', id)
