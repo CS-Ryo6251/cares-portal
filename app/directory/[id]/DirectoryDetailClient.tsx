@@ -180,21 +180,24 @@ export default function DirectoryDetailClient({
     }
     if (ratingSaving) return
     setRatingSaving(true)
-    setMyRating(value)
+
+    const isRemoving = myRating === value
+    const prevRating = myRating
+    setMyRating(isRemoving ? null : value)
 
     try {
-      const res = await fetch(`/api/directory/${listingId}/rating`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating: value }),
-      })
+      const res = isRemoving
+        ? await fetch(`/api/directory/${listingId}/rating`, { method: 'DELETE' })
+        : await fetch(`/api/directory/${listingId}/rating`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rating: value }),
+          })
       if (!res.ok) {
-        setMyRating(null)
-        fetchMyRating()
+        setMyRating(prevRating)
       }
     } catch {
-      setMyRating(null)
-      fetchMyRating()
+      setMyRating(prevRating)
     } finally {
       setRatingSaving(false)
     }

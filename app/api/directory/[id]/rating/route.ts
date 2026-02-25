@@ -80,3 +80,37 @@ export async function POST(
     return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    const authSupabase = await createAuthServerClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+    }
+
+    const supabase = getSupabaseServiceClient()
+
+    const { error } = await supabase
+      .from('cares_user_ratings')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('listing_id', id)
+
+    if (error) {
+      console.error('Rating delete error:', error)
+      return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, rating: null })
+  } catch (error) {
+    console.error('Rating API error:', error)
+    return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
+  }
+}
