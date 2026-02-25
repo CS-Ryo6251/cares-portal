@@ -24,6 +24,8 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import DirectoryDisclaimer from '@/components/DirectoryDisclaimer'
+import CompletenessBreakdown from '@/components/CompletenessBreakdown'
+import { calculateCompletenessScore } from '@/lib/score'
 import DirectoryDetailClient from './DirectoryDetailClient'
 import EditButton from './EditButton'
 import ViewTracker from '@/components/ViewTracker'
@@ -107,6 +109,18 @@ async function getListing(id: string) {
     latest_report_at: recentReports[0]?.reported_at || null,
   }
 
+  // Fetch notes and listing fees for score calculation
+  const [notesResult, listingFeesResult] = await Promise.all([
+    supabase
+      .from('cares_professional_notes')
+      .select('id, listing_id, reporter_type, created_at')
+      .eq('listing_id', id),
+    supabase
+      .from('cares_listing_fees')
+      .select('id, listing_id, fee_type, source, created_at')
+      .eq('listing_id', id),
+  ])
+
   // If owner-verified, fetch portal data
   let portalData: PortalData = null
   if (facility.is_owner_verified && facility.owner_facility_id) {
@@ -154,11 +168,50 @@ async function getListing(id: string) {
     }
   }
 
+  // Calculate completeness score
+  const scoreResult = calculateCompletenessScore({
+    listing: {
+      id: facility.id,
+      facility_name: facility.facility_name,
+      address: facility.address,
+      prefecture: facility.prefecture,
+      city: facility.city,
+      phone: facility.phone,
+      service_type: facility.service_type,
+      corporation_name: facility.corporation_name,
+      capacity: facility.capacity,
+      jigyosho_number: facility.jigyosho_number,
+      acceptance_status: facility.acceptance_status,
+      overview: facility.overview,
+      features: facility.features,
+      website_url: facility.website_url,
+    },
+    vacancyReports: (vacancyReports || []).map((r: any) => ({
+      id: r.id, listing_id: r.listing_id, vacancy_type: r.vacancy_type, reported_at: r.reported_at,
+    })),
+    professionalNotes: notesResult.data || [],
+    listingFees: listingFeesResult.data || [],
+    portalProfile: facility.is_owner_verified ? {
+      is_owner_verified: true,
+      owner_facility_id: facility.owner_facility_id,
+    } : null,
+    portalPosts: (portalData?.posts || []).map((p: any) => ({
+      id: p.id, created_at: p.created_at, status: p.status || 'published',
+    })),
+    portalFees: (portalData?.fees || []).map((f: any) => ({
+      id: f.id, fee_type: f.fee_type, category: f.category,
+    })),
+    portalDocuments: (portalData?.documents || []).map((d: any) => ({
+      id: d.id, document_type: d.document_type,
+    })),
+  })
+
   return {
     facility,
     vacancyReports: vacancyReports || [],
     vacancySummary,
     portalData,
+    scoreResult,
   }
 }
 
@@ -278,7 +331,7 @@ export default async function DirectoryDetailPage({
     notFound()
   }
 
-  const { facility: f, vacancySummary, portalData } = data
+  const { facility: f, vacancySummary, portalData, scoreResult } = data
   const isOwnerVerified = f.is_owner_verified
   const statusLabel = acceptanceLabels[f.acceptance_status || 'unknown'] || '要問合せ'
   const statusColor = acceptanceColors[f.acceptance_status || 'unknown'] || acceptanceColors.unknown
@@ -506,6 +559,15 @@ export default async function DirectoryDetailPage({
               }}
             />
           </div>
+        </div>
+
+        {/* ===== COMPLETENESS SCORE ===== */}
+        <div className="mb-6">
+          <CompletenessBreakdown
+            categoryScores={scoreResult.categoryScores}
+            score={scoreResult.score}
+            tier={scoreResult.tier}
+          />
         </div>
 
         {/* ===== VACANCY SECTION ===== */}

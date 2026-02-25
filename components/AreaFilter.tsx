@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronDown, X } from 'lucide-react'
+import { ChevronDown, X, Navigation } from 'lucide-react'
 
 const prefecturesByRegion = [
   { region: '北海道・東北', prefectures: ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'] },
@@ -29,6 +29,8 @@ export default function AreaFilter() {
   const [selectedCities, setSelectedCities] = useState<string[]>(initialCities.filter(Boolean))
   const [loading, setLoading] = useState(false)
   const [showCities, setShowCities] = useState(false)
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState<string | null>(null)
   const cityRef = useRef<HTMLDivElement>(null)
 
   // Fetch cities when prefecture changes
@@ -61,6 +63,53 @@ export default function AreaFilter() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  function handleGeolocationSearch() {
+    if (!navigator.geolocation) {
+      setGeoError('この端末では位置情報を利用できません')
+      return
+    }
+    setGeoLoading(true)
+    setGeoError(null)
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ja&zoom=12`,
+            { headers: { 'User-Agent': 'CaresPortal/1.0' } }
+          )
+          if (!res.ok) throw new Error('Geocoding failed')
+          const data = await res.json()
+          const addr = data.address || {}
+          // Nominatim returns state as prefecture, city/town/village as municipality
+          const pref = addr.state || addr.province || ''
+          const city = addr.city || addr.town || addr.village || addr.county || ''
+          if (pref) {
+            const params = new URLSearchParams(searchParams.toString())
+            if (city) {
+              params.set('area', `${pref}:${city}`)
+            } else {
+              params.set('area', pref)
+            }
+            const qs = params.toString()
+            router.push(qs ? `/?${qs}` : '/')
+          } else {
+            setGeoError('位置情報を特定できませんでした')
+          }
+        } catch {
+          setGeoError('位置情報の取得に失敗しました')
+        } finally {
+          setGeoLoading(false)
+        }
+      },
+      () => {
+        setGeoError('位置情報の利用が許可されていません')
+        setGeoLoading(false)
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    )
+  }
 
   function applyFilter() {
     const params = new URLSearchParams(searchParams.toString())
@@ -114,6 +163,19 @@ export default function AreaFilter() {
           絞込
         </button>
       </div>
+
+      {/* Geolocation search */}
+      <button
+        onClick={handleGeolocationSearch}
+        disabled={geoLoading}
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-cares-600 hover:text-cares-700 hover:bg-cares-50 rounded-lg transition-colors disabled:opacity-50"
+      >
+        <Navigation className="w-3.5 h-3.5" />
+        {geoLoading ? '取得中...' : '現在地から探す'}
+      </button>
+      {geoError && (
+        <p className="text-xs text-red-500 text-center">{geoError}</p>
+      )}
 
       {/* City multi-select */}
       {selectedPref && cities.length > 0 && (

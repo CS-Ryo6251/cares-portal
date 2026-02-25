@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
+import CompletenessBar from '@/components/CompletenessBar'
 
 const postCategories = [
   { key: '', label: 'すべて' },
@@ -286,7 +287,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
 
   let query = supabase
     .from('cares_listings')
-    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, updated_at', { count: 'exact' })
+    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, updated_at, completeness_score, completeness_tier', { count: 'exact' })
     .order('updated_at', { ascending: false, nullsFirst: false })
     .range(from, to)
 
@@ -340,6 +341,8 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     acceptance_status: item.acceptance_status,
     is_owner_verified: item.is_owner_verified,
     source: item.source,
+    completeness_score: item.completeness_score || 0,
+    completeness_tier: item.completeness_tier || 'insufficient',
   }))
 
   return { facilities, totalCount, page, totalPages }
@@ -650,6 +653,9 @@ export default async function FeedPage({
                   {item.address && (
                     <p className="text-sm text-gray-500 mt-2">{item.address}</p>
                   )}
+                  <div className="mt-2">
+                    <CompletenessBar score={item.completeness_score} tier={item.completeness_tier} size="sm" />
+                  </div>
                 </div>
               </a>
             ))}
