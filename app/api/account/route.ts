@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAuthServerClient } from '@/lib/supabase-server-auth'
+import { getSupabaseServiceClient } from '@/lib/supabase'
 
 export async function GET() {
   try {
@@ -16,13 +17,13 @@ export async function GET() {
       .eq('user_id', user.id)
       .single()
 
-    if (error) {
+    if (error && error.code !== 'PGRST116') {
       console.error('プロフィール取得エラー:', error)
       return NextResponse.json({ error: '取得に失敗しました' }, { status: 500 })
     }
 
     return NextResponse.json({
-      profile,
+      profile: profile ?? null,
       email: user.email,
     })
   } catch (error) {
@@ -61,12 +62,31 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: '更新するフィールドがありません' }, { status: 400 })
     }
 
-    updates.updated_at = new Date().toISOString()
+    const serviceClient = getSupabaseServiceClient()
 
-    const { data: profile, error } = await supabase
+    // 既存プロフィールの有無をチェック
+    const { data: existing } = await serviceClient
       .from('cares_user_profiles')
-      .update(updates)
+      .select('id')
       .eq('user_id', user.id)
+      .maybeSingle()
+
+    // 新規作成時は display_name と profession が必須
+    if (!existing) {
+      if (!updates.display_name || !(updates.display_name as string).trim()) {
+        return NextResponse.json({ error: '表示名を入力してください' }, { status: 400 })
+      }
+      if (!updates.profession) {
+        return NextResponse.json({ error: '職種を選択してください' }, { status: 400 })
+      }
+    }
+
+    updates.updated_at = new Date().toISOString()
+    updates.user_id = user.id
+
+    const { data: profile, error } = await serviceClient
+      .from('cares_user_profiles')
+      .upsert(updates, { onConflict: 'user_id' })
       .select()
       .single()
 

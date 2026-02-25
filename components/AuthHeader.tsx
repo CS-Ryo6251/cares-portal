@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createAuthClient } from '@/lib/supabase-auth'
-import { Bell, Heart, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { Bell, Heart, Settings, LogOut, ChevronDown, User } from 'lucide-react'
 
 const PROFESSION_LABELS: Record<string, string> = {
   care_manager: 'ケアマネ',
@@ -14,15 +14,6 @@ const PROFESSION_LABELS: Record<string, string> = {
   other: 'その他',
 }
 
-const PROFESSION_COLORS: Record<string, string> = {
-  care_manager: 'bg-gray-100 text-gray-700',
-  msw: 'bg-blue-100 text-blue-700',
-  care_worker: 'bg-green-100 text-green-700',
-  nurse: 'bg-pink-100 text-pink-700',
-  therapist: 'bg-purple-100 text-purple-700',
-  family: 'bg-amber-100 text-amber-700',
-  other: 'bg-gray-100 text-gray-600',
-}
 
 interface UserProfile {
   display_name: string
@@ -45,13 +36,13 @@ export default function AuthHeader() {
       if (user) {
         setUser({ id: user.id, email: user.email })
 
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('cares_user_profiles')
           .select('display_name, profession')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
 
-        if (profileData) {
+        if (profileData && !profileError) {
           setProfile(profileData)
         }
 
@@ -120,9 +111,6 @@ export default function AuthHeader() {
     )
   }
 
-  const initials = profile?.display_name?.slice(0, 2) || '?'
-  const professionColor = PROFESSION_COLORS[profile?.profession || 'other']
-
   return (
     <div className="flex items-center gap-2">
       {/* Notification bell */}
@@ -144,8 +132,8 @@ export default function AuthHeader() {
           onClick={() => setMenuOpen(!menuOpen)}
           className={`flex items-center gap-1.5 px-2 py-1 rounded-xl hover:bg-gray-50 transition-colors ${menuOpen ? 'bg-gray-50' : ''}`}
         >
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${professionColor}`}>
-            {initials}
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 text-gray-500">
+            <User className="w-4 h-4" />
           </div>
           <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
         </button>
@@ -153,8 +141,14 @@ export default function AuthHeader() {
         {menuOpen && (
           <div className="absolute right-0 top-full mt-1 w-56 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
             <div className="px-4 py-2 border-b border-gray-100">
-              <p className="text-sm font-medium text-gray-900">{profile?.display_name}</p>
-              <p className="text-xs text-gray-400">{PROFESSION_LABELS[profile?.profession || ''] || profile?.profession}</p>
+              <p className="text-sm font-medium text-gray-900">
+                {profile?.display_name || user?.email || 'ユーザー'}
+              </p>
+              <p className="text-xs text-gray-400">
+                {profile?.profession
+                  ? (PROFESSION_LABELS[profile.profession] || profile.profession)
+                  : (profile ? '' : 'プロフィール未設定')}
+              </p>
             </div>
 
             <a

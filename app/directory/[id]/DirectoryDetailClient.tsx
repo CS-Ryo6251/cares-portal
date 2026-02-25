@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { MessageSquare, Banknote, Lock } from 'lucide-react'
+import { MessageSquare, Banknote, Lock, Star, StickyNote } from 'lucide-react'
+import { createAuthClient } from '@/lib/supabase-auth'
 import VacancyReportModal from '@/components/VacancyReportModal'
-
 import OwnerClaimModal from '@/components/OwnerClaimModal'
 import ProfessionalNoteModal from '@/components/ProfessionalNoteModal'
+import PersonalNoteModal from '@/components/PersonalNoteModal'
 import FeeInfoModal from '@/components/FeeInfoModal'
 import LoginPromptModal from '@/components/LoginPromptModal'
 
@@ -70,6 +71,11 @@ type Fee = {
   created_at: string
 }
 
+type PersonalNote = {
+  content: string
+  updated_at: string
+}
+
 type DirectoryDetailClientProps = {
   listingId: string
   facilityName: string
@@ -85,11 +91,38 @@ export default function DirectoryDetailClient({
   const [showClaim, setShowClaim] = useState(false)
   const [showNote, setShowNote] = useState(false)
   const [showFee, setShowFee] = useState(false)
+  const [showPersonalNote, setShowPersonalNote] = useState(false)
   const [notes, setNotes] = useState<Note[]>([])
   const [notesLimited, setNotesLimited] = useState(false)
   const [notesRemainingCount, setNotesRemainingCount] = useState(0)
   const [fees, setFees] = useState<Fee[]>([])
   const [showLoginModal, setShowLoginModal] = useState(false)
+
+  // Auth state
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Personal rating state
+  const [myRating, setMyRating] = useState<number | null>(null)
+  const [hoverRating, setHoverRating] = useState<number | null>(null)
+  const [ratingSaving, setRatingSaving] = useState(false)
+
+  // Personal note state
+  const [personalNote, setPersonalNote] = useState<PersonalNote | null>(null)
+
+  // Tab state for notes section
+  const [activeTab, setActiveTab] = useState<'professional' | 'personal'>('professional')
+
+  // Check auth on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createAuthClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+      }
+    }
+    checkAuth()
+  }, [])
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -113,10 +146,59 @@ export default function DirectoryDetailClient({
     } catch { /* silent */ }
   }, [listingId])
 
+  const fetchMyRating = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/directory/${listingId}/rating`)
+      if (res.ok) {
+        const data = await res.json()
+        setMyRating(data.rating ?? null)
+      }
+    } catch { /* silent */ }
+  }, [listingId])
+
+  const fetchPersonalNote = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/directory/${listingId}/personal-note`)
+      if (res.ok) {
+        const data = await res.json()
+        setPersonalNote(data.note ?? null)
+      }
+    } catch { /* silent */ }
+  }, [listingId])
+
   useEffect(() => {
     fetchNotes()
     fetchFees()
-  }, [fetchNotes, fetchFees])
+    fetchMyRating()
+    fetchPersonalNote()
+  }, [fetchNotes, fetchFees, fetchMyRating, fetchPersonalNote])
+
+  const handleRatingClick = async (value: number) => {
+    if (!userId) {
+      setShowLoginModal(true)
+      return
+    }
+    if (ratingSaving) return
+    setRatingSaving(true)
+    setMyRating(value)
+
+    try {
+      const res = await fetch(`/api/directory/${listingId}/rating`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: value }),
+      })
+      if (!res.ok) {
+        setMyRating(null)
+        fetchMyRating()
+      }
+    } catch {
+      setMyRating(null)
+      fetchMyRating()
+    } finally {
+      setRatingSaving(false)
+    }
+  }
 
   return (
     <>
@@ -193,69 +275,199 @@ export default function DirectoryDetailClient({
         </p>
       </div>
 
-      {/* Professional notes section */}
+      {/* Personal rating section */}
       <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-gray-400" />
-            専門職メモ
-            {notes.length > 0 && (
-              <span className="text-sm font-normal text-gray-400">({notes.length}件)</span>
-            )}
-          </h2>
+        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-3">
+          <Star className="w-5 h-5 text-gray-400" />
+          マイ評価
+        </h2>
+        {userId ? (
+          <div>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((value) => {
+                const active = (hoverRating ?? myRating ?? 0) >= value
+                return (
+                  <button
+                    key={value}
+                    onClick={() => handleRatingClick(value)}
+                    onMouseEnter={() => setHoverRating(value)}
+                    onMouseLeave={() => setHoverRating(null)}
+                    disabled={ratingSaving}
+                    className="p-0.5 transition-transform hover:scale-110 disabled:opacity-50"
+                  >
+                    <Star
+                      className={`w-7 h-7 ${
+                        active
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-gray-200'
+                      }`}
+                    />
+                  </button>
+                )
+              })}
+              {myRating && (
+                <span className="ml-2 text-sm text-gray-500">{myRating}/5</span>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              あなただけに表示されます
+            </p>
+          </div>
+        ) : (
           <button
-            onClick={() => setShowNote(true)}
+            onClick={() => setShowLoginModal(true)}
             className="text-sm text-cares-600 hover:text-cares-700 font-medium"
           >
-            + メモを追加
+            ログインして評価する
+          </button>
+        )}
+      </div>
+
+      {/* Notes section with tabs */}
+      <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        {/* Tab header */}
+        <div className="flex items-center gap-0 mb-4 border-b border-gray-100">
+          <button
+            onClick={() => setActiveTab('professional')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'professional'
+                ? 'border-cares-600 text-cares-700'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            専門職メモ
+            {notes.length > 0 && (
+              <span className="text-xs font-normal">({notes.length})</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('personal')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'personal'
+                ? 'border-cares-600 text-cares-700'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <StickyNote className="w-4 h-4" />
+            個人メモ
           </button>
         </div>
 
-        {notes.length > 0 ? (
-          <div className="space-y-4">
-            {notes.map((note) => (
-              <div key={note.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
-                    {REPORTER_TYPE_LABELS[note.reporter_type] || '専門職'}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {getRelativeTime(note.created_at)}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {note.content}
-                </p>
+        {/* Professional notes tab */}
+        {activeTab === 'professional' && (
+          <>
+            <div className="flex items-center justify-end mb-3">
+              <button
+                onClick={() => setShowNote(true)}
+                className="text-sm text-cares-600 hover:text-cares-700 font-medium"
+              >
+                + メモを追加
+              </button>
+            </div>
+
+            {notes.length > 0 ? (
+              <div className="space-y-4">
+                {notes.map((note) => (
+                  <div key={note.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                        {REPORTER_TYPE_LABELS[note.reporter_type] || '専門職'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {getRelativeTime(note.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {note.content}
+                    </p>
+                  </div>
+                ))}
+                {notesLimited && notesRemainingCount > 0 && (
+                  <div className="relative pt-2">
+                    <div className="absolute inset-x-0 -top-8 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                      <Lock className="w-5 h-5 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-gray-700 mb-1">
+                        残り{notesRemainingCount}件のメモがあります
+                      </p>
+                      <p className="text-xs text-gray-500 mb-3">
+                        無料登録すると全てのメモを閲覧できます
+                      </p>
+                      <button
+                        onClick={() => setShowLoginModal(true)}
+                        className="px-5 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                      >
+                        無料登録して続きを読む
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
-            {notesLimited && notesRemainingCount > 0 && (
-              <div className="relative pt-2">
-                <div className="absolute inset-x-0 -top-8 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
-                  <Lock className="w-5 h-5 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-700 mb-1">
-                    残り{notesRemainingCount}件のメモがあります
-                  </p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    無料登録すると全てのメモを閲覧できます
-                  </p>
-                  <button
-                    onClick={() => setShowLoginModal(true)}
-                    className="px-5 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                  >
-                    無料登録して続きを読む
-                  </button>
-                </div>
-              </div>
+            ) : (
+              <p className="text-sm text-gray-500">まだメモがありません</p>
             )}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">まだメモがありません</p>
+
+            <p className="text-xs text-gray-400 mt-3">
+              投稿者個人の経験に基づく情報です
+            </p>
+          </>
         )}
 
-        <p className="text-xs text-gray-400 mt-3">
-          投稿者個人の経験に基づく情報です
-        </p>
+        {/* Personal notes tab */}
+        {activeTab === 'personal' && (
+          <>
+            {userId ? (
+              <>
+                {personalNote ? (
+                  <div>
+                    <div className="bg-gray-50 rounded-xl p-4 mb-3">
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {personalNote.content}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        最終更新: {getRelativeTime(personalNote.updated_at)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowPersonalNote(true)}
+                      className="text-sm text-cares-600 hover:text-cares-700 font-medium"
+                    >
+                      編集する
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <StickyNote className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500 mb-3">まだ個人メモがありません</p>
+                    <button
+                      onClick={() => setShowPersonalNote(true)}
+                      className="px-4 py-2 bg-cares-600 text-white rounded-xl text-sm font-medium hover:bg-cares-700 transition-colors"
+                    >
+                      メモを追加する
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-3">
+                  このメモはあなただけに表示されます
+                </p>
+              </>
+            ) : (
+              <div className="text-center py-6">
+                <Lock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 mb-3">
+                  個人メモを使うにはログインが必要です
+                </p>
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="px-4 py-2 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
+                >
+                  ログインする
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Owner claim CTA (only for non-verified) */}
@@ -295,6 +507,14 @@ export default function DirectoryDetailClient({
           listingId={listingId}
           onClose={() => setShowNote(false)}
           onSubmitted={fetchNotes}
+        />
+      )}
+      {showPersonalNote && (
+        <PersonalNoteModal
+          listingId={listingId}
+          initialContent={personalNote?.content ?? ''}
+          onClose={() => setShowPersonalNote(false)}
+          onSubmitted={fetchPersonalNote}
         />
       )}
       {showFee && (
