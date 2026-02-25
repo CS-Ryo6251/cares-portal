@@ -168,13 +168,13 @@ export default function AreaFilter() {
       <button
         onClick={handleGeolocationSearch}
         disabled={geoLoading}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-cares-600 hover:text-cares-700 hover:bg-cares-50 rounded-lg transition-colors disabled:opacity-50"
+        className="inline-flex items-center gap-1 px-1 py-1 text-xs text-gray-500 hover:text-cares-600 transition-colors disabled:opacity-50"
       >
-        <Navigation className="w-3.5 h-3.5" />
+        <Navigation className="w-3 h-3" />
         {geoLoading ? '取得中...' : '現在地から探す'}
       </button>
       {geoError && (
-        <p className="text-xs text-red-500 text-center">{geoError}</p>
+        <p className="text-xs text-red-500">{geoError}</p>
       )}
 
       {/* City multi-select */}
