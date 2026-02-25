@@ -103,12 +103,20 @@ export default function AuthHeader() {
 
   if (!user) {
     return (
-      <a
-        href="/login"
-        className="px-3 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors"
-      >
-        ログイン
-      </a>
+      <div className="flex items-center gap-2">
+        <a
+          href="/login"
+          className="px-3 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors"
+        >
+          ログイン
+        </a>
+        <a
+          href="/signup"
+          className="px-3 py-1.5 rounded-xl bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+        >
+          新規登録
+        </a>
+      </div>
     )
   }
 

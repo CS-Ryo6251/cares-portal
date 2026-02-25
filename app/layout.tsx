@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 href="/for-business"
                 className="text-gray-500 hover:text-cares-600 font-medium"
               >
-                <span className="hidden sm:inline">掲載をご希望の方はこちら</span>
+                <span className="hidden sm:inline">掲載をご希望の施設はこちら</span>
                 <span className="sm:hidden">施設掲載</span>
               </a>
               <AuthHeader />
