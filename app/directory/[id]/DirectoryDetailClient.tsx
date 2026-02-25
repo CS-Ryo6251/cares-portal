@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { MessageSquare, Banknote } from 'lucide-react'
+import { MessageSquare, Banknote, Lock } from 'lucide-react'
 import VacancyReportModal from '@/components/VacancyReportModal'
 
 import OwnerClaimModal from '@/components/OwnerClaimModal'
 import ProfessionalNoteModal from '@/components/ProfessionalNoteModal'
 import FeeInfoModal from '@/components/FeeInfoModal'
+import LoginPromptModal from '@/components/LoginPromptModal'
 
 const REPORTER_TYPE_LABELS: Record<string, string> = {
   care_manager: 'ケアマネジャー',
@@ -85,7 +86,10 @@ export default function DirectoryDetailClient({
   const [showNote, setShowNote] = useState(false)
   const [showFee, setShowFee] = useState(false)
   const [notes, setNotes] = useState<Note[]>([])
+  const [notesLimited, setNotesLimited] = useState(false)
+  const [notesRemainingCount, setNotesRemainingCount] = useState(0)
   const [fees, setFees] = useState<Fee[]>([])
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -93,6 +97,8 @@ export default function DirectoryDetailClient({
       if (res.ok) {
         const data = await res.json()
         setNotes(data.notes || [])
+        setNotesLimited(data.limited || false)
+        setNotesRemainingCount(data.remaining_count || 0)
       }
     } catch { /* silent */ }
   }, [listingId])
@@ -222,6 +228,26 @@ export default function DirectoryDetailClient({
                 </p>
               </div>
             ))}
+            {notesLimited && notesRemainingCount > 0 && (
+              <div className="relative pt-2">
+                <div className="absolute inset-x-0 -top-8 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                  <Lock className="w-5 h-5 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    残り{notesRemainingCount}件のメモがあります
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    無料登録すると全てのメモを閲覧できます
+                  </p>
+                  <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="px-5 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                  >
+                    無料登録して続きを読む
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-gray-500">まだメモがありません</p>
@@ -278,6 +304,11 @@ export default function DirectoryDetailClient({
           onSubmitted={fetchFees}
         />
       )}
+      <LoginPromptModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        variant="notes"
+      />
     </>
   )
 }

@@ -1,42 +1,139 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServiceClient } from '@/lib/supabase'
+import { createAuthServerClient } from '@/lib/supabase-server-auth'
+
+export async function GET() {
+  try {
+    const supabase = await createAuthServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    }
+
+    // お気に入り一覧を cares_listings と JOIN して取得
+    const { data: favorites, error } = await supabase
+      .from('cares_favorites')
+      .select(`
+        id,
+        listing_id,
+        notify_vacancy,
+        created_at,
+        cares_listings (
+          id,
+          facility_name,
+          service_type,
+          address,
+          phone,
+          acceptance_status,
+          source
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('お気に入り取得エラー:', error)
+      return NextResponse.json({ error: '取得に失敗しました' }, { status: 500 })
+    }
+
+    // 各施設の専門職メモ数を取得
+    const listingIds = (favorites || [])
+      .map(f => f.listing_id)
+      .filter(Boolean)
+
+    let noteCounts: Record<string, number> = {}
+    if (listingIds.length > 0) {
+      const { data: notes } = await supabase
+        .from('cares_professional_notes')
+        .select('listing_id')
+        .in('listing_id', listingIds)
+
+      for (const note of notes || []) {
+        noteCounts[note.listing_id] = (noteCounts[note.listing_id] || 0) + 1
+      }
+    }
+
+    const result = (favorites || []).map(fav => ({
+      ...fav,
+      note_count: noteCounts[fav.listing_id] || 0,
+    }))
+
+    return NextResponse.json({ favorites: result })
+  } catch (error) {
+    console.error('お気に入りAPIエラー:', error)
+    return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { post_id } = await request.json()
+    const { listing_id } = await request.json()
 
-    if (!post_id || typeof post_id !== 'string') {
-      return NextResponse.json({ error: 'post_id is required' }, { status: 400 })
+    if (!listing_id || typeof listing_id !== 'string') {
+      return NextResponse.json({ error: 'listing_id is required' }, { status: 400 })
     }
 
-    const supabase = getSupabaseServiceClient()
+    const supabase = await createAuthServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // Get current favorite_count
-    const { data: post, error: fetchError } = await supabase
-      .from('facility_portal_posts')
-      .select('favorite_count')
-      .eq('id', post_id)
+    if (!user) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    }
+
+    const { data, error } = await supabase
+      .from('cares_favorites')
+      .insert({
+        user_id: user.id,
+        listing_id,
+      })
+      .select()
       .single()
 
-    if (fetchError || !post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    if (error) {
+      // UNIQUE constraint violation = already favorited
+      if (error.code === '23505') {
+        return NextResponse.json({ error: 'すでにお気に入りに追加済みです' }, { status: 409 })
+      }
+      console.error('お気に入り追加エラー:', error)
+      return NextResponse.json({ error: '追加に失敗しました' }, { status: 500 })
     }
 
-    const newCount = (post.favorite_count || 0) + 1
-
-    const { error: updateError } = await supabase
-      .from('facility_portal_posts')
-      .update({ favorite_count: newCount })
-      .eq('id', post_id)
-
-    if (updateError) {
-      console.error('お気に入りカウント更新エラー:', updateError)
-      return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true, favorite_count: newCount })
+    return NextResponse.json({ success: true, favorite: data })
   } catch (error) {
     console.error('お気に入りAPIエラー:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { listing_id } = await request.json()
+
+    if (!listing_id || typeof listing_id !== 'string') {
+      return NextResponse.json({ error: 'listing_id is required' }, { status: 400 })
+    }
+
+    const supabase = await createAuthServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    }
+
+    const { error } = await supabase
+      .from('cares_favorites')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('listing_id', listing_id)
+
+    if (error) {
+      console.error('お気に入り削除エラー:', error)
+      return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('お気に入りAPIエラー:', error)
+    return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
   }
 }

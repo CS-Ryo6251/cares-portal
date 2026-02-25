@@ -23,6 +23,8 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
+import LikeButton from '@/components/LikeButton'
+import FavoriteButton from '@/components/FavoriteButton'
 import FloatingActions from './FloatingActions'
 import InquiryButton from './InquiryButton'
 import ShareButtons from './ShareButtons'
@@ -249,6 +251,7 @@ function PostCard({ post, facilityId }: { post: any; facilityId: string }) {
 
         {/* Action buttons */}
         <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+          <LikeButton postId={post.id} initialLikeCount={post.like_count || 0} />
           <a
             href={`#comments-${post.id}`}
             className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm sm:text-base font-medium hover:bg-gray-200 transition-colors"

@@ -27,6 +27,8 @@ import DirectoryDetailClient from './DirectoryDetailClient'
 import EditButton from './EditButton'
 import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
+import LikeButton from '@/components/LikeButton'
+import FavoriteButton from '@/components/FavoriteButton'
 import FloatingActions from '@/app/facility/[id]/FloatingActions'
 import InquiryButton from '@/app/facility/[id]/InquiryButton'
 import ShareButtons from '@/app/facility/[id]/ShareButtons'
@@ -252,6 +254,9 @@ function PortalPostCard({ post, facilityId }: { post: any; facilityId: string })
           </a>
         )}
 
+        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+          <LikeButton postId={post.id} initialLikeCount={post.like_count || 0} />
+        </div>
         <div className="mt-4 pt-4 border-t border-gray-100">
           <CommentSection postId={post.id} facilityId={facilityId} />
         </div>
@@ -484,8 +489,9 @@ export default async function DirectoryDetailPage({
             </>
           )}
 
-          {/* Edit proposal button at bottom of header */}
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          {/* Favorite + Edit buttons */}
+          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 flex-wrap">
+            <FavoriteButton listingId={f.id} />
             <EditButton
               listingId={f.id}
               currentValues={{

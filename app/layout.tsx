@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import AuthHeader from '@/components/AuthHeader'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="hidden sm:inline">掲載をご希望の方はこちら</span>
                 <span className="sm:hidden">施設掲載</span>
               </a>
+              <AuthHeader />
             </nav>
           </div>
         </header>

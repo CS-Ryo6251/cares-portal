@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient, getSupabaseServiceClient } from '@/lib/supabase'
+import { createAuthServerClient } from '@/lib/supabase-server-auth'
 import crypto from 'crypto'
 
 function getIpHash(request: NextRequest): string {
@@ -10,6 +11,8 @@ function getIpHash(request: NextRequest): string {
 }
 
 const ALLOWED_TYPES = ['care_manager', 'msw', 'nurse', 'therapist', 'counselor', 'doctor', 'other']
+const FREE_FACILITY_LIMIT = 3
+const FREE_NOTE_PREVIEW = 3
 
 export async function GET(
   request: NextRequest,
@@ -19,6 +22,11 @@ export async function GET(
     const { id } = await params
     const supabase = getSupabaseClient()
 
+    // Check if user is logged in
+    const authSupabase = await createAuthServerClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
+
+    // Fetch all notes for this listing
     const { data, error } = await supabase
       .from('cares_professional_notes')
       .select('id, reporter_type, content, created_at')
@@ -30,7 +38,63 @@ export async function GET(
       return NextResponse.json({ error: 'データの取得に失敗しました' }, { status: 500 })
     }
 
-    return NextResponse.json({ notes: data || [] })
+    const notes = data || []
+
+    // Logged-in users: return all notes without restriction
+    if (user) {
+      return NextResponse.json({ notes, limited: false, remaining_count: 0 })
+    }
+
+    // Not logged in: check daily view limit per IP
+    const ipHash = getIpHash(request)
+    const serviceClient = getSupabaseServiceClient()
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+
+    // Count distinct facilities viewed today by this IP
+    const { data: viewLogs, error: viewError } = await serviceClient
+      .from('cares_note_view_logs')
+      .select('listing_id')
+      .eq('ip_hash', ipHash)
+      .eq('viewed_date', today)
+
+    if (viewError) {
+      console.error('View log query error:', viewError)
+      // On error, return notes without restriction to avoid breaking the page
+      return NextResponse.json({ notes, limited: false, remaining_count: 0 })
+    }
+
+    // Get unique facility IDs viewed today
+    const viewedFacilityIds = new Set((viewLogs || []).map((log) => log.listing_id))
+
+    // If current facility is already viewed today, don't count it again
+    const alreadyViewed = viewedFacilityIds.has(id)
+    const viewedCount = viewedFacilityIds.size
+
+    if (viewedCount < FREE_FACILITY_LIMIT || alreadyViewed) {
+      // Under limit or already counted: return all notes
+      // Log the view if not already logged today
+      if (!alreadyViewed) {
+        await serviceClient
+          .from('cares_note_view_logs')
+          .insert({
+            ip_hash: ipHash,
+            listing_id: id,
+            viewed_date: today,
+          })
+      }
+
+      return NextResponse.json({ notes, limited: false, remaining_count: 0 })
+    }
+
+    // Over limit: return only preview notes
+    const previewNotes = notes.slice(0, FREE_NOTE_PREVIEW)
+    const remainingCount = Math.max(0, notes.length - FREE_NOTE_PREVIEW)
+
+    return NextResponse.json({
+      notes: previewNotes,
+      limited: true,
+      remaining_count: remainingCount,
+    })
   } catch {
     return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
   }
@@ -60,6 +124,10 @@ export async function POST(
     const supabase = getSupabaseServiceClient()
     const ipHash = getIpHash(request)
 
+    // Check if user is logged in
+    const authSupabase = await createAuthServerClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
+
     // Check listing exists
     const { data: listing } = await supabase
       .from('cares_listings')
@@ -85,14 +153,32 @@ export async function POST(
       return NextResponse.json({ error: '1日の投稿上限に達しました' }, { status: 429 })
     }
 
+    // Build insert data
+    const insertData: Record<string, string> = {
+      listing_id: id,
+      reporter_type,
+      content: content.trim(),
+      reporter_ip_hash: ipHash,
+    }
+
+    // If logged in, attach user_id and use display_name as reporter_name
+    if (user) {
+      insertData.user_id = user.id
+
+      const { data: profile } = await supabase
+        .from('cares_user_profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .single()
+
+      if (profile?.display_name) {
+        insertData.reporter_name = profile.display_name
+      }
+    }
+
     const { error } = await supabase
       .from('cares_professional_notes')
-      .insert({
-        listing_id: id,
-        reporter_type,
-        content: content.trim(),
-        reporter_ip_hash: ipHash,
-      })
+      .insert(insertData)
 
     if (error) {
       console.error('Note insert error:', error)
