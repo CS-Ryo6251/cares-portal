@@ -65,7 +65,7 @@ export default function FavoriteButton({ listingId, variant = 'button' }: Favori
         <button
           onClick={handleToggle}
           disabled={loading}
-          className={`inline-flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
+          className={`inline-flex items-center justify-center w-11 h-11 rounded-xl transition-colors ${
             favorited
               ? 'bg-amber-50 text-amber-500 hover:bg-amber-100'
               : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
@@ -88,7 +88,7 @@ export default function FavoriteButton({ listingId, variant = 'button' }: Favori
       <button
         onClick={handleToggle}
         disabled={loading}
-        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+        className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
           favorited
             ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
             : 'bg-gray-50 text-gray-600 hover:bg-gray-100'

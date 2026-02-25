@@ -79,7 +79,7 @@ function LoginForm() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -94,7 +94,7 @@ function LoginForm() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                 placeholder="8文字以上"
               />
             </div>
@@ -102,7 +102,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-gray-800 text-white rounded-xl text-base font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               {loading ? 'ログイン中...' : 'ログイン'}
             </button>

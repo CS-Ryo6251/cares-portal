@@ -240,7 +240,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       <div className="px-4 sm:px-5 pb-3 pt-1 border-t border-gray-50">
         <button
           onClick={() => setCommentOpen(!commentOpen)}
-          className="inline-flex items-center gap-1.5 px-3 py-2.5 text-gray-500 hover:text-cares-600 text-sm font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-3 text-gray-500 hover:text-cares-600 text-sm font-medium transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path

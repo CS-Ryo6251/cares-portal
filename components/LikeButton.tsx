@@ -66,7 +66,7 @@ export default function LikeButton({ postId, initialLikeCount }: LikeButtonProps
       <button
         onClick={handleToggle}
         disabled={loading}
-        className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+        className={`inline-flex items-center gap-1.5 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
           liked
             ? 'bg-red-50 text-red-600 hover:bg-red-100'
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

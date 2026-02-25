@@ -116,13 +116,13 @@ export default function GeolocationBanner() {
       <button
         onClick={handleDetect}
         disabled={loading}
-        className="shrink-0 px-4 py-1.5 bg-cares-600 text-white rounded-lg text-sm font-medium hover:bg-cares-700 transition-colors disabled:opacity-50"
+        className="shrink-0 px-4 py-2 bg-cares-600 text-white rounded-lg text-sm font-medium hover:bg-cares-700 transition-colors disabled:opacity-50"
       >
         {loading ? '取得中...' : '現在地から検索'}
       </button>
       <button
         onClick={handleDismiss}
-        className="shrink-0 p-1 text-cares-400 hover:text-cares-600 transition-colors"
+        className="shrink-0 p-2 text-cares-400 hover:text-cares-600 transition-colors"
         aria-label="閉じる"
       >
         <X className="w-4 h-4" />

@@ -37,10 +37,10 @@ export default function LoginPromptModal({ isOpen, onClose, variant = 'default' 
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      <div className="relative bg-white w-full sm:w-[420px] rounded-t-2xl sm:rounded-2xl p-6 sm:p-8 animate-slide-in-right">
+      <div className="relative bg-white w-full sm:w-[420px] max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-5 sm:p-8 animate-slide-in-right">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600"
+          className="absolute top-3 right-3 p-2 text-gray-400 hover:text-gray-600"
         >
           <X className="w-5 h-5" />
         </button>
@@ -69,7 +69,7 @@ export default function LoginPromptModal({ isOpen, onClose, variant = 'default' 
 
         <a
           href={`/signup?redirect=${encodeURIComponent(currentPath)}`}
-          className="block w-full py-2.5 bg-gray-800 text-white rounded-xl text-sm font-medium text-center hover:bg-gray-700 transition-colors"
+          className="block w-full py-3 bg-gray-800 text-white rounded-xl text-base font-medium text-center hover:bg-gray-700 transition-colors"
         >
           無料で登録する
         </a>

@@ -390,7 +390,7 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
           <a
             key={filter.key}
             href={href}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cares-50 text-cares-700 rounded-lg text-sm font-medium hover:bg-cares-100 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-cares-50 text-cares-700 rounded-lg text-sm font-medium hover:bg-cares-100 transition-colors"
           >
             {filter.value}
             <X className="w-3.5 h-3.5" />
@@ -556,7 +556,7 @@ export default async function FeedPage({
               <a
                 key={sort.key}
                 href={href}
-                className={`text-sm font-semibold transition-colors px-2 py-1.5 rounded-lg ${
+                className={`text-sm font-semibold transition-colors px-3 py-2 rounded-lg ${
                   isActive ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >

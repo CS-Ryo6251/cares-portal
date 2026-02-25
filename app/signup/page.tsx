@@ -103,7 +103,7 @@ function SignupForm() {
             </div>
           ))}
         </div>
-        <div className="flex justify-center gap-8 mb-8 text-xs text-gray-400">
+        <div className="flex justify-center gap-4 sm:gap-8 mb-6 sm:mb-8 text-xs text-gray-400">
           <span className={step === 1 ? 'text-gray-700 font-medium' : ''}>基本情報</span>
           <span className={step === 2 ? 'text-gray-700 font-medium' : ''}>パスワード</span>
           <span className={step === 3 ? 'text-gray-700 font-medium' : ''}>完了</span>
@@ -139,7 +139,7 @@ function SignupForm() {
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                   placeholder="you@example.com"
                 />
               </div>
@@ -155,7 +155,7 @@ function SignupForm() {
                   maxLength={50}
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                   placeholder="例: 田中ケアマネ"
                 />
                 <p className="mt-1 text-xs text-gray-400">メモやコメント投稿時に表示されます</p>
@@ -170,7 +170,7 @@ function SignupForm() {
                   required
                   value={profession}
                   onChange={e => setProfession(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white"
                 >
                   <option value="">選択してください</option>
                   {PROFESSIONS.map(p => (
@@ -181,7 +181,7 @@ function SignupForm() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
+                className="w-full py-3 bg-gray-800 text-white rounded-xl text-base font-medium hover:bg-gray-700 transition-colors"
               >
                 次へ
               </button>
@@ -219,7 +219,7 @@ function SignupForm() {
                   minLength={8}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                   placeholder="8文字以上"
                 />
               </div>
@@ -235,7 +235,7 @@ function SignupForm() {
                   minLength={8}
                   value={passwordConfirm}
                   onChange={e => setPasswordConfirm(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
                   placeholder="もう一度入力"
                 />
               </div>
@@ -243,7 +243,7 @@ function SignupForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="w-full py-3 bg-gray-800 text-white rounded-xl text-base font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
                 {loading ? '登録中...' : 'アカウントを作成'}
               </button>

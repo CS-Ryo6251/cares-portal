@@ -179,7 +179,7 @@ export default function CommentSection({ postId, facilityId }: CommentSectionPro
           <button
             type="submit"
             disabled={submitting}
-            className="shrink-0 self-end px-4 py-2.5 bg-cares-600 hover:bg-cares-700 disabled:bg-gray-300 text-white rounded-xl text-sm font-medium transition-colors"
+            className="shrink-0 self-end px-5 py-3 bg-cares-600 hover:bg-cares-700 disabled:bg-gray-300 text-white rounded-xl text-sm font-medium transition-colors"
           >
             {submitting ? '送信中...' : '投稿'}
           </button>
