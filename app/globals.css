@@ -11,6 +11,20 @@
   animation: slide-in-right 0.25s ease-out;
 }
 
+/* Notebook ruled-line background */
+.notebook-bg {
+  background-color: #fafaf7;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 31px,
+      #e8e4d9 31px,
+      #e8e4d9 32px
+    );
+  background-size: 100% 32px;
+}
+
 /* Hide scrollbar but keep scroll functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;

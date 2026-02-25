@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
-      <body className="bg-gray-50 text-gray-900 antialiased">
+      <body className="notebook-bg text-gray-900 antialiased">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
           <div className="px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">

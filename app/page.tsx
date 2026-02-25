@@ -271,14 +271,24 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
   })
 }
 
-async function getFacilities(searchParams: { [key: string]: string | undefined }) {
+const FACILITIES_PER_PAGE = 50
+
+async function getFacilities(searchParams: { [key: string]: string | undefined }): Promise<{
+  facilities: any[]
+  totalCount: number
+  page: number
+  totalPages: number
+}> {
   const supabase = getSupabaseClient()
+  const page = Math.max(1, parseInt(searchParams.page || '1', 10))
+  const from = (page - 1) * FACILITIES_PER_PAGE
+  const to = from + FACILITIES_PER_PAGE - 1
 
   let query = supabase
     .from('cares_listings')
-    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, updated_at')
+    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, updated_at', { count: 'exact' })
     .order('updated_at', { ascending: false, nullsFirst: false })
-    .limit(50)
+    .range(from, to)
 
   if (searchParams.area) {
     const area = searchParams.area
@@ -297,7 +307,6 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   }
 
   if (searchParams.status) {
-    // New values + legacy values mapping
     const statusMap: Record<string, string[]> = {
       has_vacancy: ['has_vacancy', 'accepting'],
       no_vacancy: ['no_vacancy', 'not_accepting'],
@@ -307,25 +316,23 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     query = query.in('acceptance_status', values)
   }
 
-  const { data, error } = await query
+  // フリーワード検索（サーバー側フィルタ）
+  if (searchParams.q) {
+    const q = searchParams.q
+    query = query.or(`facility_name.ilike.%${q}%,address.ilike.%${q}%`)
+  }
+
+  const { data, error, count } = await query
 
   if (error) {
     console.error('施設取得エラー:', error)
-    return []
+    return { facilities: [], totalCount: 0, page, totalPages: 0 }
   }
 
-  let facilities = (data || []) as any[]
+  const totalCount = count || 0
+  const totalPages = Math.ceil(totalCount / FACILITIES_PER_PAGE)
 
-  // フリーワード検索（クライアント側フィルタ）
-  if (searchParams.q) {
-    const q = searchParams.q.toLowerCase()
-    facilities = facilities.filter((item) =>
-      item.facility_name?.toLowerCase().includes(q) ||
-      item.address?.toLowerCase().includes(q)
-    )
-  }
-
-  return facilities.map((item: any) => ({
+  const facilities = (data || []).map((item: any) => ({
     id: item.id,
     facility_name: item.facility_name,
     service_type: item.service_type,
@@ -334,6 +341,8 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     is_owner_verified: item.is_owner_verified,
     source: item.source,
   }))
+
+  return { facilities, totalCount, page, totalPages }
 }
 
 function buildCategoryUrl(currentParams: { [key: string]: string | undefined }, category: string) {
@@ -411,6 +420,17 @@ function buildTabUrl(currentParams: { [key: string]: string | undefined }, view:
   return qs ? `/?${qs}` : '/'
 }
 
+function buildPageUrl(currentParams: { [key: string]: string | undefined }, page: number) {
+  const params = new URLSearchParams()
+  if (currentParams.view) params.set('view', currentParams.view)
+  if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.status) params.set('status', currentParams.status)
+  if (currentParams.q) params.set('q', currentParams.q)
+  if (page > 1) params.set('page', String(page))
+  const qs = params.toString()
+  return qs ? `/?${qs}` : '/'
+}
+
 export default async function FeedPage({
   searchParams,
 }: {
@@ -421,7 +441,8 @@ export default async function FeedPage({
   const currentView = params.view || 'facilities'
 
   const posts = currentView === 'posts' ? await getFeedPosts(params) : []
-  const facilities = currentView === 'facilities' ? await getFacilities(params) : []
+  const facilitiesResult = currentView === 'facilities' ? await getFacilities(params) : { facilities: [], totalCount: 0, page: 1, totalPages: 0 }
+  const { facilities, totalCount, page: currentPage, totalPages } = facilitiesResult
 
   return (
     <div className="flex gap-0">
@@ -655,10 +676,69 @@ export default async function FeedPage({
             </div>
           )}
 
-          {/* Footer */}
+          {/* Pagination */}
           {facilities.length > 0 && (
-            <div className="text-center py-8 text-sm text-gray-400">
-              {facilities.length}件の施設を表示中
+            <div className="py-8 space-y-4">
+              <div className="text-center text-sm text-gray-400">
+                {totalCount.toLocaleString()}件中 {((currentPage - 1) * FACILITIES_PER_PAGE + 1).toLocaleString()}〜{Math.min(currentPage * FACILITIES_PER_PAGE, totalCount).toLocaleString()}件を表示
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2">
+                  {currentPage > 1 && (
+                    <a
+                      href={buildPageUrl(params, currentPage - 1)}
+                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                      前へ
+                    </a>
+                  )}
+                  {(() => {
+                    const pages: (number | '...')[] = []
+                    if (totalPages <= 7) {
+                      for (let i = 1; i <= totalPages; i++) pages.push(i)
+                    } else {
+                      pages.push(1)
+                      if (currentPage > 3) pages.push('...')
+                      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                        pages.push(i)
+                      }
+                      if (currentPage < totalPages - 2) pages.push('...')
+                      pages.push(totalPages)
+                    }
+                    return pages.map((p, idx) =>
+                      p === '...' ? (
+                        <span key={`ellipsis-${idx}`} className="px-2 py-2 text-sm text-gray-400">...</span>
+                      ) : (
+                        <a
+                          key={p}
+                          href={buildPageUrl(params, p)}
+                          className={`inline-flex items-center justify-center w-10 h-10 text-sm font-medium rounded-lg transition-colors ${
+                            p === currentPage
+                              ? 'bg-cares-600 text-white'
+                              : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {p}
+                        </a>
+                      )
+                    )
+                  })()}
+                  {currentPage < totalPages && (
+                    <a
+                      href={buildPageUrl(params, currentPage + 1)}
+                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      次へ
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </>
