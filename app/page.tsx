@@ -4,6 +4,7 @@ import { Search, X } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
+import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 
 const postCategories = [
   { key: '', label: 'すべて' },
@@ -604,9 +605,7 @@ export default async function FeedPage({
               >
                 <div className="px-5 py-5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="shrink-0 w-9 h-9 rounded-lg bg-cares-50 border border-cares-100 flex items-center justify-center">
-                      <span className="text-sm font-bold text-cares-600">{item.facility_name?.charAt(0) || '?'}</span>
-                    </span>
+                    <ServiceTypeIcon serviceType={item.service_type} size="sm" />
                     <span className="text-lg font-bold text-gray-900 leading-snug">
                       {item.facility_name}
                     </span>

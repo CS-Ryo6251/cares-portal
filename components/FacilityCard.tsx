@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import ServiceTypeIcon from './ServiceTypeIcon'
 
 const facilityTypeLabels: Record<string, string> = {
   訪問介護: '訪問介護',
@@ -76,9 +77,7 @@ export default function FacilityCard({ facility }: FacilityCardProps) {
               className="shrink-0 w-9 h-9 rounded-lg object-cover border border-gray-200"
             />
           ) : (
-            <span className="shrink-0 w-9 h-9 rounded-lg bg-cares-50 border border-cares-100 flex items-center justify-center">
-              <span className="text-sm font-bold text-cares-600">{facility.name.charAt(0)}</span>
-            </span>
+            <ServiceTypeIcon serviceType={facility.service_type} size="sm" />
           )}
           <span className="text-lg font-bold text-gray-900 leading-snug">
             {facility.name}

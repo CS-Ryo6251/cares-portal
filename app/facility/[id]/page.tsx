@@ -25,6 +25,7 @@ import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
 import LikeButton from '@/components/LikeButton'
 import FavoriteButton from '@/components/FavoriteButton'
+import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import FloatingActions from './FloatingActions'
 import InquiryButton from './InquiryButton'
 import ShareButtons from './ShareButtons'
@@ -446,9 +447,7 @@ export default async function FacilityDetailPage({
                     className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
                   />
                 ) : (
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
-                    <span className="text-xl sm:text-2xl font-bold text-cares-600">{f.name.charAt(0)}</span>
-                  </div>
+                  <ServiceTypeIcon serviceType={f.service_type} size="md" className="shadow-lg" />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -493,9 +492,7 @@ export default async function FacilityDetailPage({
                     className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
                   />
                 ) : (
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
-                    <span className="text-xl sm:text-2xl font-bold text-cares-600">{f.name.charAt(0)}</span>
-                  </div>
+                  <ServiceTypeIcon serviceType={f.service_type} size="md" className="shadow-lg" />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

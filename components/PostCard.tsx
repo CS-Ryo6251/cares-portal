@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import CommentSection from './CommentSection'
+import ServiceTypeIcon from './ServiceTypeIcon'
 
 const categoryLabels: Record<string, { label: string; color: string }> = {
   daily: { label: '日常', color: 'bg-green-100 text-green-700' },
@@ -138,11 +139,8 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
               />
             </a>
           ) : (
-            <a
-              href={facilityDetailUrl}
-              className="shrink-0 w-9 h-9 rounded-lg bg-cares-50 border border-cares-100 flex items-center justify-center"
-            >
-              <span className="text-sm font-bold text-cares-600">{facility.name.charAt(0)}</span>
+            <a href={facilityDetailUrl} className="shrink-0">
+              <ServiceTypeIcon serviceType={facility.facility_type} size="sm" />
             </a>
           )}
           <a

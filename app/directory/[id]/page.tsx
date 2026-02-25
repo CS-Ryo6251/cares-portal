@@ -22,6 +22,7 @@ import {
   FileText,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import DirectoryDisclaimer from '@/components/DirectoryDisclaimer'
 import DirectoryDetailClient from './DirectoryDetailClient'
 import EditButton from './EditButton'
@@ -340,9 +341,7 @@ export default async function DirectoryDetailPage({
                   <img src={portalProfile.icon_url} alt={f.facility_name}
                     className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0" />
                 ) : (
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center shrink-0 shadow-lg">
-                    <span className="text-xl sm:text-2xl font-bold text-cares-600">{f.facility_name.charAt(0)}</span>
-                  </div>
+                  <ServiceTypeIcon serviceType={f.service_type} size="md" className="shadow-lg" />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
