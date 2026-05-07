@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { MapPin, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
+const PREFERRED_AREA_KEY = 'cares_preferred_area'
+const GEO_DISMISSED_KEY = 'geolocation_dismissed'
+
 // 47都道府県の中心座標（緯度, 経度）
 const prefectureCoordinates: { name: string; lat: number; lng: number }[] = [
   { name: '北海道', lat: 43.0646, lng: 141.3468 },
@@ -76,7 +79,8 @@ export default function GeolocationBanner() {
   useEffect(() => {
     if (searchParams.get('area')) return
     if (typeof window === 'undefined') return
-    if (localStorage.getItem('geolocation_dismissed')) return
+    if (localStorage.getItem(PREFERRED_AREA_KEY)) return
+    if (localStorage.getItem(GEO_DISMISSED_KEY)) return
     if (!navigator.geolocation) return
     setVisible(true)
   }, [searchParams])
@@ -86,7 +90,8 @@ export default function GeolocationBanner() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const pref = findNearestPrefecture(position.coords.latitude, position.coords.longitude)
-        localStorage.setItem('geolocation_dismissed', '1')
+        localStorage.setItem(PREFERRED_AREA_KEY, pref)
+        localStorage.setItem(GEO_DISMISSED_KEY, '1')
         // Build URL preserving existing params
         const params = new URLSearchParams(searchParams.toString())
         params.set('area', pref)
@@ -94,14 +99,14 @@ export default function GeolocationBanner() {
       },
       () => {
         // Permission denied or error — just close the banner
-        localStorage.setItem('geolocation_dismissed', '1')
+        localStorage.setItem(GEO_DISMISSED_KEY, '1')
         setVisible(false)
       }
     )
   }
 
   const handleDismiss = () => {
-    localStorage.setItem('geolocation_dismissed', '1')
+    localStorage.setItem(GEO_DISMISSED_KEY, '1')
     setVisible(false)
   }
 

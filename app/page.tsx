@@ -1,9 +1,11 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import Link from 'next/link'
-import { Search, X, SlidersHorizontal } from 'lucide-react'
+import { Search, Star, X } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
+import AreaPreferenceRedirect from '@/components/AreaPreferenceRedirect'
+import FacilityMapPreview from '@/components/FacilityMapPreview'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import CompletenessBar from '@/components/CompletenessBar'
 import { vacancyStatusMap, facilityTypeLabels } from '@/lib/constants'
@@ -341,17 +343,43 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   const totalCount = count || 0
   const totalPages = Math.ceil(totalCount / FACILITIES_PER_PAGE)
 
-  const facilities = (data || []).map((item: any) => ({
-    id: item.id,
-    facility_name: item.facility_name,
-    service_type: item.service_type,
-    address: item.address,
-    acceptance_status: item.acceptance_status,
-    is_owner_verified: item.is_owner_verified,
-    source: item.source,
-    completeness_score: item.completeness_score || 0,
-    completeness_tier: item.completeness_tier || 'insufficient',
-  }))
+  const listingIds = (data || []).map((item: any) => item.id)
+  const ratingStats: Record<string, { sum: number; count: number }> = {}
+
+  if (listingIds.length > 0) {
+    const { data: ratings, error: ratingError } = await supabase
+      .from('cares_user_ratings')
+      .select('listing_id, rating')
+      .in('listing_id', listingIds)
+
+    if (!ratingError) {
+      for (const rating of ratings || []) {
+        const listingId = (rating as any).listing_id
+        if (!ratingStats[listingId]) ratingStats[listingId] = { sum: 0, count: 0 }
+        ratingStats[listingId].sum += Number((rating as any).rating || 0)
+        ratingStats[listingId].count += 1
+      }
+    }
+  }
+
+  const facilities = (data || []).map((item: any) => {
+    const stats = ratingStats[item.id]
+    const ratingAverage = stats?.count ? Math.round((stats.sum / stats.count) * 10) / 10 : null
+
+    return {
+      id: item.id,
+      facility_name: item.facility_name,
+      service_type: item.service_type,
+      address: item.address,
+      acceptance_status: item.acceptance_status,
+      is_owner_verified: item.is_owner_verified,
+      source: item.source,
+      completeness_score: item.completeness_score || 0,
+      completeness_tier: item.completeness_tier || 'insufficient',
+      rating_average: ratingAverage,
+      rating_count: stats?.count || 0,
+    }
+  })
 
   return { facilities, totalCount, page, totalPages }
 }
@@ -476,6 +504,7 @@ export default async function FeedPage({
 
   return (
     <div className="flex gap-0">
+      <AreaPreferenceRedirect />
       {/* Sidebar - desktop only */}
       <aside className="hidden lg:block w-72 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-100 bg-white">
         <Sidebar searchParams={params} />
@@ -697,6 +726,8 @@ export default async function FeedPage({
         {/* Facility list */}
         {currentView === 'facilities' && (
         <>
+          <FacilityMapPreview facilities={facilities} area={params.area} />
+
           <div className="space-y-4">
             {facilities.map((item: any) => (
               <a
@@ -735,6 +766,15 @@ export default async function FeedPage({
                   {item.address && (
                     <p className="text-sm text-slate-500 mt-2 leading-relaxed">{item.address}</p>
                   )}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      {item.rating_average ? item.rating_average.toFixed(1) : '-'}
+                    </span>
+                    <span className="text-xs font-medium text-slate-400">
+                      {item.rating_count > 0 ? `${item.rating_count}件の評価` : '評価なし'}
+                    </span>
+                  </div>
                   <div className="mt-2">
                     <CompletenessBar score={item.completeness_score} tier={item.completeness_tier} size="sm" />
                   </div>

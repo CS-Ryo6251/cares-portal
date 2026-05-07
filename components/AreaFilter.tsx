@@ -14,6 +14,9 @@ const prefecturesByRegion = [
   { region: '九州・沖縄', prefectures: ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'] },
 ]
 
+const PREFERRED_AREA_KEY = 'cares_preferred_area'
+const GEO_DISMISSED_KEY = 'geolocation_dismissed'
+
 const prefectureCoordinates: { name: string; lat: number; lng: number }[] = [
   { name: '北海道', lat: 43.0646, lng: 141.3468 },
   { name: '青森県', lat: 40.8244, lng: 140.74 },
@@ -143,6 +146,8 @@ export default function AreaFilter() {
         const params = new URLSearchParams(searchParams.toString())
         params.set('area', pref)
         params.delete('page')
+        localStorage.setItem(PREFERRED_AREA_KEY, pref)
+        localStorage.setItem(GEO_DISMISSED_KEY, '1')
         router.push(`/?${params.toString()}`)
         setGeoLoading(false)
       },
@@ -164,13 +169,18 @@ export default function AreaFilter() {
     const params = new URLSearchParams(searchParams.toString())
     if (selectedPref) {
       if (selectedCities.length > 0) {
-        params.set('area', `${selectedPref}:${selectedCities.join(',')}`)
+        const area = `${selectedPref}:${selectedCities.join(',')}`
+        params.set('area', area)
+        localStorage.setItem(PREFERRED_AREA_KEY, area)
       } else {
         params.set('area', selectedPref)
+        localStorage.setItem(PREFERRED_AREA_KEY, selectedPref)
       }
     } else {
       params.delete('area')
+      localStorage.removeItem(PREFERRED_AREA_KEY)
     }
+    params.delete('page')
     const qs = params.toString()
     router.push(qs ? `/?${qs}` : '/')
   }
