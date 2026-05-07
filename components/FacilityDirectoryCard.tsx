@@ -36,18 +36,23 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
   return (
     <Link
       href={`/directory/${facility.id}`}
-      className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+      className="group block rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cares-200 hover:shadow-xl hover:shadow-slate-200/70"
     >
       <div className="px-4 py-4 sm:px-5 sm:py-5">
         {/* Header row */}
         <div className="flex items-start gap-2 flex-wrap">
-          <span className="text-base sm:text-lg font-bold text-gray-900 leading-snug">
+          <span className="text-base sm:text-lg font-bold text-slate-950 leading-snug group-hover:text-cares-800">
             {facility.facility_name}
           </span>
           {isOfficial && (
             <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
               公式
+            </span>
+          )}
+          {!isOfficial && (
+            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">
+              公表DB
             </span>
           )}
         </div>

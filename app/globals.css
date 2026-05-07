@@ -11,18 +11,20 @@
   animation: slide-in-right 0.25s ease-out;
 }
 
-/* Notebook ruled-line background */
 .notebook-bg {
-  background-color: #fafaf7;
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 31px,
-      #e8e4d9 31px,
-      #e8e4d9 32px
-    );
-  background-size: 100% 32px;
+  background:
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.08), transparent 28rem),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #f8fafc 100%);
+}
+
+.surface-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+}
+
+.soft-ring {
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.08);
 }
 
 /* Hide scrollbar but keep scroll functionality */

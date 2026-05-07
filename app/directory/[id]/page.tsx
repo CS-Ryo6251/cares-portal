@@ -606,6 +606,7 @@ export default async function DirectoryDetailPage({
             listingId={f.id}
             facilityName={f.facility_name}
             isOwnerVerified={isOwnerVerified}
+            jigyoshoNumber={f.jigyosho_number}
           />
 
           {/* Vacancy disclaimer */}

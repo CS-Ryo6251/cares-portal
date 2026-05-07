@@ -11,7 +11,7 @@ interface LoginPromptModalProps {
 const VARIANTS = {
   notes: {
     icon: Lock,
-    title: '専門職メモをもっと見るには',
+    title: '口コミ・現場メモをもっと見るには',
     subtitle: 'アカウント登録が必要です',
   },
   favorite: {
@@ -55,7 +55,7 @@ export default function LoginPromptModal({ isOpen, onClose, variant = 'default' 
 
         <div className="space-y-2.5 mb-6">
           {[
-            { icon: Lock, text: '専門職メモを無制限に閲覧' },
+            { icon: Lock, text: '口コミ・現場メモを無制限に閲覧' },
             { icon: Heart, text: 'お気に入り施設を保存' },
             { icon: Bell, text: '空き情報の変更通知を受け取る' },
             { icon: BarChart3, text: '施設を比較できる' },

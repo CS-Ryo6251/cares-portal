@@ -11,6 +11,8 @@ import FeeInfoModal from '@/components/FeeInfoModal'
 import LoginPromptModal from '@/components/LoginPromptModal'
 
 const REPORTER_TYPE_LABELS: Record<string, string> = {
+  family: 'ご家族',
+  community: '地域の方',
   care_manager: 'ケアマネジャー',
   msw: 'MSW',
   nurse: '看護師',
@@ -80,12 +82,14 @@ type DirectoryDetailClientProps = {
   listingId: string
   facilityName: string
   isOwnerVerified: boolean
+  jigyoshoNumber?: string | null
 }
 
 export default function DirectoryDetailClient({
   listingId,
   facilityName,
   isOwnerVerified,
+  jigyoshoNumber,
 }: DirectoryDetailClientProps) {
   const [showVacancy, setShowVacancy] = useState(false)
   const [showClaim, setShowClaim] = useState(false)
@@ -339,7 +343,7 @@ export default function DirectoryDetailClient({
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            専門職メモ
+            口コミ・現場メモ
             {notes.length > 0 && (
               <span className="text-xs font-normal">({notes.length})</span>
             )}
@@ -365,7 +369,7 @@ export default function DirectoryDetailClient({
                 onClick={() => setShowNote(true)}
                 className="text-sm text-cares-600 hover:text-cares-700 font-medium"
               >
-                + メモを追加
+                + 口コミを書く
               </button>
             </div>
 
@@ -375,7 +379,7 @@ export default function DirectoryDetailClient({
                   <div key={note.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
-                        {REPORTER_TYPE_LABELS[note.reporter_type] || '専門職'}
+                        {REPORTER_TYPE_LABELS[note.reporter_type] || '投稿者'}
                       </span>
                       <span className="text-xs text-gray-400">
                         {getRelativeTime(note.created_at)}
@@ -408,7 +412,7 @@ export default function DirectoryDetailClient({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">まだメモがありません</p>
+              <p className="text-sm text-gray-500">まだ口コミ・現場メモがありません</p>
             )}
 
             <p className="text-xs text-gray-400 mt-3">
@@ -477,10 +481,10 @@ export default function DirectoryDetailClient({
       {!isOwnerVerified && (
         <div className="mt-6 bg-cares-50 border border-cares-200 rounded-2xl p-5">
           <p className="text-sm font-bold text-cares-800 mb-1">
-            この事業所のオーナーですか？
+            この事業所をCareSpaceで管理しますか？
           </p>
           <p className="text-sm text-cares-600 mb-3">
-            CareSpace OSに登録して公式情報を管理できます
+            事業所番号の一致と本人確認により、公表データのページを公式情報として管理できます。
           </p>
           <button
             onClick={() => setShowClaim(true)}
@@ -500,10 +504,11 @@ export default function DirectoryDetailClient({
       )}
       {showClaim && (
         <OwnerClaimModal
-          listingId={listingId}
-          facilityName={facilityName}
-          onClose={() => setShowClaim(false)}
-        />
+            listingId={listingId}
+            facilityName={facilityName}
+            jigyoshoNumber={jigyoshoNumber}
+            onClose={() => setShowClaim(false)}
+          />
       )}
       {showNote && (
         <ProfessionalNoteModal

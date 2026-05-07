@@ -279,8 +279,8 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
 
   let query = supabase
     .from('cares_listings')
-    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, updated_at, completeness_score, completeness_tier', { count: 'exact' })
-    .order('updated_at', { ascending: false, nullsFirst: false })
+    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, completeness_score, completeness_tier', { count: 'estimated' })
+    .order('id', { ascending: true })
     .range(from, to)
 
   if (searchParams.area) {
@@ -320,11 +320,22 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     query = query.or(`facility_name.ilike.%${q}%,address.ilike.%${q}%`)
   }
 
-  const { data, error, count } = await query
+  let { data, error, count } = await query
 
   if (error) {
     console.error('施設取得エラー:', error)
-    return { facilities: [], totalCount: 0, page, totalPages: 0 }
+    const fallback = await supabase
+      .from('cares_listings')
+      .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, completeness_score, completeness_tier')
+      .limit(FACILITIES_PER_PAGE)
+
+    if (fallback.error) {
+      console.error('施設フォールバック取得エラー:', fallback.error)
+      return { facilities: [], totalCount: 0, page, totalPages: 0 }
+    }
+
+    data = fallback.data
+    count = fallback.data?.length || 0
   }
 
   const totalCount = count || 0
@@ -471,7 +482,7 @@ export default async function FeedPage({
       </aside>
 
       {/* Feed */}
-      <div className="flex-1 max-w-2xl mx-auto px-4 py-6">
+      <div className="flex-1 max-w-3xl mx-auto px-4 py-6 sm:py-8">
         {/* Mobile search bar */}
         <div className="lg:hidden mb-4">
           <form method="GET" action="/">
@@ -497,22 +508,47 @@ export default async function FeedPage({
         <GeolocationBanner />
 
         {/* Site intro */}
-        <div className="mb-5 text-center">
-          <p className="text-base font-bold text-gray-700 leading-relaxed">
-            介護サービスの情報をみんなで共有して、事業所探しをもっとかんたんに。
-          </p>
-          <p className="text-base font-bold text-cares-600 mt-1">
-            あなたの情報が誰かの笑顔へ
-          </p>
+        <div className="surface-card soft-ring mb-5 rounded-2xl p-5 sm:p-7">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-cares-700">
+                Cares Platform
+              </p>
+              <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-slate-950">
+                公表データに、公式情報と現場の声を重ねる。
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-600">
+                全国の介護事業所データを常時掲載。口コミ・現場メモを書き込めて、CareSpace連携済みの事業所は自分たちの公式情報を管理できます。
+              </p>
+            </div>
+            <a
+              href="/for-business"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/10 transition-colors hover:bg-cares-800"
+            >
+              事業所ページを作る
+            </a>
+          </div>
+          <div className="mt-5 grid gap-2 text-center sm:grid-cols-3">
+            {[
+              ['公表DB', '最初から掲載'],
+              ['口コミ', '誰でも追記'],
+              ['公式管理', '事業所が更新'],
+            ].map(([title, body]) => (
+              <div key={title} className="rounded-xl bg-slate-50 px-3 py-3">
+                <p className="text-sm font-bold text-slate-900">{title}</p>
+                <p className="mt-1 text-xs text-slate-500">{body}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
+        <div className="flex bg-slate-100 rounded-xl p-1 mb-4">
           <a
             href={buildTabUrl(params, 'facilities')}
             className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               currentView === 'facilities'
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-slate-950 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -522,7 +558,7 @@ export default async function FeedPage({
             href={buildTabUrl(params, 'posts')}
             className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               currentView === 'posts'
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-slate-950 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -580,7 +616,7 @@ export default async function FeedPage({
 
         {/* Sort selector — posts tab only */}
         {currentView === 'posts' && (
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {[
             { key: 'recommended', label: 'おすすめ' },
             { key: 'newest', label: '新着順' },
@@ -589,6 +625,7 @@ export default async function FeedPage({
             const isActive = currentSort === sort.key
             const sortParams = new URLSearchParams()
             // 既存パラメータを維持
+            sortParams.set('view', 'posts')
             if (params.category) sortParams.set('category', params.category)
             if (params.area) sortParams.set('area', params.area)
             if (params.status) sortParams.set('status', params.status)
@@ -665,18 +702,23 @@ export default async function FeedPage({
               <a
                 key={item.id}
                 href={`/directory/${item.id}`}
-                className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+                className="group block rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cares-200 hover:shadow-xl hover:shadow-slate-200/70"
               >
-                <div className="px-5 py-5">
+                <div className="px-4 py-4 sm:px-5 sm:py-5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <ServiceTypeIcon serviceType={item.service_type} size="sm" />
-                    <span className="text-lg font-bold text-gray-900 leading-snug">
+                    <span className="text-base sm:text-lg font-bold text-slate-950 leading-snug group-hover:text-cares-800">
                       {item.facility_name}
                     </span>
                     {item.is_owner_verified && (
                       <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
                         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                         公式
+                      </span>
+                    )}
+                    {!item.is_owner_verified && (
+                      <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">
+                        公表DB
                       </span>
                     )}
                     {item.service_type && (
@@ -691,7 +733,7 @@ export default async function FeedPage({
                     )}
                   </div>
                   {item.address && (
-                    <p className="text-sm text-gray-500 mt-2">{item.address}</p>
+                    <p className="text-sm text-slate-500 mt-2 leading-relaxed">{item.address}</p>
                   )}
                   <div className="mt-2">
                     <CompletenessBar score={item.completeness_score} tier={item.completeness_tier} size="sm" />
@@ -729,11 +771,11 @@ export default async function FeedPage({
                 {totalCount.toLocaleString()}件中 {((currentPage - 1) * FACILITIES_PER_PAGE + 1).toLocaleString()}〜{Math.min(currentPage * FACILITIES_PER_PAGE, totalCount).toLocaleString()}件を表示
               </div>
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                   {currentPage > 1 && (
                     <a
                       href={buildPageUrl(params, currentPage - 1)}
-                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -761,7 +803,7 @@ export default async function FeedPage({
                         <a
                           key={p}
                           href={buildPageUrl(params, p)}
-                          className={`inline-flex items-center justify-center w-10 h-10 text-sm font-medium rounded-lg transition-colors ${
+                          className={`inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-sm font-medium rounded-lg transition-colors ${
                             p === currentPage
                               ? 'bg-cares-600 text-white'
                               : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
@@ -775,7 +817,7 @@ export default async function FeedPage({
                   {currentPage < totalPages && (
                     <a
                       href={buildPageUrl(params, currentPage + 1)}
-                      className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       次へ
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

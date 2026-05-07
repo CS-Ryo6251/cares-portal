@@ -10,10 +10,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Cares — みんなでつくる介護ノート',
+    default: 'Cares — 介護事業所の情報発信プラットフォーム',
     template: '%s — Cares',
   },
-  description: '全国18万件の介護事業所の空き状況・料金・専門職メモをみんなで共有。ケアマネ・MSW・ご家族の施設探しを効率化する介護情報プラットフォーム。',
+  description: '介護事業所の公式情報、空き状況、料金表、現場の声をまとめて発信・確認できる情報プラットフォーム。',
   icons: {
     icon: '/favicon.png',
   },
@@ -21,15 +21,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ja_JP',
-    siteName: 'Cares — みんなでつくる介護ノート',
-    title: 'Cares — みんなでつくる介護ノート',
-    description: '全国18万件の介護事業所の空き状況・料金・専門職メモをみんなで共有。施設探しをもっとかんたんに。',
+    siteName: 'Cares — 介護事業所の情報発信プラットフォーム',
+    title: 'Cares — 介護事業所の情報発信プラットフォーム',
+    description: '介護事業所の公式情報、空き状況、料金表、現場の声をまとめて確認できます。',
     url: 'https://cares.carespace.jp',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cares — みんなでつくる介護ノート',
-    description: '全国18万件の介護事業所の空き状況・料金・専門職メモをみんなで共有。施設探しをもっとかんたんに。',
+    title: 'Cares — 介護事業所の情報発信プラットフォーム',
+    description: '介護事業所の公式情報、空き状況、料金表、現場の声をまとめて確認できます。',
   },
   alternates: {
     canonical: 'https://cares.carespace.jp',
@@ -53,19 +53,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       )}
       <body className="notebook-bg text-gray-900 antialiased">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div className="px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+        <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200/80 sticky top-0 z-50">
+          <div className="px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
             <a href="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="Cares" className="h-10 sm:h-12" />
-              <span className="text-sm sm:text-base font-bold text-cares-600 whitespace-nowrap">みんなでつくる介護ノート</span>
+              <img src="/logo.png" alt="Cares" className="h-8 sm:h-12" />
+              <span className="hidden sm:inline text-sm font-semibold text-slate-600 whitespace-nowrap">
+                介護事業所の情報発信プラットフォーム
+              </span>
             </a>
-            <nav className="flex items-center gap-3 sm:gap-4 text-sm">
+            <nav className="flex min-w-0 items-center gap-2 sm:gap-4 text-sm">
               <a
                 href="/for-business"
-                className="text-gray-500 hover:text-cares-600 font-medium"
+                className="hidden sm:inline-flex items-center rounded-full bg-cares-50 px-3 py-1.5 text-cares-700 hover:bg-cares-100 font-semibold transition-colors"
               >
-                <span className="hidden sm:inline">掲載をご希望の施設はこちら</span>
-                <span className="sm:hidden">施設掲載</span>
+                事業所向け
+              </a>
+              <a
+                href="/for-business"
+                className="hidden min-[390px]:inline text-gray-500 hover:text-cares-600 font-medium"
+              >
+                施設掲載
               </a>
               <AuthHeader />
             </nav>

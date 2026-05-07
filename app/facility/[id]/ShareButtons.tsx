@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cares.carespace.jp'
+
 export default function ShareButtons({ facilityName, facilityId }: { facilityName: string; facilityId: string }) {
   const [copied, setCopied] = useState(false)
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const url = `${origin}/facility/${facilityId}`
+  const url = `${SITE_URL}/facility/${facilityId}`
   const shareText = `${facilityName}の施設情報 — Cares\n${url}`
 
   const handleCopy = async () => {

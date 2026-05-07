@@ -46,7 +46,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
   const hasImages = sortedMedia.length > 0
 
   return (
-    <article className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+    <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cares-200 hover:shadow-xl hover:shadow-slate-200/70">
       {/* Facility header */}
       <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -65,11 +65,11 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
           )}
           <a
             href={facilityDetailUrl}
-            className="text-lg font-bold text-gray-900 hover:text-cares-600 transition-colors leading-snug"
+            className="text-lg font-bold text-slate-950 hover:text-cares-700 transition-colors leading-snug"
           >
             {facility.name}
           </a>
-          <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
+          <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-cares-50 text-cares-800">
             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
             公式
           </span>
@@ -130,7 +130,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       {/* Content */}
       <div className="px-4 sm:px-5 py-4">
         {post.title && (
-          <h3 className="text-lg font-bold text-gray-900 mb-1.5 leading-snug">
+          <h3 className="text-lg font-bold text-slate-950 mb-1.5 leading-snug">
             {post.title}
           </h3>
         )}

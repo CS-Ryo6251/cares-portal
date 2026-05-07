@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServiceClient } from '@/lib/supabase'
+import { createAuthServerClient } from '@/lib/supabase-server-auth'
 
 export async function POST(
   request: NextRequest,
@@ -8,22 +9,30 @@ export async function POST(
   try {
     const { id } = await params
     const body = await request.json()
-    const { claimer_name, claimer_email, claimer_phone, organization_name, jigyosho_number } = body
+    const {
+      claimer_name,
+      claimer_email,
+      claimer_phone,
+      organization_name,
+      jigyosho_number,
+      message,
+    } = body
 
-    if (!claimer_name) {
+    if (!claimer_name?.trim()) {
       return NextResponse.json({ error: 'お名前は必須です' }, { status: 400 })
     }
 
-    if (!claimer_email) {
+    if (!claimer_email?.trim()) {
       return NextResponse.json({ error: 'メールアドレスは必須です' }, { status: 400 })
     }
 
     const supabase = getSupabaseServiceClient()
+    const authSupabase = await createAuthServerClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
 
-    // Check listing exists
     const { data: listing } = await supabase
       .from('cares_listings')
-      .select('id')
+      .select('id, jigyosho_number')
       .eq('id', id)
       .single()
 
@@ -31,7 +40,6 @@ export async function POST(
       return NextResponse.json({ error: '事業所が見つかりません' }, { status: 404 })
     }
 
-    // Check for existing pending claim
     const { data: existingClaim } = await supabase
       .from('cares_owner_claims')
       .select('id')
@@ -41,24 +49,26 @@ export async function POST(
       .maybeSingle()
 
     if (existingClaim) {
-      return NextResponse.json({ error: 'この事業所には既に申請中のオーナー登録があります' }, { status: 409 })
+      return NextResponse.json({ error: 'この事業所には既に申請中の公式管理依頼があります' }, { status: 409 })
     }
 
     const { error } = await supabase
       .from('cares_owner_claims')
       .insert({
         listing_id: id,
-        claimer_name,
-        claimer_email,
-        claimer_phone: claimer_phone || null,
-        organization_name: organization_name || null,
-        jigyosho_number: jigyosho_number || null,
+        user_id: user?.id || null,
+        claimer_name: claimer_name.trim(),
+        claimer_email: claimer_email.trim(),
+        claimer_phone: claimer_phone?.trim() || null,
+        organization_name: organization_name?.trim() || null,
+        jigyosho_number: jigyosho_number?.trim() || listing.jigyosho_number || null,
+        notes: message?.trim() || null,
         status: 'pending',
       })
 
     if (error) {
       console.error('Owner claim insert error:', error)
-      return NextResponse.json({ error: 'オーナー登録の申請に失敗しました' }, { status: 500 })
+      return NextResponse.json({ error: '公式管理の申請に失敗しました' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true }, { status: 201 })

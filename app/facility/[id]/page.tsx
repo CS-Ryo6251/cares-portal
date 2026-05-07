@@ -290,8 +290,11 @@ export async function generateMetadata({
   const facility = await getFacilityDetail(id)
   if (!facility) return { title: '施設が見つかりません' }
 
-  const f = facility.facility
-  const name = f.name
+  const joinedFacility = (facility as any).facilities
+  const f = Array.isArray(joinedFacility) ? joinedFacility[0] : joinedFacility
+  if (!f) return { title: '施設が見つかりません' }
+
+  const name = f.name || '介護事業所'
   const serviceType = f.service_type || '介護事業所'
   const cityMatch = f.address?.replace(/^.+?[県都府道]/, '').match(/^(.+?[市区町村])/)
   const city = cityMatch ? cityMatch[1] : ''

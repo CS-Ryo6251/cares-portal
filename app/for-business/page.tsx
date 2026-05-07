@@ -1,473 +1,397 @@
 import type { Metadata } from 'next'
 import {
   ArrowRight,
-  UserPlus,
-  ClipboardEdit,
-  Globe,
-  CheckCircle2,
-  Building2,
-  Users,
-  CalendarX,
-  Wallet,
-  ChevronRight,
-  Search,
-  Database,
   BadgeCheck,
-  Radio,
-  MessageSquare,
+  BarChart3,
+  Building2,
+  Calculator,
+  CheckCircle2,
+  ClipboardCheck,
+  Database,
+  FileText,
+  ImagePlus,
+  Mail,
+  MessageSquareText,
+  PencilLine,
+  Search,
+  Send,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react'
 import FaqSection from './FaqSection'
 
 export const metadata: Metadata = {
   title: '掲載をご希望の方へ — Cares',
   description:
-    '介護施設の情報を無料でCaresに掲載。ケアマネジャーやご家族に施設の「いま」を届けて、選ばれる施設に。',
+    'Caresは介護事業所の公式情報、料金表、空き状況、投稿を発信できる情報プラットフォームです。公表データをもとにした事業所ページを公式管理できます。',
 }
 
-const pains = [
+const heroPoints = [
+  '公表データをもとに事業所ページを掲載',
+  '公式管理申請後に事業所側で更新',
+  '料金表・投稿・空き状況をURLで共有',
+]
+
+const managementItems = [
   {
-    icon: Building2,
-    text: 'ホームページが古いまま。更新する時間も担当者もいない',
+    icon: FileText,
+    title: '公式ページ',
+    text: '写真、特徴、サービス内容、連絡先、パンフレットをまとめて掲載できます。',
   },
   {
-    icon: Users,
-    text: 'ケアマネへの営業が訪問頼みで、担当者が辞めると紹介が減る',
+    icon: Calculator,
+    title: '料金表・目安計算',
+    text: '食費、居住費、加算、介護度別料金を整理し、家族やケアマネに説明しやすくします。',
   },
   {
-    icon: CalendarX,
-    text: '空きが出ても、外部にうまく伝える手段がない',
+    icon: Send,
+    title: '投稿・お知らせ',
+    text: '空き状況、日常の様子、イベント、採用情報を公式情報として発信できます。',
   },
   {
-    icon: Wallet,
-    text: '集客に広告費をかける余裕がない',
+    icon: BarChart3,
+    title: '発信管理',
+    text: '投稿、料金表、資料、問い合わせ導線をひとつの管理画面に集約していきます。',
   },
 ]
 
-const stats = [
-  { number: '182,000件+', label: '掲載事業所数' },
-  { number: '¥0', label: '利用料金' },
-  { number: '無制限', label: '投稿回数' },
-  { number: 'QR対応', label: '施設ページ共有' },
-]
-
-const benefits = [
+const flowItems = [
   {
     number: '01',
-    title: '施設ページがそのまま営業ツールになる',
-    description:
-      '施設の概要、写真、料金、パンフレット——すべてが1つのページにまとまります。QRコードを名刺やチラシに載せるだけで、ケアマネや家族にいつでも最新情報を共有できます。ホームページがなくても大丈夫です。',
-    result: '名刺・チラシから施設情報にすぐアクセス',
-    image: '/benefit-01.jpg',
+    icon: Search,
+    title: '自分の事業所ページを確認',
+    text: '介護サービス情報公表システムのデータをもとに、Cares上に事業所ページが作成されています。',
   },
   {
     number: '02',
-    title: '空き情報を、すぐに必要な人に届けられる',
-    description:
-      '空きが出たその日に投稿するだけで、「今すぐ入居先を探している」家族やケアマネに届きます。電話やFAXで個別に連絡する手間がなくなり、空き期間が短縮します。',
-    result: '空き室の埋まるスピードが上がる',
-    image: '/benefit-02.jpg',
+    icon: ClipboardCheck,
+    title: '公式管理を申請',
+    text: '事業所番号や連絡先をもとに、Caresへ管理申請を送ります。',
   },
   {
     number: '03',
-    title: '「うちのらしさ」を、無料で発信し続けられる',
-    description:
-      '日常の様子、行事・イベント、スタッフ紹介——更新のたびに、施設の「らしさ」が伝わります。広告費ゼロで、あなたの施設を選ぶ理由を作り続けられます。',
-    result: '施設ブランドの形成と入居検討者の信頼獲得',
-    image: '/benefit-03.jpg',
+    icon: ShieldCheck,
+    title: '確認後に連携',
+    text: '担当者が確認し、CareSpaceの経営支援メニュー内でCares管理をご案内します。',
   },
 ]
 
-
-const steps = [
+const useCases = [
   {
-    number: '1',
-    icon: UserPlus,
-    title: '無料アカウントを作成',
-    description:
-      'かんたんな情報入力で登録完了。クレジットカード不要。',
-    time: 'かんたん登録',
+    title: '料金の問い合わせに',
+    text: '電話で毎回説明していた目安料金を、URLで共有できます。',
   },
   {
-    number: '2',
-    icon: ClipboardEdit,
-    title: '施設情報を入力する',
-    description:
-      '概要、写真、空き状況、料金を入力。できる範囲から始めて、あとから追加できます。',
-    time: '5〜10分',
+    title: 'ケアマネへの情報提供に',
+    text: '空き状況や受け入れ条件を、最新の状態で見てもらえます。',
   },
   {
-    number: '3',
-    icon: Globe,
-    title: '公開してみんなに届く',
-    description:
-      '「公開」ボタンを押すだけ。情報を更新するたびに、ケアマネや家族に届き続けます。',
-    time: '即時公開',
+    title: '見学前の不安解消に',
+    text: '写真や日常投稿で、事業所の雰囲気を事前に伝えられます。',
   },
 ]
 
 const faqItems = [
   {
-    question: '本当に無料ですか？有料プランへの切り替えを求められますか？',
+    question: 'まだCaresに登録していない事業所も表示されますか？',
     answer:
-      'はい、施設情報の掲載、写真・動画投稿、料金シミュレーター、パンフレットPDF掲載、問い合わせ受付——すべての掲載機能を無料でご利用いただけます。顧客管理や業務効率化などの機能をご活用いただく場合は、有料プランをご用意しております。',
+      'はい。介護サービス情報公表システムのオープンデータをもとに、事業所ページを作成します。公式管理を申請すると、事業所側で追加情報や投稿を管理できるようになります。',
   },
   {
-    question: 'ITが苦手でも使えますか？',
+    question: '公式管理は誰でも申請できますか？',
     answer:
-      'はい、ご安心ください。スマートフォンから写真を撮って投稿するだけの操作感で設計しています。パソコンが苦手な方でも無理なくお使いいただけます。',
+      '事業所の関係者からの申請を想定しています。申請内容を確認したうえで、担当者より連絡し、管理方法やCareSpaceとの連携をご案内します。',
   },
   {
-    question: '掲載に審査はありますか？',
+    question: '料金表はどのように使えますか？',
     answer:
-      'アカウント登録後すぐに施設情報の入力・掲載が可能です。審査や承認待ちはありません。',
+      '月額、日額、食費、介護度別料金、初期費用などを項目ごとに登録できます。家族やケアマネへ目安料金として共有でき、公式ページ上ではシミュレーションにも反映されます。',
   },
   {
-    question: '掲載をやめたいときはすぐに停止できますか？',
+    question: '無料で使えますか？',
     answer:
-      'はい、いつでもご自身のアカウントから掲載を非公開にできます。退会手続きもアカウント設定からいつでも行えます。縛りや解約違約金は一切ありません。',
-  },
-  {
-    question: '空き情報はどれくらいの頻度で更新すればいいですか？',
-    answer:
-      '頻度に決まりはありませんが、空き状況が変わったタイミングでの更新をおすすめしています。「今日空きが出た」という情報ほど、ケアマネジャーや家族にとって価値が高くなります。',
-  },
-  {
-    question: '事業所データベースとは何ですか？',
-    answer:
-      '厚生労働省の介護サービス情報公表システムに基づく全国約18万件の事業所情報をもとに、ケアマネジャーやMSW、ご家族が事業所を検索できるデータベースです。オーナー登録をすることで、公式マークが付与され、空き状況の発信やお問い合わせの受付が可能になります。',
+      '公式ページ、料金表、投稿など、事業所の基本的な情報発信機能は無料で提供する方針です。より高度な経営支援や業務管理機能はCareSpace側でご案内します。',
   },
 ]
 
 export default function ForBusinessPage() {
   return (
-    <div>
-      {/* ===== HERO ===== */}
-      <section className="relative overflow-hidden py-16 sm:py-24 md:py-32">
-        {/* Background image */}
+    <div className="bg-slate-50 text-slate-950">
+      <section className="relative isolate overflow-hidden px-4 pb-10 pt-12 sm:pb-14 sm:pt-16 lg:pt-20">
         <img
           src="/hero-care.jpg"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
         />
-        {/* Light overlay — keeps the photo bright, text readable */}
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 -z-10 bg-slate-950/55" />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(15,23,42,0.92),rgba(15,23,42,0.72)_48%,rgba(15,23,42,0.28))]" />
 
-        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <p className="inline-flex items-center gap-2 px-4 py-1.5 bg-cares-100 text-cares-700 rounded-full text-sm font-medium mb-6">
-            介護施設の経営者・管理者の方へ
-          </p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
-            ケアマネに選ばれる施設は、
-            <br />
-            <span className="text-cares-600">「見える」</span>施設です。
-          </h1>
-          <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-            空き状況、日常の様子、イベント情報——
-            <br className="hidden sm:block" />
-            Caresに掲載するだけで、近くのケアマネジャーや
-            <br className="hidden sm:block" />
-            入居を考えるご家族に、あなたの施設の「いま」が届きます。
-          </p>
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/20 backdrop-blur">
+              <Sparkles className="h-4 w-4 text-cares-200" />
+              介護事業所の情報発信プラットフォーム
+            </p>
+            <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+              事業所の公式情報と料金を、
+              <br className="hidden sm:block" />
+              必要な人へ正しく届ける。
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
+              Caresは、公表データをもとにした事業所ページへ、公式情報・料金表・空き状況・日々の投稿を重ねて発信できる仕組みです。
+              家族やケアマネに、電話だけでは伝えきれない事業所の「いま」をURLひとつで共有できます。
+            </p>
 
-          {/* Free badge */}
-          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-5 py-2 mb-8">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <span className="font-semibold text-green-700 text-sm">掲載・利用 すべて完全無料</span>
-          </div>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
-            <a
-              href="https://app.carespace.jp/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-cares-600 text-white rounded-xl hover:bg-cares-700 font-semibold text-base sm:text-lg transition-colors shadow-lg shadow-cares-600/20"
-            >
-              いますぐ無料で掲載を始める
-              <ArrowRight className="w-5 h-5" />
-            </a>
-            <a
-              href="https://app.carespace.jp"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-cares-700 border-2 border-cares-200 rounded-xl hover:border-cares-400 font-semibold text-base sm:text-lg transition-colors"
-            >
-              ログインはこちら
-            </a>
-          </div>
-          <p className="text-sm text-gray-400">
-            クレジットカード不要。登録はかんたんです。
-          </p>
-        </div>
-      </section>
-
-      {/* ===== PAIN RECOGNITION ===== */}
-      <section className="py-12 sm:py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4">
-          <p className="text-center text-cares-600 font-semibold text-sm mb-3 tracking-wide">
-            PROBLEM
-          </p>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
-            こんなお悩みはありませんか？
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {pains.map((pain) => (
-              <div
-                key={pain.text}
-                className="flex items-start gap-4 bg-white rounded-xl border border-gray-200 p-5"
-              >
-                <div className="shrink-0 w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                  <pain.icon className="w-5 h-5 text-red-400" />
+            <div className="mt-7 grid gap-2 sm:grid-cols-3">
+              {heroPoints.map((point) => (
+                <div key={point} className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-3 text-sm font-semibold text-white ring-1 ring-white/20 backdrop-blur">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-cares-200" />
+                  <span>{point}</span>
                 </div>
-                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{pain.text}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-base sm:text-lg font-medium text-gray-900 mt-10">
-            Caresは、そのすべての課題を
-            <span className="text-cares-600 font-bold">「掲載するだけ」</span>
-            で解決します。
-          </p>
-        </div>
-      </section>
+              ))}
+            </div>
 
-      {/* ===== STATS ===== */}
-      <section className="py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="text-center bg-white rounded-xl border border-gray-200 p-5 sm:p-6"
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="/directory"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-4 text-base font-bold text-slate-950 shadow-lg shadow-slate-950/20 transition hover:bg-cares-50"
               >
-                <p className="text-2xl sm:text-3xl font-bold text-cares-700 mb-1">
-                  {stat.number}
-                </p>
-                <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
-              </div>
-            ))}
+                自分の事業所を探して申請する
+                <ArrowRight className="h-5 w-5" />
+              </a>
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                仕組みを見る
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ===== BENEFITS ===== */}
-      <section className="py-12 sm:py-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <p className="text-center text-cares-600 font-semibold text-sm mb-3 tracking-wide">
-            BENEFITS
-          </p>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
-            Caresに掲載すると、何が変わるか
-          </h2>
-          <p className="text-center text-gray-500 mb-12 max-w-2xl mx-auto">
-            「機能」ではなく、掲載後にあなたの施設で起きる変化をお伝えします。
-          </p>
+      <section className="border-y border-slate-200 bg-white px-4 py-5">
+        <div className="mx-auto grid max-w-6xl gap-3 sm:grid-cols-3">
+          {[
+            ['全国の公表データ', '未登録でも基本ページが存在'],
+            ['公式管理申請', '事業所確認後に更新権限を案内'],
+            ['無料の情報発信', '料金表・投稿・資料を掲載'],
+          ].map(([title, text]) => (
+            <div key={title} className="flex items-start gap-3">
+              <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-cares-600" />
+              <div>
+                <p className="text-sm font-bold text-slate-950">{title}</p>
+                <p className="mt-1 text-sm text-slate-500">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="space-y-8 sm:space-y-12">
-            {benefits.map((benefit, i) => (
-              <div
-                key={benefit.number}
-                className={`rounded-2xl overflow-hidden border border-gray-200 ${
-                  i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-                } md:flex`}
-              >
-                {/* Photo */}
-                <div className="md:w-2/5 h-48 sm:h-56 md:h-64 relative overflow-hidden bg-gray-100">
-                  <img
-                    src={benefit.image}
-                    alt={benefit.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+      <section className="px-4 py-14 sm:py-18">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div>
+              <p className="text-sm font-bold tracking-wide text-cares-700">WHY CARES</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+                事業所の情報は、探す人に届く形で整理されている必要があります。
+              </h2>
+              <p className="mt-5 text-base leading-8 text-slate-600">
+                料金の目安、空き状況、受け入れ条件、日々の雰囲気。家族やケアマネが知りたい情報は多い一方で、事業所側は電話、紙、ホームページ、SNSに情報が分散しがちです。
+                Caresでは、まず公表データでページを用意し、そこに事業所の公式情報を足していける状態をつくります。
+              </p>
+            </div>
 
-                {/* Content */}
-                <div className="md:w-3/5 p-6 sm:p-8 flex flex-col justify-center">
-                  <span className="text-cares-400 font-bold text-sm mb-2">{benefit.number}</span>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-4">
-                    {benefit.description}
-                  </p>
-                  <div className="flex items-center gap-2 bg-cares-50 rounded-lg px-4 py-2.5">
-                    <ChevronRight className="w-4 h-4 text-cares-600 shrink-0" />
-                    <span className="text-sm font-medium text-cares-700">{benefit.result}</span>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+                  <div>
+                    <p className="text-xs font-bold text-cares-700">OFFICIAL PAGE</p>
+                    <h3 className="mt-1 text-xl font-bold text-slate-950">居宅介護支援事業所サンプル</h3>
+                    <p className="mt-2 text-sm text-slate-500">公表データ + 公式管理情報</p>
                   </div>
+                  <span className="rounded-full bg-cares-100 px-3 py-1 text-xs font-bold text-cares-800">公式確認中</span>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    [Database, '公表データ', '住所・電話・サービス種別'],
+                    [ImagePlus, '写真・特徴', '事業所の雰囲気を掲載'],
+                    [Calculator, '料金表', '月額目安をわかりやすく'],
+                    [MessageSquareText, '投稿', '空き状況や日常を発信'],
+                  ].map(([Icon, title, text]) => (
+                    <div key={title as string} className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+                      <Icon className="h-5 w-5 text-cares-600" />
+                      <p className="mt-3 text-sm font-bold text-slate-950">{title as string}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">{text as string}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ===== DIRECTORY ===== */}
-      <section className="py-12 sm:py-20 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-10 text-center">
-            <div className="w-14 h-14 bg-cares-100 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Database className="w-7 h-7 text-cares-600" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-              全国18万件の事業所データベースに掲載
+      <section className="bg-white px-4 py-14 sm:py-18">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-sm font-bold tracking-wide text-cares-700">WHAT YOU CAN MANAGE</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              公式ページで管理できること
             </h2>
-            <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-8 max-w-xl mx-auto">
-              介護情報公表システムのデータをもとに、ケアマネ・MSW・ご家族が事業所を検索できます。
-            </p>
-            <div className="space-y-3 text-left max-w-md mx-auto mb-8">
-              <div className="flex items-start gap-3">
-                <BadgeCheck className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                <p className="text-sm sm:text-base text-gray-700">オーナー登録で「公式マーク」を取得</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <Radio className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                <p className="text-sm sm:text-base text-gray-700">空き状況をリアルタイムで発信</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <MessageSquare className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                <p className="text-sm sm:text-base text-gray-700">ケアマネからの直接お問い合わせ</p>
-              </div>
-            </div>
-            <a
-              href="/directory"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-cares-600 text-white rounded-xl hover:bg-cares-700 font-semibold text-sm sm:text-base transition-colors"
-            >
-              <Search className="w-4 h-4" />
-              施設を探す
-              <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== BACKSTORY ===== */}
-      <section className="py-12 sm:py-20 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4">
-          <p className="text-center text-cares-600 font-semibold text-sm mb-3 tracking-wide">
-            STORY
-          </p>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
-            Caresが生まれた理由
-          </h2>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 md:p-10">
-            {/* Founder photo */}
-            <div className="flex justify-center mb-6">
-              <img
-                src="/founder.jpg"
-                alt="創業者"
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-cares-100 shadow-sm"
-              />
-            </div>
-
-            <p className="text-sm sm:text-base text-gray-700 leading-loose text-center">
-              ホームページの制作・維持には数十万円。更新のたびに外注費がかかる。でも情報が古いままでは、施設の魅力は伝わらない。介護業界に特化した「自分たちのことを知ってもらうためのツール」もない。一般的なSNSでは、ケアマネや家族に必要な情報が届かない。
-            </p>
-            <p className="text-sm sm:text-base text-gray-700 leading-loose text-center mt-4">
-              営業先では「パンフレットありますか？」と聞かれ、見学前には「料金はどれくらいですか？」と問い合わせが来る。その都度、紙を渡したり電話で説明したり。
-            </p>
-            <p className="text-sm sm:text-base text-gray-900 font-medium leading-loose text-center mt-4">
-              だったら、施設の情報・パンフレット・料金をすべてまとめたページを、誰でも無料で簡単に持てるようにしよう。それがCaresの出発点です。
-            </p>
-
-            <p className="text-center text-sm text-gray-500 mt-6">
-              三浦 亮 — 株式会社CARESPACE 代表取締役
+            <p className="mt-4 text-base leading-8 text-slate-600">
+              事業所の魅力と実務的な情報を、検索される場所にまとめて掲載できます。
             </p>
           </div>
-        </div>
-      </section>
 
-      {/* ===== HOW IT WORKS ===== */}
-      <section className="py-12 sm:py-20">
-        <div className="max-w-4xl mx-auto px-4">
-          <p className="text-center text-cares-600 font-semibold text-sm mb-3 tracking-wide">
-            HOW IT WORKS
-          </p>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
-            かんたん3ステップで掲載開始
-          </h2>
-          <p className="text-center text-gray-500 mb-12">
-            最短5分で、あなたの施設がCaresに掲載されます。
-          </p>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {steps.map((step, i) => (
-              <div key={step.title} className="text-center relative">
-                {/* Connector line (desktop only) */}
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-10 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-px bg-cares-200" />
-                )}
-                <div className="w-20 h-20 bg-cares-100 rounded-full flex items-center justify-center mx-auto mb-4 relative">
-                  <step.icon className="w-9 h-9 text-cares-600" />
-                  <span className="absolute -top-1 -right-1 w-7 h-7 bg-cares-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                    {step.number}
-                  </span>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {managementItems.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
+                  <item.icon className="h-5 w-5 text-cares-700" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                  {step.description}
-                </p>
-                <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
-                  {step.time}
-                </span>
+                <h3 className="mt-5 text-lg font-bold text-slate-950">{item.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-slate-600">{item.text}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== FAQ ===== */}
-      <section className="py-12 sm:py-20 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4">
-          <p className="text-center text-cares-600 font-semibold text-sm mb-3 tracking-wide">
-            FAQ
-          </p>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
+      <section className="px-4 py-14 sm:py-18">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div>
+              <p className="text-sm font-bold tracking-wide text-cares-700">FEE TABLE</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+                料金の目安を、電話ではなくページで伝えられるように。
+              </h2>
+              <p className="mt-5 text-base leading-8 text-slate-600">
+                食費、居住費、加算、介護度別料金、初期費用などを項目ごとに整理。家族やケアマネから「だいたいいくらですか？」と聞かれたときに、公式ページをそのまま案内できます。
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                <div>
+                  <p className="text-xs font-bold text-slate-400">SIMULATION</p>
+                  <p className="mt-1 text-lg font-bold text-slate-950">月額目安</p>
+                </div>
+                <span className="rounded-full bg-cares-100 px-3 py-1 text-sm font-bold text-cares-800">¥82,000 〜 ¥96,000</span>
+              </div>
+              <div className="mt-4 space-y-3">
+                {[
+                  ['介護サービス費', '要介護2', '¥24,000'],
+                  ['食費', '3食 × 30日', '¥45,000'],
+                  ['日用品費', '月額', '¥5,000 〜 ¥8,000'],
+                  ['任意オプション', '選択式', '必要分のみ反映'],
+                ].map(([name, condition, amount]) => (
+                  <div key={name} className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-950">{name}</p>
+                      <p className="mt-1 text-xs text-slate-500">{condition}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-bold text-slate-700">{amount}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-xs leading-6 text-slate-500">
+                実際の金額は負担割合、加算、地域区分、利用状況により変動します。Caresでは目安として説明しやすい表示を目指しています。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" className="bg-white px-4 py-14 sm:py-18">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-sm font-bold tracking-wide text-cares-700">HOW IT WORKS</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              いきなり管理画面ではなく、まず申請から。
+            </h2>
+            <p className="mt-4 text-base leading-8 text-slate-600">
+              Caresだけを知った方にもわかりやすいよう、事業所ページから公式管理を申請し、担当者が確認してからCareSpace側の管理方法をご案内します。
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {flowItems.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-cares-700">{item.number}</span>
+                  <item.icon className="h-5 w-5 text-slate-400" />
+                </div>
+                <h3 className="mt-6 text-lg font-bold text-slate-950">{item.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-slate-600">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-14 sm:py-18">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-3xl bg-slate-950 p-6 text-white sm:p-10">
+            <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+              <div>
+                <p className="text-sm font-bold tracking-wide text-cares-200">USE CASES</p>
+                <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                  営業、問い合わせ対応、見学前説明を軽くする。
+                </h2>
+              </div>
+              <div className="grid gap-3">
+                {useCases.map((item) => (
+                  <div key={item.title} className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/20">
+                    <p className="font-bold">{item.title}</p>
+                    <p className="mt-1 text-sm leading-7 text-white/70">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-4 py-14 sm:py-18">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-center text-sm font-bold tracking-wide text-cares-700">FAQ</p>
+          <h2 className="mt-3 text-center text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
             よくある質問
           </h2>
-          <FaqSection items={faqItems} />
+          <div className="mt-8">
+            <FaqSection items={faqItems} />
+          </div>
         </div>
       </section>
 
-      {/* ===== FINAL CTA ===== */}
-      <section className="relative py-16 sm:py-24 overflow-hidden">
-        <img
-          src="/cta-care.jpg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-white/75 backdrop-blur-[2px]" />
-
-        <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-            今日、あなたの施設を
-            <br />
-            「見える」施設にしませんか。
-          </h2>
-          <p className="text-base sm:text-lg text-gray-600 mb-8">
-            掲載は5分で完了。費用は、永久に、ゼロです。
-          </p>
-          <a
-            href="https://app.carespace.jp/signup"
-            className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-cares-600 text-white rounded-xl hover:bg-cares-700 font-semibold text-lg transition-colors shadow-lg shadow-cares-600/20"
-          >
-            無料で掲載を始める
-            <ArrowRight className="w-5 h-5" />
-          </a>
-
-          {/* Trust signals */}
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-6">
-            {['クレジットカード不要', 'いつでも削除・退会可能', '登録後すぐに掲載開始'].map((signal) => (
-              <span key={signal} className="flex items-center gap-1.5 text-sm text-gray-500">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                {signal}
-              </span>
-            ))}
+      <section className="px-4 py-14 sm:py-18">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-cares-200 bg-cares-50 p-6 text-center sm:p-10">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white ring-1 ring-cares-200">
+            <PencilLine className="h-6 w-6 text-cares-700" />
           </div>
-
-          <p className="text-sm text-gray-400 mt-8">
-            すでにアカウントをお持ちの方は{' '}
-            <a href="https://app.carespace.jp" className="text-cares-600 hover:underline font-medium">
-              ログインはこちら
-            </a>
+          <h2 className="mt-5 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            まずは、自分の事業所ページを確認してください。
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-slate-600">
+            ページ内の「公式管理を申請する」から申請できます。担当者が確認後、情報発信や料金表の管理方法をご案内します。
           </p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <a
+              href="/directory"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-cares-700 px-6 py-4 text-base font-bold text-white shadow-lg shadow-cares-700/15 transition hover:bg-cares-800"
+            >
+              事業所を検索する
+              <ArrowRight className="h-5 w-5" />
+            </a>
+            <a
+              href="mailto:info@carespace.jp?subject=Cares%E6%8E%B2%E8%BC%89%E3%81%AE%E7%9B%B8%E8%AB%87"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-4 text-base font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+            >
+              <Mail className="h-5 w-5" />
+              掲載について相談する
+            </a>
+          </div>
         </div>
       </section>
     </div>

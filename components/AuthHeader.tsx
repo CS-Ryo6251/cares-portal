@@ -94,18 +94,19 @@ export default function AuthHeader() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <a
           href="/login"
-          className="px-3 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors"
+          className="px-2.5 sm:px-3 py-1.5 rounded-xl border border-gray-200 text-xs sm:text-sm font-medium text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors"
         >
           ログイン
         </a>
         <a
           href="/signup"
-          className="px-3 py-1.5 rounded-xl bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-800 text-xs sm:text-sm font-medium text-white hover:bg-gray-700 transition-colors"
         >
-          新規登録
+          <span className="sm:hidden">登録</span>
+          <span className="hidden sm:inline">新規登録</span>
         </a>
       </div>
     )

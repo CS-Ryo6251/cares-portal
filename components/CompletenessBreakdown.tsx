@@ -57,11 +57,11 @@ const categories: CategoryConfig[] = [
   },
   {
     key: 'notes',
-    label: '専門職メモ',
+    label: '口コミ・現場メモ',
     icon: FileText,
     iconColor: 'text-orange-500',
     barColor: 'bg-orange-500',
-    nudge: { label: 'メモを投稿' },
+    nudge: { label: '口コミを投稿' },
   },
   {
     key: 'overview',

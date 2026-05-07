@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 
 const REPORTER_TYPES = [
+  { value: 'family', label: 'ご家族・利用検討者' },
+  { value: 'community', label: '地域の方・関係者' },
   { value: 'care_manager', label: 'ケアマネジャー' },
   { value: 'msw', label: 'MSW（医療ソーシャルワーカー）' },
   { value: 'nurse', label: '看護師' },
@@ -72,7 +74,10 @@ export default function ProfessionalNoteModal({
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="text-lg font-bold text-gray-900 mb-4">専門職メモを投稿する</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">口コミ・現場メモを投稿する</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          施設選びに役立つ雰囲気、対応、料金説明、空き状況などを共有できます。
+        </p>
 
         {success ? (
           <div className="text-center py-8">
@@ -88,7 +93,7 @@ export default function ProfessionalNoteModal({
             {/* Reporter type selection */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                あなたの職種 <span className="text-red-500">*</span>
+                投稿者の立場 <span className="text-red-500">*</span>
               </label>
               <select
                 value={reporterType}
@@ -112,7 +117,7 @@ export default function ProfessionalNoteModal({
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="施設選びに役立つ情報を共有してください（例: リハビリに力を入れている、受け入れ対応が早い、など）"
+                placeholder="施設選びに役立つ情報を共有してください（例: 料金説明が丁寧、見学時の対応が早い、リハビリに力を入れている、など）"
                 maxLength={500}
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none resize-none"
@@ -135,7 +140,7 @@ export default function ProfessionalNoteModal({
             </button>
 
             <p className="text-xs text-gray-400 mt-3 text-center">
-              匿名で公開されます。施設選びに役立つ事実情報の共有にご協力ください。
+              匿名で公開されます。誹謗中傷ではなく、施設選びに役立つ具体的な情報の共有にご協力ください。
             </p>
           </>
         )}

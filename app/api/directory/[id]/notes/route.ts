@@ -10,7 +10,17 @@ function getIpHash(request: NextRequest): string {
   return crypto.createHash('sha256').update(ip).digest('hex')
 }
 
-const ALLOWED_TYPES = ['care_manager', 'msw', 'nurse', 'therapist', 'counselor', 'doctor', 'other']
+const ALLOWED_TYPES = [
+  'family',
+  'community',
+  'care_manager',
+  'msw',
+  'nurse',
+  'therapist',
+  'counselor',
+  'doctor',
+  'other',
+]
 const FREE_FACILITY_LIMIT = 3
 const FREE_NOTE_PREVIEW = 3
 
@@ -110,7 +120,7 @@ export async function POST(
     const { reporter_type, content } = body
 
     if (!reporter_type || !ALLOWED_TYPES.includes(reporter_type)) {
-      return NextResponse.json({ error: '職種を選択してください' }, { status: 400 })
+      return NextResponse.json({ error: '投稿者の立場を選択してください' }, { status: 400 })
     }
 
     if (!content || content.trim().length === 0) {

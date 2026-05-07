@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('cares_listings')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'estimated' })
 
     if (q) {
       query = query.or(`facility_name.ilike.%${q}%,address.ilike.%${q}%`)
