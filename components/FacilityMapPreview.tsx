@@ -277,10 +277,12 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
   const [hasMoved, setHasMoved] = useState(false)
   const [boundsSearchLoading, setBoundsSearchLoading] = useState(false)
   const [boundsSearchError, setBoundsSearchError] = useState<string | null>(null)
+  const [boundsSearched, setBoundsSearched] = useState(false)
 
   useEffect(() => {
     setMapFacilities(facilities)
     setHasMoved(false)
+    setBoundsSearched(false)
     lastSearchBoundsRef.current = null
   }, [facilities])
 
@@ -437,7 +439,8 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
   }, [geocodedCoordinates, googleReady, visibleFacilities])
 
   useEffect(() => {
-    if (!googleMapsApiKey || !googleMapRef.current || mapItems.length === 0) return
+    if (!googleMapsApiKey || !googleMapRef.current) return
+    if (mapItems.length === 0 && !lastSearchBoundsRef.current) return
 
     let cancelled = false
 
@@ -459,12 +462,14 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
           ? { lat: (savedBounds.north + savedBounds.south) / 2, lng: (savedBounds.east + savedBounds.west) / 2 }
           : hasUserPosition
             ? { lat: userLatitude, lng: userLongitude }
-            : { lat: firstPoint.lat, lng: firstPoint.lng }
+            : firstPoint
+              ? { lat: firstPoint.lat, lng: firstPoint.lng }
+              : { lat: 35.6895, lng: 139.6917 }
         const latValues = mapItems.map((item) => item.lat)
         const lngValues = mapItems.map((item) => item.lng)
-        const latSpread = Math.max(...latValues) - Math.min(...latValues)
-        const lngSpread = Math.max(...lngValues) - Math.min(...lngValues)
-        const shouldFitAllPins = Boolean(area) || (latSpread < 1.8 && lngSpread < 1.8)
+        const latSpread = mapItems.length > 0 ? Math.max(...latValues) - Math.min(...latValues) : 0
+        const lngSpread = mapItems.length > 0 ? Math.max(...lngValues) - Math.min(...lngValues) : 0
+        const shouldFitAllPins = mapItems.length > 1 && (Boolean(area) || (latSpread < 1.8 && lngSpread < 1.8))
         const map = new google.maps.Map(googleMapRef.current, {
           center,
           zoom: shouldFitAllPins ? 12 : 13,
@@ -648,6 +653,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
       const next: FacilityMapItem[] = Array.isArray(data.facilities) ? data.facilities : []
       lastSearchBoundsRef.current = { north, south, east, west }
       setMapFacilities(next)
+      setBoundsSearched(true)
       setHasMoved(false)
     } catch (error) {
       console.error('bounds search error:', error)
@@ -657,7 +663,21 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     }
   }
 
-  if (visibleFacilities.length === 0 && mapFacilities.length === 0) return null
+  function resetBoundsSearch() {
+    setMapFacilities(facilities)
+    setBoundsSearched(false)
+    setHasMoved(false)
+    setBoundsSearchError(null)
+    lastSearchBoundsRef.current = null
+  }
+
+  if (
+    visibleFacilities.length === 0 &&
+    mapFacilities.length === 0 &&
+    !boundsSearched &&
+    facilities.length === 0
+  )
+    return null
 
   function updateZoom(nextZoom: number) {
     setZoom(clamp(Math.round(nextZoom * 10) / 10, 0.8, 2.4))
@@ -799,7 +819,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                   : '現在地またはエリアを指定して探せます'}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              ここで選んだ条件は、地図と下の事業所一覧の両方に反映されます。
+              エリア・市区町村・現在地は地図と下の一覧の両方に反映されます。地図上の「この範囲で検索」は地図のマーカーのみ更新します。
             </p>
           </div>
 
@@ -930,22 +950,48 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                 {googleError ? 'Google Mapsを読み込めませんでした' : 'Google Mapsを読み込み中'}
               </div>
             )}
-            {googleReady && (hasMoved || boundsSearchLoading) && (
-              <div className="pointer-events-none absolute left-1/2 top-3 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
-                <button
-                  type="button"
-                  onClick={handleSearchThisArea}
-                  disabled={boundsSearchLoading}
-                  className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-cares-700 shadow-md ring-1 ring-slate-200 transition hover:bg-cares-50 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  <Search className="h-4 w-4" />
-                  {boundsSearchLoading ? '検索中…' : 'この範囲で検索'}
-                </button>
+            {googleReady && (hasMoved || boundsSearchLoading || boundsSearched) && (
+              <div className="pointer-events-none absolute left-1/2 top-3 z-30 flex -translate-x-1/2 flex-col items-center gap-1.5">
+                {(hasMoved || boundsSearchLoading) && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleSearchThisArea}
+                      disabled={boundsSearchLoading}
+                      title="座標登録済みの事業所のみ対象。下の一覧には反映されません"
+                      className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-cares-700 shadow-md ring-1 ring-slate-200 transition hover:bg-cares-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      <Search className="h-4 w-4" />
+                      {boundsSearchLoading ? '検索中…' : 'この範囲で検索'}
+                    </button>
+                    <span className="rounded-md bg-white/85 px-2 py-0.5 text-[11px] font-medium text-slate-500 shadow-sm">
+                      ※座標登録済みのみ・下の一覧には反映されません
+                    </span>
+                  </>
+                )}
+                {boundsSearched && !hasMoved && !boundsSearchLoading && (
+                  <button
+                    type="button"
+                    onClick={resetBoundsSearch}
+                    className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-slate-600 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    元の表示に戻す
+                  </button>
+                )}
                 {boundsSearchError && (
                   <span className="pointer-events-auto rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-red-500 shadow-sm">
                     {boundsSearchError}
                   </span>
                 )}
+              </div>
+            )}
+            {googleReady && boundsSearched && mapFacilities.length === 0 && !boundsSearchLoading && (
+              <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white/95 px-5 py-4 text-center shadow-lg backdrop-blur">
+                <p className="text-sm font-bold text-slate-900">この範囲に該当する事業所が見つかりませんでした</p>
+                <p className="mt-1.5 text-xs font-medium leading-5 text-slate-500">
+                  座標未登録の事業所は範囲検索の対象外です。地図を動かして再度検索するか、上の「元の表示に戻す」をご利用ください。
+                </p>
               </div>
             )}
           </>
