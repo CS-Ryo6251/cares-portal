@@ -1,6 +1,6 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import Link from 'next/link'
-import { Search, Star, X } from 'lucide-react'
+import { Search, Star } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
@@ -8,6 +8,7 @@ import AreaPreferenceRedirect from '@/components/AreaPreferenceRedirect'
 import FacilityMapPreview from '@/components/FacilityMapPreview'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import CompletenessBar from '@/components/CompletenessBar'
+import FilterChipLink from '@/components/FilterChipLink'
 import { vacancyStatusMap, facilityTypeLabels } from '@/lib/constants'
 
 const postCategories = [
@@ -466,6 +467,7 @@ function buildServiceTypeUrl(currentParams: { [key: string]: string | undefined 
 
 function ActiveFilters({ params }: { params: { [key: string]: string | undefined } }) {
   const filters: { key: string; label: string; value: string }[] = []
+  const hasLocation = Boolean(params.lat && params.lng)
 
   if (params.category) {
     const cat = postCategories.find((c) => c.key === params.category)
@@ -475,11 +477,14 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
     const st = serviceTypeFilters.find((s) => s.key === params.service_type)
     filters.push({ key: 'service_type', label: 'サービス種別', value: st?.label || params.service_type })
   }
-  if (params.area) {
-    filters.push({ key: 'area', label: 'エリア', value: params.area })
-  }
-  if (params.lat && params.lng) {
-    filters.push({ key: 'location', label: '現在地', value: '現在地周辺' })
+  if (hasLocation) {
+    filters.push({
+      key: 'location',
+      label: '現在地',
+      value: params.area ? `${params.area.replace(':', ' / ')} 周辺` : '現在地周辺',
+    })
+  } else if (params.area) {
+    filters.push({ key: 'area', label: 'エリア', value: params.area.replace(':', ' / ') })
   }
   if (params.status) {
     const statusInfo = vacancyStatusMap[params.status]
@@ -500,6 +505,7 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
           if (v && k !== filter.key) newParams.set(k, v)
         })
         if (filter.key === 'location') {
+          newParams.delete('area')
           newParams.delete('lat')
           newParams.delete('lng')
         }
@@ -510,23 +516,23 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
         const qs = newParams.toString()
         const href = qs ? `/?${qs}` : '/'
         return (
-          <a
+          <FilterChipLink
             key={filter.key}
             href={href}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-cares-50 text-cares-700 rounded-lg text-sm font-medium hover:bg-cares-100 transition-colors"
+            clearLocation={filter.key === 'location' || filter.key === 'area'}
           >
             {filter.value}
-            <X className="w-3.5 h-3.5" />
-          </a>
+          </FilterChipLink>
         )
       })}
       {filters.length > 1 && (
-        <a
+        <FilterChipLink
           href={params.view ? `/?view=${params.view}` : '/'}
+          clearLocation
           className="text-sm text-gray-400 hover:text-gray-600 ml-1"
         >
           すべてクリア
-        </a>
+        </FilterChipLink>
       )}
     </div>
   )

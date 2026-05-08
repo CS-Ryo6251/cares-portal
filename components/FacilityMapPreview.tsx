@@ -22,6 +22,7 @@ import {
   Users,
 } from 'lucide-react'
 import ServiceTypeIcon from './ServiceTypeIcon'
+import { resolveAreaFromCoordinates } from '@/lib/client-location'
 
 type FacilityMapItem = {
   id: string
@@ -127,21 +128,6 @@ const prefectureCoordinates: { name: string; lat: number; lng: number }[] = [
   { name: '鹿児島県', lat: 31.5602, lng: 130.5582 },
   { name: '沖縄県', lat: 26.3358, lng: 127.8011 },
 ]
-
-function findNearestPrefecture(lat: number, lng: number): string {
-  let nearest = prefectureCoordinates[0]
-  let minDist = Infinity
-
-  for (const pref of prefectureCoordinates) {
-    const dist = (pref.lat - lat) ** 2 + (pref.lng - lng) ** 2
-    if (dist < minDist) {
-      minDist = dist
-      nearest = pref
-    }
-  }
-
-  return nearest.name
-}
 
 function hashToUnit(value: string): number {
   let hash = 0
@@ -571,21 +557,21 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     setGeoError(null)
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords
-        const nearestPrefecture = findNearestPrefecture(latitude, longitude)
+        const area = await resolveAreaFromCoordinates(latitude, longitude)
         const params = new URLSearchParams(searchParams.toString())
         params.set('view', 'facilities')
-        params.set('area', nearestPrefecture)
+        params.set('area', area)
         params.set('lat', latitude.toFixed(6))
         params.set('lng', longitude.toFixed(6))
         params.delete('page')
 
-        localStorage.setItem(PREFERRED_AREA_KEY, nearestPrefecture)
+        localStorage.setItem(PREFERRED_AREA_KEY, area)
         localStorage.setItem(PREFERRED_LAT_KEY, latitude.toFixed(6))
         localStorage.setItem(PREFERRED_LNG_KEY, longitude.toFixed(6))
 
-        setSelectedArea(nearestPrefecture)
+        setSelectedArea(area.split(':')[0] || area)
         setGeoLoading(false)
         router.push(`/?${params.toString()}`)
       },
