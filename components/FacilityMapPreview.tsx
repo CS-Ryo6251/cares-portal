@@ -241,7 +241,8 @@ function createMarkerContent(facility: FacilityMapItem, active: boolean) {
 export default function FacilityMapPreview({ facilities, area, userLatitude, userLongitude }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const visibleFacilities = useMemo(() => facilities.slice(0, 18), [facilities])
+  const [mapFacilities, setMapFacilities] = useState<FacilityMapItem[]>(facilities)
+  const visibleFacilities = useMemo(() => mapFacilities.slice(0, 100), [mapFacilities])
   const [activeId, setActiveId] = useState(visibleFacilities[0]?.id || '')
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -271,6 +272,17 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
   const activeIdRef = useRef(activeId)
   activeIdRef.current = activeId
   const cityRef = useRef<HTMLDivElement>(null)
+  const mapInstanceRef = useRef<any>(null)
+  const lastSearchBoundsRef = useRef<{ north: number; south: number; east: number; west: number } | null>(null)
+  const [hasMoved, setHasMoved] = useState(false)
+  const [boundsSearchLoading, setBoundsSearchLoading] = useState(false)
+  const [boundsSearchError, setBoundsSearchError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMapFacilities(facilities)
+    setHasMoved(false)
+    lastSearchBoundsRef.current = null
+  }, [facilities])
 
   useEffect(() => {
     setSelectedArea(area?.split(':')[0] || '')
@@ -442,9 +454,12 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
 
         const firstPoint = mapItems[0]
         const hasUserPosition = userLatitude !== null && userLatitude !== undefined && userLongitude !== null && userLongitude !== undefined
-        const center = hasUserPosition
-          ? { lat: userLatitude, lng: userLongitude }
-          : { lat: firstPoint.lat, lng: firstPoint.lng }
+        const savedBounds = lastSearchBoundsRef.current
+        const center = savedBounds
+          ? { lat: (savedBounds.north + savedBounds.south) / 2, lng: (savedBounds.east + savedBounds.west) / 2 }
+          : hasUserPosition
+            ? { lat: userLatitude, lng: userLongitude }
+            : { lat: firstPoint.lat, lng: firstPoint.lng }
         const latValues = mapItems.map((item) => item.lat)
         const lngValues = mapItems.map((item) => item.lng)
         const latSpread = Math.max(...latValues) - Math.min(...latValues)
@@ -461,6 +476,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
           cameraControl: false,
           zoomControl: true,
         })
+        mapInstanceRef.current = map
         setGoogleError(false)
         setGoogleReady(true)
         const bounds = new google.maps.LatLngBounds()
@@ -516,9 +532,28 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
             }
           })
 
-          if (shouldFitAllPins && mapItems.length > 1) {
+          if (savedBounds) {
+            const llBounds = new google.maps.LatLngBounds(
+              { lat: savedBounds.south, lng: savedBounds.west },
+              { lat: savedBounds.north, lng: savedBounds.east },
+            )
+            map.fitBounds(llBounds, 0)
+            lastSearchBoundsRef.current = null
+          } else if (shouldFitAllPins && mapItems.length > 1) {
             map.fitBounds(bounds, 58)
           }
+
+          let initialDone = false
+          const idleHandle = map.addListener('idle', () => {
+            initialDone = true
+            google.maps.event.removeListener(idleHandle)
+          })
+          const handleUserMove = () => {
+            if (!initialDone) return
+            setHasMoved(true)
+          }
+          map.addListener('dragend', handleUserMove)
+          map.addListener('zoom_changed', handleUserMove)
 
           const currentActiveId = activeIdRef.current
           for (const [id, el] of Object.entries(markerContentRef.current)) {
@@ -547,6 +582,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
       cancelled = true
       markerContentRef.current = {}
       fallbackMarkerRef.current = {}
+      mapInstanceRef.current = null
     }
   }, [area, mapItems, userLatitude, userLongitude])
 
@@ -578,7 +614,50 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     visibleFacilities[0]
   const showGoogleMap = Boolean(googleMapsApiKey)
 
-  if (visibleFacilities.length === 0) return null
+  async function handleSearchThisArea() {
+    const map = mapInstanceRef.current
+    if (!map) return
+    const llBounds = map.getBounds?.()
+    if (!llBounds) return
+    const ne = llBounds.getNorthEast()
+    const sw = llBounds.getSouthWest()
+    const north = ne.lat()
+    const east = ne.lng()
+    const south = sw.lat()
+    const west = sw.lng()
+
+    const params = new URLSearchParams({
+      north: String(north),
+      south: String(south),
+      east: String(east),
+      west: String(west),
+    })
+    const status = searchParams.get('status')
+    const serviceType = searchParams.get('service_type')
+    const q = searchParams.get('q')
+    if (status) params.set('status', status)
+    if (serviceType) params.set('service_type', serviceType)
+    if (q) params.set('q', q)
+
+    setBoundsSearchLoading(true)
+    setBoundsSearchError(null)
+    try {
+      const response = await fetch(`/api/directory/by-bounds?${params.toString()}`)
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const data = await response.json()
+      const next: FacilityMapItem[] = Array.isArray(data.facilities) ? data.facilities : []
+      lastSearchBoundsRef.current = { north, south, east, west }
+      setMapFacilities(next)
+      setHasMoved(false)
+    } catch (error) {
+      console.error('bounds search error:', error)
+      setBoundsSearchError('この範囲の事業所を取得できませんでした')
+    } finally {
+      setBoundsSearchLoading(false)
+    }
+  }
+
+  if (visibleFacilities.length === 0 && mapFacilities.length === 0) return null
 
   function updateZoom(nextZoom: number) {
     setZoom(clamp(Math.round(nextZoom * 10) / 10, 0.8, 2.4))
@@ -849,6 +928,24 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
             {!googleReady && (
               <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-sm font-bold text-slate-500">
                 {googleError ? 'Google Mapsを読み込めませんでした' : 'Google Mapsを読み込み中'}
+              </div>
+            )}
+            {googleReady && (hasMoved || boundsSearchLoading) && (
+              <div className="pointer-events-none absolute left-1/2 top-3 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handleSearchThisArea}
+                  disabled={boundsSearchLoading}
+                  className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-cares-700 shadow-md ring-1 ring-slate-200 transition hover:bg-cares-50 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  <Search className="h-4 w-4" />
+                  {boundsSearchLoading ? '検索中…' : 'この範囲で検索'}
+                </button>
+                {boundsSearchError && (
+                  <span className="pointer-events-auto rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-red-500 shadow-sm">
+                    {boundsSearchError}
+                  </span>
+                )}
               </div>
             )}
           </>
