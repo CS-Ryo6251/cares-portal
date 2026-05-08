@@ -626,10 +626,10 @@ export default async function FeedPage({
                 Cares Platform
               </p>
               <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-slate-950">
-                公表データに、公式情報と現場の声を重ねる。
+                近くの介護事業所を、わかりやすく探せる。
               </h1>
               <p className="mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-600">
-                全国の介護事業所データを常時掲載。口コミ・現場メモを書き込めて、CareSpace連携済みの事業所は自分たちの公式情報を管理できます。
+                全国の介護事業所を、地域やサービス内容から検索できます。空き状況・口コミ・現場メモを見ながら、気になる事業所の情報を確認できます。
               </p>
             </div>
             <a
