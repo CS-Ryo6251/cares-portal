@@ -197,9 +197,14 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
         }
 
         const firstPoint = mapItems[0]
+        const latValues = mapItems.map((item) => item.lat)
+        const lngValues = mapItems.map((item) => item.lng)
+        const latSpread = Math.max(...latValues) - Math.min(...latValues)
+        const lngSpread = Math.max(...lngValues) - Math.min(...lngValues)
+        const shouldFitAllPins = Boolean(area) || (latSpread < 1.8 && lngSpread < 1.8)
         const map = new google.maps.Map(googleMapRef.current, {
           center: { lat: firstPoint.lat, lng: firstPoint.lng },
-          zoom: area ? 12 : 5,
+          zoom: shouldFitAllPins ? 12 : 13,
           mapId: googleMapsMapId,
           clickableIcons: false,
           fullscreenControl: false,
@@ -222,7 +227,7 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
           marker.addListener('click', () => setActiveId(facility.id))
         })
 
-        if (mapItems.length > 1) {
+        if (shouldFitAllPins && mapItems.length > 1) {
           map.fitBounds(bounds, 58)
         }
         setGoogleReady(true)
@@ -305,7 +310,7 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
       </div>
 
       <div
-        className={`relative h-72 overflow-hidden bg-[#edf4ef] sm:h-80 ${
+        className={`relative h-[26rem] overflow-hidden bg-[#edf4ef] sm:h-[31rem] ${
           showGoogleMap ? '' : `touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`
         }`}
         onPointerDown={showGoogleMap ? undefined : handlePointerDown}
