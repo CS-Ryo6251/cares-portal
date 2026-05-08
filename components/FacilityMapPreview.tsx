@@ -297,32 +297,39 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
           cameraControl: false,
           zoomControl: true,
         })
+        setGoogleError(false)
+        setGoogleReady(true)
         const bounds = new google.maps.LatLngBounds()
 
-        mapItems.forEach(({ facility, lat, lng }, index) => {
-          const position = { lat, lng }
-          bounds.extend(position)
-          const marker = google.maps.marker?.AdvancedMarkerElement
-            ? new google.maps.marker.AdvancedMarkerElement({
+        try {
+          mapItems.forEach(({ facility, lat, lng }, index) => {
+            const position = { lat, lng }
+            bounds.extend(position)
+            if (google.maps.marker?.AdvancedMarkerElement) {
+              const marker = new google.maps.marker.AdvancedMarkerElement({
                 map,
                 position,
                 title: facility.facility_name,
                 content: createMarkerContent(facility, index),
               })
-            : new google.maps.Marker({
+              marker.addEventListener('gmp-click', () => setActiveId(facility.id))
+            } else {
+              const marker = new google.maps.Marker({
                 map,
                 position,
                 title: facility.facility_name,
                 label: facility.rating_average ? formatRating(facility.rating_average) : String(index + 1),
               })
-          marker.addListener('click', () => setActiveId(facility.id))
-        })
+              marker.addListener('click', () => setActiveId(facility.id))
+            }
+          })
 
-        if (shouldFitAllPins && mapItems.length > 1) {
-          map.fitBounds(bounds, 58)
+          if (shouldFitAllPins && mapItems.length > 1) {
+            map.fitBounds(bounds, 58)
+          }
+        } catch (markerError) {
+          console.warn('Google Maps marker rendering failed:', markerError)
         }
-        setGoogleError(false)
-        setGoogleReady(true)
       })
       .catch(() => setGoogleError(true))
 
@@ -414,7 +421,7 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
         {showGoogleMap ? (
           <>
             <div ref={googleMapRef} className="absolute inset-0" />
-            {(!googleReady || googleError) && (
+            {!googleReady && (
               <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-sm font-bold text-slate-500">
                 {googleError ? 'Google Mapsを読み込めませんでした' : 'Google Mapsを読み込み中'}
               </div>
