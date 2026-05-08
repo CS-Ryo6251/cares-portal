@@ -281,7 +281,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
 
   let query = supabase
     .from('cares_listings')
-    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, completeness_score, completeness_tier', { count: 'estimated' })
+    .select('*', { count: 'estimated' })
     .order('id', { ascending: true })
     .range(from, to)
 
@@ -328,7 +328,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     console.error('施設取得エラー:', error)
     const fallback = await supabase
       .from('cares_listings')
-      .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, source, completeness_score, completeness_tier')
+      .select('*')
       .limit(FACILITIES_PER_PAGE)
 
     if (fallback.error) {
@@ -371,6 +371,8 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
       facility_name: item.facility_name,
       service_type: item.service_type,
       address: item.address,
+      latitude: item.latitude ?? null,
+      longitude: item.longitude ?? null,
       acceptance_status: item.acceptance_status,
       is_owner_verified: item.is_owner_verified,
       source: item.source,

@@ -9,6 +9,8 @@ type FacilityMapItem = {
   facility_name: string
   service_type: string | null
   address: string | null
+  latitude?: number | null
+  longitude?: number | null
   acceptance_status: string | null
   is_owner_verified: boolean
   rating_average: number | null
@@ -94,6 +96,12 @@ function getPrefecture(address: string | null) {
   return prefectureCoordinates.find((pref) => address?.includes(pref.name))
 }
 
+function parseCoordinate(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === '') return null
+  const numericValue = Number(value)
+  return Number.isFinite(numericValue) ? numericValue : null
+}
+
 function formatRating(value: number | null) {
   return value ? value.toFixed(1) : '-'
 }
@@ -143,6 +151,7 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
   const [isDragging, setIsDragging] = useState(false)
   const [googleReady, setGoogleReady] = useState(false)
   const [googleError, setGoogleError] = useState(false)
+  const [geocodedCoordinates, setGeocodedCoordinates] = useState<Record<string, { lat: number; lng: number }>>({})
   const googleMapRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef({
     pointerId: 0,
@@ -154,13 +163,16 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
 
   const mapItems = useMemo(() => {
     const points = visibleFacilities.map((facility) => {
+      const latitude = parseCoordinate(facility.latitude) ?? geocodedCoordinates[facility.id]?.lat
+      const longitude = parseCoordinate(facility.longitude) ?? geocodedCoordinates[facility.id]?.lng
+      const hasExactCoordinate = latitude !== null && longitude !== null
       const base = getPrefecture(facility.address) || getPrefecture(area || '') || prefectureCoordinates[12]
-      const jitterX = (hashToUnit(`${facility.id}:x`) - 0.5) * 1.4
-      const jitterY = (hashToUnit(`${facility.id}:y`) - 0.5) * 1.1
+      const jitterX = hasExactCoordinate ? 0 : (hashToUnit(`${facility.id}:x`) - 0.5) * 1.4
+      const jitterY = hasExactCoordinate ? 0 : (hashToUnit(`${facility.id}:y`) - 0.5) * 1.1
       return {
         facility,
-        lat: base.lat + jitterY,
-        lng: base.lng + jitterX,
+        lat: hasExactCoordinate ? Number(latitude) : base.lat + jitterY,
+        lng: hasExactCoordinate ? Number(longitude) : base.lng + jitterX,
       }
     })
 
@@ -178,7 +190,79 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
       x: clamp(((point.lng - minLng) / lngRange) * 78 + 11, 8, 92),
       y: clamp((1 - (point.lat - minLat) / latRange) * 68 + 16, 10, 86),
     }))
-  }, [area, visibleFacilities])
+  }, [area, geocodedCoordinates, visibleFacilities])
+
+  useEffect(() => {
+    if (!googleReady) return
+
+    const targets = visibleFacilities
+      .filter((facility) => {
+        const hasStoredCoordinate =
+          parseCoordinate(facility.latitude) !== null && parseCoordinate(facility.longitude) !== null
+        return !hasStoredCoordinate && !geocodedCoordinates[facility.id] && facility.address
+      })
+      .slice(0, 10)
+      .map((facility) => ({ id: facility.id, address: facility.address }))
+
+    if (targets.length === 0) return
+
+    let cancelled = false
+    const mapsWindow = window as GoogleMapsWindow
+    const google = mapsWindow.google
+    const geocoder = google?.maps?.Geocoder ? new google.maps.Geocoder() : null
+
+    if (!geocoder) return
+
+    Promise.all(
+      targets.map(
+        (facility) =>
+          new Promise<{ id: string | undefined; address: string | null | undefined; latitude: number; longitude: number } | null>((resolve) => {
+            geocoder.geocode({ address: facility.address, region: 'JP' }, (results: any, status: string) => {
+              const location = results?.[0]?.geometry?.location
+              if (status !== 'OK' || !location) {
+                resolve(null)
+                return
+              }
+
+              resolve({
+                id: facility.id,
+                address: facility.address,
+                latitude: location.lat(),
+                longitude: location.lng(),
+              })
+            })
+          })
+      )
+    )
+      .then((geocodedFacilities) => {
+        if (cancelled) return
+        const successfulFacilities = geocodedFacilities.filter(Boolean)
+
+        const nextCoordinates: Record<string, { lat: number; lng: number }> = {}
+        for (const facility of successfulFacilities) {
+          if (facility?.id) {
+            nextCoordinates[facility.id] = { lat: facility.latitude, lng: facility.longitude }
+          }
+        }
+
+        if (Object.keys(nextCoordinates).length > 0) {
+          setGeocodedCoordinates((current) => ({ ...current, ...nextCoordinates }))
+        }
+
+        if (successfulFacilities.length > 0) {
+          fetch('/api/directory/geocode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ facilities: successfulFacilities }),
+          }).catch(() => undefined)
+        }
+      })
+      .catch(() => undefined)
+
+    return () => {
+      cancelled = true
+    }
+  }, [geocodedCoordinates, googleReady, visibleFacilities])
 
   useEffect(() => {
     if (!googleMapsApiKey || !googleMapRef.current || mapItems.length === 0) return
