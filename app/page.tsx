@@ -818,7 +818,7 @@ export default async function FeedPage({
               </div>
               {!hasUserLocation && (
                 <span className="text-xs font-semibold text-cares-700">
-                  左の「現在地から探す」またはエリア検索を利用できます
+                  マップ上の「現在地から探す」またはエリア選択を利用できます
                 </span>
               )}
             </div>

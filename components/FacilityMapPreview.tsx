@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent, WheelEvent } from 'react'
-import { MapPinned, Minus, Plus, RotateCcw, Star } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { MapPinned, Minus, Navigation, Plus, RotateCcw, Search, Star } from 'lucide-react'
 
 type FacilityMapItem = {
   id: string
@@ -31,6 +32,9 @@ type GoogleMapsWindow = Window & {
 
 const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 const googleMapsMapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID'
+const PREFERRED_AREA_KEY = 'cares_preferred_area'
+const PREFERRED_LAT_KEY = 'cares_preferred_lat'
+const PREFERRED_LNG_KEY = 'cares_preferred_lng'
 
 const prefectureCoordinates: { name: string; lat: number; lng: number }[] = [
   { name: '北海道', lat: 43.0646, lng: 141.3468 },
@@ -81,6 +85,21 @@ const prefectureCoordinates: { name: string; lat: number; lng: number }[] = [
   { name: '鹿児島県', lat: 31.5602, lng: 130.5582 },
   { name: '沖縄県', lat: 26.3358, lng: 127.8011 },
 ]
+
+function findNearestPrefecture(lat: number, lng: number): string {
+  let nearest = prefectureCoordinates[0]
+  let minDist = Infinity
+
+  for (const pref of prefectureCoordinates) {
+    const dist = (pref.lat - lat) ** 2 + (pref.lng - lng) ** 2
+    if (dist < minDist) {
+      minDist = dist
+      nearest = pref
+    }
+  }
+
+  return nearest.name
+}
 
 function hashToUnit(value: string): number {
   let hash = 0
@@ -146,6 +165,8 @@ function createMarkerContent(facility: FacilityMapItem, index: number) {
 }
 
 export default function FacilityMapPreview({ facilities, area, userLatitude, userLongitude }: Props) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const visibleFacilities = useMemo(() => facilities.slice(0, 18), [facilities])
   const [activeId, setActiveId] = useState(visibleFacilities[0]?.id || '')
   const [zoom, setZoom] = useState(1)
@@ -153,6 +174,9 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
   const [isDragging, setIsDragging] = useState(false)
   const [googleReady, setGoogleReady] = useState(false)
   const [googleError, setGoogleError] = useState(false)
+  const [selectedArea, setSelectedArea] = useState(area?.split(':')[0] || '')
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState<string | null>(null)
   const [geocodedCoordinates, setGeocodedCoordinates] = useState<Record<string, { lat: number; lng: number }>>({})
   const googleMapRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef({
@@ -162,6 +186,10 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     panX: 0,
     panY: 0,
   })
+
+  useEffect(() => {
+    setSelectedArea(area?.split(':')[0] || '')
+  }, [area])
 
   const mapItems = useMemo(() => {
     const points = visibleFacilities.map((facility) => {
@@ -405,6 +433,64 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     setPan({ x: 0, y: 0 })
   }
 
+  function applyArea(nextArea = selectedArea) {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('view', 'facilities')
+    params.delete('page')
+    params.delete('lat')
+    params.delete('lng')
+
+    if (nextArea) {
+      params.set('area', nextArea)
+      localStorage.setItem(PREFERRED_AREA_KEY, nextArea)
+      localStorage.removeItem(PREFERRED_LAT_KEY)
+      localStorage.removeItem(PREFERRED_LNG_KEY)
+    } else {
+      params.delete('area')
+      localStorage.removeItem(PREFERRED_AREA_KEY)
+      localStorage.removeItem(PREFERRED_LAT_KEY)
+      localStorage.removeItem(PREFERRED_LNG_KEY)
+    }
+
+    router.push(`/?${params.toString()}`)
+  }
+
+  function handleGeolocationSearch() {
+    if (!navigator.geolocation) {
+      setGeoError('このブラウザでは現在地を取得できません')
+      return
+    }
+
+    setGeoLoading(true)
+    setGeoError(null)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        const nearestPrefecture = findNearestPrefecture(latitude, longitude)
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('view', 'facilities')
+        params.set('area', nearestPrefecture)
+        params.set('lat', latitude.toFixed(6))
+        params.set('lng', longitude.toFixed(6))
+        params.delete('page')
+
+        localStorage.setItem(PREFERRED_AREA_KEY, nearestPrefecture)
+        localStorage.setItem(PREFERRED_LAT_KEY, latitude.toFixed(6))
+        localStorage.setItem(PREFERRED_LNG_KEY, longitude.toFixed(6))
+
+        setSelectedArea(nearestPrefecture)
+        setGeoLoading(false)
+        router.push(`/?${params.toString()}`)
+      },
+      () => {
+        setGeoLoading(false)
+        setGeoError('現在地を取得できませんでした。ブラウザの位置情報許可をご確認ください。')
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    )
+  }
+
   return (
     <section className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5">
@@ -422,6 +508,59 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
         <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
           {showGoogleMap ? 'Google Maps' : `${visibleFacilities.length}件`}
         </span>
+      </div>
+
+      <div className="border-b border-slate-100 bg-white px-4 py-3 sm:px-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-bold text-slate-950">
+              {userLatitude && userLongitude
+                ? '現在地に近い順で表示しています'
+                : area
+                  ? `${area.replace(':', ' / ')} 周辺を表示しています`
+                  : '現在地またはエリアを指定して探せます'}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              ここで選んだ条件は、地図と下の事業所一覧の両方に反映されます。
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={handleGeolocationSearch}
+              disabled={geoLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-cares-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-cares-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Navigation className="h-4 w-4" />
+              {geoLoading ? '現在地を取得中' : '現在地から探す'}
+            </button>
+
+            <div className="flex min-w-0 gap-2">
+              <select
+                value={selectedArea}
+                onChange={(event) => setSelectedArea(event.target.value)}
+                className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-cares-500 focus:ring-4 focus:ring-cares-100 sm:w-44"
+              >
+                <option value="">全国</option>
+                {prefectureCoordinates.map((prefecture) => (
+                  <option key={prefecture.name} value={prefecture.name}>
+                    {prefecture.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => applyArea()}
+                className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-cares-200 hover:bg-cares-50 hover:text-cares-800"
+              >
+                <Search className="h-4 w-4" />
+                表示
+              </button>
+            </div>
+          </div>
+        </div>
+        {geoError && <p className="mt-2 text-xs font-semibold text-red-500">{geoError}</p>}
       </div>
 
       <div
