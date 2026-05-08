@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Armchair,
   Building2,
+  ChevronDown,
   ClipboardList,
   HandHelping,
   Heart,
@@ -20,6 +21,7 @@ import {
   Stethoscope,
   Truck,
   Users,
+  X,
 } from 'lucide-react'
 import ServiceTypeIcon from './ServiceTypeIcon'
 import { resolveAreaFromCoordinates } from '@/lib/client-location'
@@ -247,6 +249,12 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
   const [googleReady, setGoogleReady] = useState(false)
   const [googleError, setGoogleError] = useState(false)
   const [selectedArea, setSelectedArea] = useState(area?.split(':')[0] || '')
+  const [selectedCities, setSelectedCities] = useState<string[]>(
+    area && area.includes(':') ? area.split(':')[1].split(',').filter(Boolean) : [],
+  )
+  const [cities, setCities] = useState<string[]>([])
+  const [citiesLoading, setCitiesLoading] = useState(false)
+  const [showCities, setShowCities] = useState(false)
   const [geoLoading, setGeoLoading] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
   const [geocodedCoordinates, setGeocodedCoordinates] = useState<Record<string, { lat: number; lng: number }>>({})
@@ -262,10 +270,50 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
   const fallbackMarkerRef = useRef<Record<string, any>>({})
   const activeIdRef = useRef(activeId)
   activeIdRef.current = activeId
+  const cityRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setSelectedArea(area?.split(':')[0] || '')
+    setSelectedCities(
+      area && area.includes(':') ? area.split(':')[1].split(',').filter(Boolean) : [],
+    )
   }, [area])
+
+  useEffect(() => {
+    if (!selectedArea) {
+      setCities([])
+      return
+    }
+    let cancelled = false
+    setCitiesLoading(true)
+    fetch(`/api/directory/cities?prefecture=${encodeURIComponent(selectedArea)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return
+        const next: string[] = data.cities || []
+        setCities(next)
+        setSelectedCities((prev) => prev.filter((c) => next.includes(c)))
+      })
+      .catch(() => {
+        if (!cancelled) setCities([])
+      })
+      .finally(() => {
+        if (!cancelled) setCitiesLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedArea])
+
+  useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      if (cityRef.current && !cityRef.current.contains(event.target as Node)) {
+        setShowCities(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   useEffect(() => {
     if (!visibleFacilities.some((facility) => facility.id === activeId)) {
@@ -576,16 +624,18 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     setPan({ x: 0, y: 0 })
   }
 
-  function applyArea(nextArea = selectedArea) {
+  function applyArea() {
+    const pref = selectedArea
     const params = new URLSearchParams(searchParams.toString())
     params.set('view', 'facilities')
     params.delete('page')
     params.delete('lat')
     params.delete('lng')
 
-    if (nextArea) {
-      params.set('area', nextArea)
-      localStorage.setItem(PREFERRED_AREA_KEY, nextArea)
+    if (pref) {
+      const value = selectedCities.length > 0 ? `${pref}:${selectedCities.join(',')}` : pref
+      params.set('area', value)
+      localStorage.setItem(PREFERRED_AREA_KEY, value)
       localStorage.removeItem(PREFERRED_LAT_KEY)
       localStorage.removeItem(PREFERRED_LNG_KEY)
     } else {
@@ -596,6 +646,12 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     }
 
     router.push(`/?${params.toString()}`)
+  }
+
+  function toggleCity(city: string) {
+    setSelectedCities((prev) =>
+      prev.includes(city) ? prev.filter((c) => c !== city) : [...prev, city],
+    )
   }
 
   function handleGeolocationSearch() {
@@ -679,27 +735,98 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
               {geoLoading ? '現在地を取得中' : '現在地から探す'}
             </button>
 
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 sm:w-[19rem]">
-              <select
-                value={selectedArea}
-                onChange={(event) => setSelectedArea(event.target.value)}
-                className="min-h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-cares-500 focus:ring-4 focus:ring-cares-100"
-              >
-                <option value="">全国</option>
-                {prefectureCoordinates.map((prefecture) => (
-                  <option key={prefecture.name} value={prefecture.name}>
-                    {prefecture.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => applyArea()}
-                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-cares-200 hover:bg-cares-50 hover:text-cares-800"
-              >
-                <Search className="h-4 w-4 shrink-0" />
-                表示
-              </button>
+            <div className="flex flex-col gap-2 sm:w-[19rem]">
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
+                <select
+                  value={selectedArea}
+                  onChange={(event) => {
+                    setSelectedArea(event.target.value)
+                    setSelectedCities([])
+                    setShowCities(false)
+                  }}
+                  className="min-h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-cares-500 focus:ring-4 focus:ring-cares-100"
+                >
+                  <option value="">全国</option>
+                  {prefectureCoordinates.map((prefecture) => (
+                    <option key={prefecture.name} value={prefecture.name}>
+                      {prefecture.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => applyArea()}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-cares-200 hover:bg-cares-50 hover:text-cares-800"
+                >
+                  <Search className="h-4 w-4 shrink-0" />
+                  表示
+                </button>
+              </div>
+
+              {selectedArea && (citiesLoading || cities.length > 0) && (
+                <div ref={cityRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowCities((prev) => !prev)}
+                    className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-cares-200 hover:text-cares-800"
+                  >
+                    <span className="truncate">
+                      {selectedCities.length > 0
+                        ? `${selectedCities.length}件の市区町村を選択中`
+                        : '市区町村で絞り込む'}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${showCities ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  {selectedCities.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {selectedCities.map((city) => (
+                        <span
+                          key={city}
+                          className="inline-flex items-center gap-1 rounded-lg bg-cares-50 px-2 py-1 text-xs font-bold text-cares-700"
+                        >
+                          {city}
+                          <button
+                            type="button"
+                            onClick={() => toggleCity(city)}
+                            aria-label={`${city}の選択を解除`}
+                            className="hover:text-cares-900"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {showCities && (
+                    <div className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                      {citiesLoading ? (
+                        <p className="px-3 py-4 text-center text-sm text-slate-400">読込中...</p>
+                      ) : (
+                        <div className="py-1">
+                          {cities.map((city) => (
+                            <label
+                              key={city}
+                              className="flex cursor-pointer items-center gap-2.5 px-3 py-2 hover:bg-slate-50"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedCities.includes(city)}
+                                onChange={() => toggleCity(city)}
+                                className="h-4 w-4 rounded border-slate-300 text-cares-600 focus:ring-cares-500"
+                              />
+                              <span className="text-sm text-slate-700">{city}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
