@@ -1,13 +1,11 @@
-'use client'
+import { NextRequest, NextResponse } from 'next/server'
 
-export const PREFERRED_AREA_KEY = 'cares_preferred_area'
-export const PREFERRED_LAT_KEY = 'cares_preferred_lat'
-export const PREFERRED_LNG_KEY = 'cares_preferred_lng'
-export const GEO_DISMISSED_KEY = 'geolocation_dismissed'
+type AddressComponent = {
+  long_name?: string
+  types?: string[]
+}
 
-type PrefectureCoordinate = { name: string; lat: number; lng: number }
-
-export const prefectureCoordinates: PrefectureCoordinate[] = [
+const PREFECTURE_COORDINATES: { name: string; lat: number; lng: number }[] = [
   { name: '北海道', lat: 43.0646, lng: 141.3468 },
   { name: '青森県', lat: 40.8244, lng: 140.74 },
   { name: '岩手県', lat: 39.7036, lng: 141.1527 },
@@ -57,41 +55,85 @@ export const prefectureCoordinates: PrefectureCoordinate[] = [
   { name: '沖縄県', lat: 26.3358, lng: 127.8011 },
 ]
 
-export function findNearestPrefecture(lat: number, lng: number): string {
-  let nearest = prefectureCoordinates[0]
+function findNearestPrefecture(lat: number, lng: number) {
+  let nearest = PREFECTURE_COORDINATES[0]
   let minDist = Infinity
-
-  for (const pref of prefectureCoordinates) {
+  for (const pref of PREFECTURE_COORDINATES) {
     const dist = (pref.lat - lat) ** 2 + (pref.lng - lng) ** 2
     if (dist < minDist) {
       minDist = dist
       nearest = pref
     }
   }
-
   return nearest.name
 }
 
-export function clearPreferredLocation() {
-  localStorage.removeItem(PREFERRED_AREA_KEY)
-  localStorage.removeItem(PREFERRED_LAT_KEY)
-  localStorage.removeItem(PREFERRED_LNG_KEY)
+function findComponent(components: AddressComponent[], types: string[]) {
+  return components.find((component) =>
+    types.every((type) => component.types?.includes(type)),
+  )?.long_name
 }
 
-export async function resolveAreaFromCoordinates(lat: number, lng: number) {
-  const fallbackPrefecture = findNearestPrefecture(lat, lng)
-
+export async function POST(request: NextRequest) {
   try {
-    const response = await fetch('/api/directory/reverse-geocode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lat, lng }),
+    const body = await request.json().catch(() => ({}))
+    const lat = Number(body.lat)
+    const lng = Number(body.lng)
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return NextResponse.json({ error: '緯度経度が不正です' }, { status: 400 })
+    }
+
+    const fallbackPrefecture = findNearestPrefecture(lat, lng)
+    const apiKey = process.env.GOOGLE_MAPS_GEOCODING_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+
+    if (!apiKey) {
+      return NextResponse.json({ area: fallbackPrefecture, source: 'fallback', reason: 'no_api_key' })
+    }
+
+    const params = new URLSearchParams({
+      latlng: `${lat},${lng}`,
+      language: 'ja',
+      region: 'JP',
+      key: apiKey,
     })
-    if (!response.ok) return fallbackPrefecture
+
+    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`, {
+      next: { revalidate: 60 * 60 * 24 },
+    })
+
+    if (!response.ok) {
+      return NextResponse.json({
+        area: fallbackPrefecture,
+        source: 'fallback',
+        reason: `http_${response.status}`,
+      })
+    }
+
     const data = await response.json()
-    const area = typeof data?.area === 'string' ? data.area : null
-    return area || fallbackPrefecture
-  } catch {
-    return fallbackPrefecture
+
+    if (data.status && data.status !== 'OK') {
+      return NextResponse.json({
+        area: fallbackPrefecture,
+        source: 'fallback',
+        reason: String(data.status).toLowerCase(),
+        error: data.error_message || null,
+      })
+    }
+
+    const components: AddressComponent[] = data.results?.[0]?.address_components || []
+    const prefecture = findComponent(components, ['administrative_area_level_1']) || fallbackPrefecture
+    const city =
+      findComponent(components, ['locality']) ||
+      findComponent(components, ['administrative_area_level_2']) ||
+      findComponent(components, ['sublocality_level_1'])
+
+    return NextResponse.json({
+      area: city ? `${prefecture}:${city}` : prefecture,
+      source: 'geocoder',
+    })
+  } catch (error) {
+    console.error('Reverse geocode error:', error)
+    return NextResponse.json({ error: '座標の解決に失敗しました' }, { status: 500 })
   }
 }

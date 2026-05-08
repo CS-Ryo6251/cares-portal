@@ -433,8 +433,9 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                 position,
                 title: facility.facility_name,
                 content: createMarkerContent(facility, facility.id === activeId),
+                gmpClickable: true,
               })
-              marker.addEventListener('gmp-click', () => {
+              marker.addListener('click', () => {
                 setActiveId(facility.id)
                 map.panTo(position)
               })
