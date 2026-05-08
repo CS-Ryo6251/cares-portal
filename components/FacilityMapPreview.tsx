@@ -511,8 +511,8 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
       </div>
 
       <div className="border-b border-slate-100 bg-white px-4 py-3 sm:px-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+          <div className="min-w-0">
             <p className="text-sm font-bold text-slate-950">
               {userLatitude && userLongitude
                 ? '現在地に近い順で表示しています'
@@ -525,22 +525,22 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch xl:justify-end">
             <button
               type="button"
               onClick={handleGeolocationSearch}
               disabled={geoLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-cares-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-cares-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-cares-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-cares-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Navigation className="h-4 w-4" />
+              <Navigation className="h-4 w-4 shrink-0" />
               {geoLoading ? '現在地を取得中' : '現在地から探す'}
             </button>
 
-            <div className="flex min-w-0 gap-2">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 sm:w-[19rem]">
               <select
                 value={selectedArea}
                 onChange={(event) => setSelectedArea(event.target.value)}
-                className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-cares-500 focus:ring-4 focus:ring-cares-100 sm:w-44"
+                className="min-h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-cares-500 focus:ring-4 focus:ring-cares-100"
               >
                 <option value="">全国</option>
                 {prefectureCoordinates.map((prefecture) => (
@@ -552,9 +552,9 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
               <button
                 type="button"
                 onClick={() => applyArea()}
-                className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-cares-200 hover:bg-cares-50 hover:text-cares-800"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-cares-200 hover:bg-cares-50 hover:text-cares-800"
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-4 w-4 shrink-0" />
                 表示
               </button>
             </div>
