@@ -20,6 +20,8 @@ type FacilityMapItem = {
 type Props = {
   facilities: FacilityMapItem[]
   area?: string
+  userLatitude?: number | null
+  userLongitude?: number | null
 }
 
 type GoogleMapsWindow = Window & {
@@ -143,7 +145,7 @@ function createMarkerContent(facility: FacilityMapItem, index: number) {
   return node
 }
 
-export default function FacilityMapPreview({ facilities, area }: Props) {
+export default function FacilityMapPreview({ facilities, area, userLatitude, userLongitude }: Props) {
   const visibleFacilities = useMemo(() => facilities.slice(0, 18), [facilities])
   const [activeId, setActiveId] = useState(visibleFacilities[0]?.id || '')
   const [zoom, setZoom] = useState(1)
@@ -281,13 +283,17 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
         }
 
         const firstPoint = mapItems[0]
+        const hasUserPosition = userLatitude !== null && userLatitude !== undefined && userLongitude !== null && userLongitude !== undefined
+        const center = hasUserPosition
+          ? { lat: userLatitude, lng: userLongitude }
+          : { lat: firstPoint.lat, lng: firstPoint.lng }
         const latValues = mapItems.map((item) => item.lat)
         const lngValues = mapItems.map((item) => item.lng)
         const latSpread = Math.max(...latValues) - Math.min(...latValues)
         const lngSpread = Math.max(...lngValues) - Math.min(...lngValues)
         const shouldFitAllPins = Boolean(area) || (latSpread < 1.8 && lngSpread < 1.8)
         const map = new google.maps.Map(googleMapRef.current, {
-          center: { lat: firstPoint.lat, lng: firstPoint.lng },
+          center,
           zoom: shouldFitAllPins ? 12 : 13,
           mapId: googleMapsMapId,
           clickableIcons: false,
@@ -302,6 +308,16 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
         const bounds = new google.maps.LatLngBounds()
 
         try {
+          if (hasUserPosition) {
+            new google.maps.Marker({
+              map,
+              position: center,
+              title: '現在地',
+              label: '現在地',
+            })
+            bounds.extend(center)
+          }
+
           mapItems.forEach(({ facility, lat, lng }, index) => {
             const position = { lat, lng }
             bounds.extend(position)
@@ -336,7 +352,7 @@ export default function FacilityMapPreview({ facilities, area }: Props) {
     return () => {
       cancelled = true
     }
-  }, [area, mapItems])
+  }, [area, mapItems, userLatitude, userLongitude])
 
   const activeFacility =
     mapItems.find((item) => item.facility.id === activeId)?.facility ||

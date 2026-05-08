@@ -5,6 +5,8 @@ import { MapPin, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
 const PREFERRED_AREA_KEY = 'cares_preferred_area'
+const PREFERRED_LAT_KEY = 'cares_preferred_lat'
+const PREFERRED_LNG_KEY = 'cares_preferred_lng'
 const GEO_DISMISSED_KEY = 'geolocation_dismissed'
 
 // 47都道府県の中心座標（緯度, 経度）
@@ -91,10 +93,15 @@ export default function GeolocationBanner() {
       (position) => {
         const pref = findNearestPrefecture(position.coords.latitude, position.coords.longitude)
         localStorage.setItem(PREFERRED_AREA_KEY, pref)
+        localStorage.setItem(PREFERRED_LAT_KEY, String(position.coords.latitude))
+        localStorage.setItem(PREFERRED_LNG_KEY, String(position.coords.longitude))
         localStorage.setItem(GEO_DISMISSED_KEY, '1')
         // Build URL preserving existing params
         const params = new URLSearchParams(searchParams.toString())
         params.set('area', pref)
+        params.set('lat', String(position.coords.latitude))
+        params.set('lng', String(position.coords.longitude))
+        params.delete('page')
         window.location.href = `/?${params.toString()}`
       },
       () => {

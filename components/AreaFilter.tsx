@@ -15,6 +15,8 @@ const prefecturesByRegion = [
 ]
 
 const PREFERRED_AREA_KEY = 'cares_preferred_area'
+const PREFERRED_LAT_KEY = 'cares_preferred_lat'
+const PREFERRED_LNG_KEY = 'cares_preferred_lng'
 const GEO_DISMISSED_KEY = 'geolocation_dismissed'
 
 const prefectureCoordinates: { name: string; lat: number; lng: number }[] = [
@@ -145,8 +147,12 @@ export default function AreaFilter() {
         const pref = findNearestPrefecture(latitude, longitude)
         const params = new URLSearchParams(searchParams.toString())
         params.set('area', pref)
+        params.set('lat', String(latitude))
+        params.set('lng', String(longitude))
         params.delete('page')
         localStorage.setItem(PREFERRED_AREA_KEY, pref)
+        localStorage.setItem(PREFERRED_LAT_KEY, String(latitude))
+        localStorage.setItem(PREFERRED_LNG_KEY, String(longitude))
         localStorage.setItem(GEO_DISMISSED_KEY, '1')
         router.push(`/?${params.toString()}`)
         setGeoLoading(false)
@@ -178,7 +184,11 @@ export default function AreaFilter() {
       }
     } else {
       params.delete('area')
+      params.delete('lat')
+      params.delete('lng')
       localStorage.removeItem(PREFERRED_AREA_KEY)
+      localStorage.removeItem(PREFERRED_LAT_KEY)
+      localStorage.removeItem(PREFERRED_LNG_KEY)
     }
     params.delete('page')
     const qs = params.toString()

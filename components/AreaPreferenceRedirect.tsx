@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const PREFERRED_AREA_KEY = 'cares_preferred_area'
+const PREFERRED_LAT_KEY = 'cares_preferred_lat'
+const PREFERRED_LNG_KEY = 'cares_preferred_lng'
 
 export default function AreaPreferenceRedirect() {
   const router = useRouter()
@@ -24,9 +26,15 @@ export default function AreaPreferenceRedirect() {
 
     const preferredArea = localStorage.getItem(PREFERRED_AREA_KEY)
     if (!preferredArea) return
+    const preferredLat = localStorage.getItem(PREFERRED_LAT_KEY)
+    const preferredLng = localStorage.getItem(PREFERRED_LNG_KEY)
 
     const params = new URLSearchParams(searchParams.toString())
     params.set('area', preferredArea)
+    if (preferredLat && preferredLng) {
+      params.set('lat', preferredLat)
+      params.set('lng', preferredLng)
+    }
     params.delete('page')
     router.replace(`/?${params.toString()}`)
   }, [router, searchParams])

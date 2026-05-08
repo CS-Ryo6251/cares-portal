@@ -40,6 +40,11 @@ function buildHref(
   if (overrideValue) {
     params.set(overrideKey, overrideValue)
   }
+  if (overrideKey === 'area' && !overrideValue) {
+    params.delete('lat')
+    params.delete('lng')
+  }
+  params.delete('page')
   const qs = params.toString()
   return qs ? `/?${qs}` : '/'
 }
@@ -60,6 +65,8 @@ export default function Sidebar({ searchParams }: SidebarProps) {
             {currentView === 'posts' && <input type="hidden" name="view" value="posts" />}
             {currentCategory && <input type="hidden" name="category" value={currentCategory} />}
             {currentArea && <input type="hidden" name="area" value={currentArea} />}
+            {searchParams.lat && <input type="hidden" name="lat" value={searchParams.lat} />}
+            {searchParams.lng && <input type="hidden" name="lng" value={searchParams.lng} />}
             {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />

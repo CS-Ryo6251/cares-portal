@@ -268,6 +268,25 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
 
 const FACILITIES_PER_PAGE = 50
 
+function parseCoordinate(value: string | undefined) {
+  if (!value) return null
+  const coordinate = Number(value)
+  return Number.isFinite(coordinate) ? coordinate : null
+}
+
+function calculateDistanceKm(fromLat: number, fromLng: number, toLat: number | null, toLng: number | null) {
+  if (toLat === null || toLng === null) return Number.POSITIVE_INFINITY
+  const earthRadiusKm = 6371
+  const latDelta = ((toLat - fromLat) * Math.PI) / 180
+  const lngDelta = ((toLng - fromLng) * Math.PI) / 180
+  const startLat = (fromLat * Math.PI) / 180
+  const endLat = (toLat * Math.PI) / 180
+  const haversine =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(startLat) * Math.cos(endLat) * Math.sin(lngDelta / 2) ** 2
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
+}
+
 async function getFacilities(searchParams: { [key: string]: string | undefined }): Promise<{
   facilities: any[]
   totalCount: number
@@ -278,12 +297,16 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   const page = Math.max(1, parseInt(searchParams.page || '1', 10))
   const from = (page - 1) * FACILITIES_PER_PAGE
   const to = from + FACILITIES_PER_PAGE - 1
+  const userLatitude = parseCoordinate(searchParams.lat)
+  const userLongitude = parseCoordinate(searchParams.lng)
+  const hasUserLocation = userLatitude !== null && userLongitude !== null
 
   let query = supabase
     .from('cares_listings')
     .select('*', { count: 'estimated' })
-    .order('id', { ascending: true })
-    .range(from, to)
+    .order('is_owner_verified', { ascending: false })
+    .order('completeness_score', { ascending: false, nullsFirst: false })
+    .order('facility_name', { ascending: true })
 
   if (searchParams.area) {
     const area = searchParams.area
@@ -322,6 +345,12 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     query = query.or(`facility_name.ilike.%${q}%,address.ilike.%${q}%`)
   }
 
+  if (hasUserLocation) {
+    query = query.limit(Math.max(to + 1, 250))
+  } else {
+    query = query.range(from, to)
+  }
+
   let { data, error, count } = await query
 
   if (error) {
@@ -340,10 +369,30 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     count = fallback.data?.length || 0
   }
 
+  let rawData = data || []
+  if (hasUserLocation) {
+    rawData = [...rawData]
+      .map((item: any) => ({
+        ...item,
+        distance_km: calculateDistanceKm(
+          userLatitude,
+          userLongitude,
+          parseCoordinate(item.latitude),
+          parseCoordinate(item.longitude)
+        ),
+      }))
+      .sort((a: any, b: any) => {
+        if (a.distance_km !== b.distance_km) return a.distance_km - b.distance_km
+        if (a.is_owner_verified !== b.is_owner_verified) return a.is_owner_verified ? -1 : 1
+        return (b.completeness_score || 0) - (a.completeness_score || 0)
+      })
+      .slice(from, to + 1)
+  }
+
   const totalCount = count || 0
   const totalPages = Math.ceil(totalCount / FACILITIES_PER_PAGE)
 
-  const listingIds = (data || []).map((item: any) => item.id)
+  const listingIds = rawData.map((item: any) => item.id)
   const ratingStats: Record<string, { sum: number; count: number }> = {}
 
   if (listingIds.length > 0) {
@@ -362,7 +411,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     }
   }
 
-  const facilities = (data || []).map((item: any) => {
+  const facilities = rawData.map((item: any) => {
     const stats = ratingStats[item.id]
     const ratingAverage = stats?.count ? Math.round((stats.sum / stats.count) * 10) / 10 : null
 
@@ -380,6 +429,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
       completeness_tier: item.completeness_tier || 'insufficient',
       rating_average: ratingAverage,
       rating_count: stats?.count || 0,
+      distance_km: item.distance_km ?? null,
     }
   })
 
@@ -390,6 +440,8 @@ function buildCategoryUrl(currentParams: { [key: string]: string | undefined }, 
   const params = new URLSearchParams()
   if (currentParams.view) params.set('view', currentParams.view)
   if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.lat) params.set('lat', currentParams.lat)
+  if (currentParams.lng) params.set('lng', currentParams.lng)
   if (currentParams.status) params.set('status', currentParams.status)
   if (currentParams.q) params.set('q', currentParams.q)
   if (currentParams.service_type) params.set('service_type', currentParams.service_type)
@@ -402,6 +454,8 @@ function buildServiceTypeUrl(currentParams: { [key: string]: string | undefined 
   const params = new URLSearchParams()
   if (currentParams.view) params.set('view', currentParams.view)
   if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.lat) params.set('lat', currentParams.lat)
+  if (currentParams.lng) params.set('lng', currentParams.lng)
   if (currentParams.status) params.set('status', currentParams.status)
   if (currentParams.q) params.set('q', currentParams.q)
   if (serviceType) params.set('service_type', serviceType)
@@ -424,6 +478,9 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
   if (params.area) {
     filters.push({ key: 'area', label: 'エリア', value: params.area })
   }
+  if (params.lat && params.lng) {
+    filters.push({ key: 'location', label: '現在地', value: '現在地周辺' })
+  }
   if (params.status) {
     const statusInfo = vacancyStatusMap[params.status]
     filters.push({ key: 'status', label: '受入状況', value: statusInfo?.label || params.status })
@@ -442,6 +499,14 @@ function ActiveFilters({ params }: { params: { [key: string]: string | undefined
         Object.entries(params).forEach(([k, v]) => {
           if (v && k !== filter.key) newParams.set(k, v)
         })
+        if (filter.key === 'location') {
+          newParams.delete('lat')
+          newParams.delete('lng')
+        }
+        if (filter.key === 'area') {
+          newParams.delete('lat')
+          newParams.delete('lng')
+        }
         const qs = newParams.toString()
         const href = qs ? `/?${qs}` : '/'
         return (
@@ -473,6 +538,8 @@ function buildTabUrl(currentParams: { [key: string]: string | undefined }, view:
   // Preserve q, area, status, service_type — reset category and sort when switching tabs
   if (currentParams.q) params.set('q', currentParams.q)
   if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.lat) params.set('lat', currentParams.lat)
+  if (currentParams.lng) params.set('lng', currentParams.lng)
   if (currentParams.status) params.set('status', currentParams.status)
   if (currentParams.service_type) params.set('service_type', currentParams.service_type)
   const qs = params.toString()
@@ -483,6 +550,8 @@ function buildPageUrl(currentParams: { [key: string]: string | undefined }, page
   const params = new URLSearchParams()
   if (currentParams.view) params.set('view', currentParams.view)
   if (currentParams.area) params.set('area', currentParams.area)
+  if (currentParams.lat) params.set('lat', currentParams.lat)
+  if (currentParams.lng) params.set('lng', currentParams.lng)
   if (currentParams.status) params.set('status', currentParams.status)
   if (currentParams.q) params.set('q', currentParams.q)
   if (currentParams.service_type) params.set('service_type', currentParams.service_type)
@@ -499,6 +568,9 @@ export default async function FeedPage({
   const params = await searchParams
   const currentSort = params.sort || 'recommended'
   const currentView = params.view || 'facilities'
+  const userLatitude = parseCoordinate(params.lat)
+  const userLongitude = parseCoordinate(params.lng)
+  const hasUserLocation = userLatitude !== null && userLongitude !== null
 
   const posts = currentView === 'posts' ? await getFeedPosts(params) : []
   const facilitiesResult = currentView === 'facilities' ? await getFacilities(params) : { facilities: [], totalCount: 0, page: 1, totalPages: 0 }
@@ -521,6 +593,8 @@ export default async function FeedPage({
             {currentView === 'posts' && <input type="hidden" name="view" value="posts" />}
             {params.category && <input type="hidden" name="category" value={params.category} />}
             {params.area && <input type="hidden" name="area" value={params.area} />}
+            {params.lat && <input type="hidden" name="lat" value={params.lat} />}
+            {params.lng && <input type="hidden" name="lng" value={params.lng} />}
             {params.status && <input type="hidden" name="status" value={params.status} />}
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -728,7 +802,34 @@ export default async function FeedPage({
         {/* Facility list */}
         {currentView === 'facilities' && (
         <>
-          <FacilityMapPreview facilities={facilities} area={params.area} />
+          <div className="mb-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-bold text-slate-950">
+                  {hasUserLocation
+                    ? '現在地に近い順で表示しています'
+                    : params.area
+                      ? `${params.area.replace(':', ' / ')}の事業所`
+                      : 'エリアを指定すると近くの事業所を探しやすくなります'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  検索・エリア・サービス種別の条件は、一覧と地図の両方に反映されます。
+                </p>
+              </div>
+              {!hasUserLocation && (
+                <span className="text-xs font-semibold text-cares-700">
+                  左の「現在地から探す」またはエリア検索を利用できます
+                </span>
+              )}
+            </div>
+          </div>
+
+          <FacilityMapPreview
+            facilities={facilities}
+            area={params.area}
+            userLatitude={userLatitude}
+            userLongitude={userLongitude}
+          />
 
           <div className="space-y-4">
             {facilities.map((item: any) => (
@@ -769,6 +870,11 @@ export default async function FeedPage({
                     <p className="text-sm text-slate-500 mt-2 leading-relaxed">{item.address}</p>
                   )}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {typeof item.distance_km === 'number' && Number.isFinite(item.distance_km) && (
+                      <span className="inline-flex items-center rounded-full bg-cares-50 px-2.5 py-1 text-xs font-bold text-cares-700">
+                        現在地から約{item.distance_km < 1 ? `${Math.round(item.distance_km * 1000)}m` : `${item.distance_km.toFixed(1)}km`}
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                       {item.rating_average ? item.rating_average.toFixed(1) : '-'}
