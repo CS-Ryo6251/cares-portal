@@ -258,6 +258,10 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     panX: 0,
     panY: 0,
   })
+  const markerContentRef = useRef<Record<string, HTMLElement>>({})
+  const fallbackMarkerRef = useRef<Record<string, any>>({})
+  const activeIdRef = useRef(activeId)
+  activeIdRef.current = activeId
 
   useEffect(() => {
     setSelectedArea(area?.split(':')[0] || '')
@@ -428,11 +432,13 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
             const position = { lat, lng }
             bounds.extend(position)
             if (google.maps.marker?.AdvancedMarkerElement) {
+              const content = createMarkerContent(facility, false)
+              markerContentRef.current[facility.id] = content
               const marker = new google.maps.marker.AdvancedMarkerElement({
                 map,
                 position,
                 title: facility.facility_name,
-                content: createMarkerContent(facility, facility.id === activeId),
+                content,
                 gmpClickable: true,
               })
               marker.addListener('click', () => {
@@ -451,9 +457,10 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                   fillOpacity: 1,
                   strokeColor: '#ffffff',
                   strokeWeight: 3,
-                  scale: facility.id === activeId ? 11 : 9,
+                  scale: 9,
                 },
               })
+              fallbackMarkerRef.current[facility.id] = marker
               marker.addListener('click', () => {
                 setActiveId(facility.id)
                 map.panTo(position)
@@ -464,6 +471,24 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
           if (shouldFitAllPins && mapItems.length > 1) {
             map.fitBounds(bounds, 58)
           }
+
+          const currentActiveId = activeIdRef.current
+          for (const [id, el] of Object.entries(markerContentRef.current)) {
+            el.classList.toggle('is-active', id === currentActiveId)
+          }
+          for (const [id, fallbackMarker] of Object.entries(fallbackMarkerRef.current)) {
+            const facility = mapItems.find((item) => item.facility.id === id)?.facility
+            if (!facility) continue
+            const style = getMapServiceStyle(facility.service_type)
+            fallbackMarker.setIcon({
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: style.color,
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 3,
+              scale: id === currentActiveId ? 11 : 9,
+            })
+          }
         } catch (markerError) {
           console.warn('Google Maps marker rendering failed:', markerError)
         }
@@ -472,8 +497,33 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
 
     return () => {
       cancelled = true
+      markerContentRef.current = {}
+      fallbackMarkerRef.current = {}
     }
-  }, [activeId, area, mapItems, userLatitude, userLongitude])
+  }, [area, mapItems, userLatitude, userLongitude])
+
+  useEffect(() => {
+    for (const [id, el] of Object.entries(markerContentRef.current)) {
+      el.classList.toggle('is-active', id === activeId)
+    }
+
+    const mapsWindow = window as GoogleMapsWindow
+    const google = mapsWindow.google
+    if (!google?.maps?.SymbolPath) return
+    for (const item of mapItems) {
+      const fallbackMarker = fallbackMarkerRef.current[item.facility.id]
+      if (!fallbackMarker) continue
+      const style = getMapServiceStyle(item.facility.service_type)
+      fallbackMarker.setIcon({
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: style.color,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+        scale: item.facility.id === activeId ? 11 : 9,
+      })
+    }
+  }, [activeId, mapItems])
 
   const activeFacility =
     mapItems.find((item) => item.facility.id === activeId)?.facility ||
