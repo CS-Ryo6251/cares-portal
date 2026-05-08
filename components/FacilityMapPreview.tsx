@@ -3,7 +3,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent, WheelEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MapPinned, Minus, Navigation, Plus, RotateCcw, Search, Star } from 'lucide-react'
+import {
+  Armchair,
+  Building2,
+  ClipboardList,
+  HandHelping,
+  Heart,
+  Home,
+  MapPinned,
+  Minus,
+  Navigation,
+  Plus,
+  RotateCcw,
+  Search,
+  Star,
+  Stethoscope,
+  Truck,
+  Users,
+} from 'lucide-react'
+import ServiceTypeIcon from './ServiceTypeIcon'
 
 type FacilityMapItem = {
   id: string
@@ -35,6 +53,30 @@ const googleMapsMapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_
 const PREFERRED_AREA_KEY = 'cares_preferred_area'
 const PREFERRED_LAT_KEY = 'cares_preferred_lat'
 const PREFERRED_LNG_KEY = 'cares_preferred_lng'
+
+const mapServiceStyles: Record<string, { icon: string; color: string; soft: string; label: string }> = {
+  visit: { icon: 'truck', color: '#2563eb', soft: '#dbeafe', label: '訪問系' },
+  day: { icon: 'users', color: '#16a34a', soft: '#dcfce7', label: '通所系' },
+  residential: { icon: 'building', color: '#9333ea', soft: '#f3e8ff', label: '入所系' },
+  home: { icon: 'home', color: '#d97706', soft: '#fef3c7', label: '住まい系' },
+  shortStay: { icon: 'armchair', color: '#0f766e', soft: '#ccfbf1', label: '短期入所' },
+  carePlan: { icon: 'clipboard', color: '#e11d48', soft: '#ffe4e6', label: '居宅介護支援' },
+  multi: { icon: 'hand', color: '#4f46e5', soft: '#e0e7ff', label: '多機能系' },
+  support: { icon: 'heart', color: '#0284c7', soft: '#e0f2fe', label: '相談支援' },
+  default: { icon: 'building', color: '#475569', soft: '#f1f5f9', label: '介護事業所' },
+}
+
+const markerSvgPaths: Record<string, string> = {
+  building: '<path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16"/><path d="M9 21v-4h3v4"/><path d="M8 7h1"/><path d="M12 7h1"/><path d="M8 11h1"/><path d="M12 11h1"/><path d="M3 21h18"/>',
+  home: '<path d="M3 11 12 3l9 8"/><path d="M5 10v11h14V10"/><path d="M9 21v-6h6v6"/>',
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',
+  stethoscope: '<path d="M6 3v5a6 6 0 0 0 12 0V3"/><path d="M8 3H4v5a8 8 0 0 0 16 0V3h-4"/><circle cx="20" cy="16" r="2"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  hand: '<path d="M11 11V5a2 2 0 0 1 4 0v6"/><path d="M15 11V7a2 2 0 0 1 4 0v7a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7v-3a2 2 0 0 1 4 0v2"/><path d="M7 11V9a2 2 0 0 1 4 0v2"/>',
+  truck: '<path d="M10 17h4V5H2v12h3"/><path d="M14 17h1"/><path d="M14 8h4l4 4v5h-2"/><circle cx="7" cy="17" r="2"/><circle cx="18" cy="17" r="2"/>',
+  armchair: '<path d="M6 9V6a3 3 0 0 1 6 0v3"/><path d="M18 9V6a3 3 0 0 0-6 0v3"/><path d="M4 11h16v6H4z"/><path d="M5 21v-4"/><path d="M19 21v-4"/>',
+  clipboard: '<path d="M9 3h6v4H9z"/><path d="M9 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/><path d="M8 13h8"/><path d="M8 17h5"/>',
+}
 
 const prefectureCoordinates: { name: string; lat: number; lng: number }[] = [
   { name: '北海道', lat: 43.0646, lng: 141.3468 },
@@ -127,6 +169,41 @@ function formatRating(value: number | null) {
   return value ? value.toFixed(1) : '-'
 }
 
+function getMapServiceStyle(serviceType?: string | null) {
+  if (!serviceType) return mapServiceStyles.default
+  if (serviceType.includes('訪問')) return mapServiceStyles.visit
+  if (serviceType.includes('通所') || serviceType.includes('デイ')) return mapServiceStyles.day
+  if (serviceType.includes('特別養護') || serviceType.includes('老人福祉') || serviceType.includes('老人保健') || serviceType.includes('介護医療')) {
+    return mapServiceStyles.residential
+  }
+  if (serviceType.includes('共同生活') || serviceType.includes('グループホーム') || serviceType.includes('有料老人') || serviceType.includes('サービス付き')) {
+    return mapServiceStyles.home
+  }
+  if (serviceType.includes('短期入所')) return mapServiceStyles.shortStay
+  if (serviceType.includes('居宅介護支援')) return mapServiceStyles.carePlan
+  if (serviceType.includes('小規模多機能') || serviceType.includes('定期巡回') || serviceType.includes('夜間対応')) return mapServiceStyles.multi
+  if (serviceType.includes('地域包括')) return mapServiceStyles.support
+  if (serviceType.includes('看護') || serviceType.includes('リハビリ')) return mapServiceStyles.visit
+  return mapServiceStyles.default
+}
+
+function getFallbackMarkerIcon(serviceType?: string | null) {
+  const icon = getMapServiceStyle(serviceType).icon
+  const icons = {
+    building: Building2,
+    home: Home,
+    heart: Heart,
+    stethoscope: Stethoscope,
+    users: Users,
+    hand: HandHelping,
+    truck: Truck,
+    armchair: Armchair,
+    clipboard: ClipboardList,
+  } as const
+
+  return icons[icon as keyof typeof icons] || Building2
+}
+
 function loadGoogleMaps(apiKey: string) {
   const mapsWindow = window as GoogleMapsWindow
   if (mapsWindow.google?.maps?.Map) {
@@ -156,11 +233,20 @@ function loadGoogleMaps(apiKey: string) {
   return mapsWindow.__caresGoogleMapsPromise
 }
 
-function createMarkerContent(facility: FacilityMapItem, index: number) {
+function createMarkerContent(facility: FacilityMapItem, active: boolean) {
+  const style = getMapServiceStyle(facility.service_type)
+  const svgPath = markerSvgPaths[style.icon] || markerSvgPaths.building
   const node = document.createElement('div')
-  node.className = 'cares-google-marker'
-  node.textContent = facility.rating_average ? formatRating(facility.rating_average) : String(index + 1)
+  node.className = `cares-google-marker ${active ? 'is-active' : ''}`
+  node.style.setProperty('--marker-color', style.color)
+  node.style.setProperty('--marker-soft', style.soft)
+  node.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      ${svgPath}
+    </svg>
+  `
   node.title = facility.facility_name
+  node.setAttribute('aria-label', `${facility.facility_name}を選択`)
   return node
 }
 
@@ -190,6 +276,12 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
   useEffect(() => {
     setSelectedArea(area?.split(':')[0] || '')
   }, [area])
+
+  useEffect(() => {
+    if (!visibleFacilities.some((facility) => facility.id === activeId)) {
+      setActiveId(visibleFacilities[0]?.id || '')
+    }
+  }, [activeId, visibleFacilities])
 
   const mapItems = useMemo(() => {
     const points = visibleFacilities.map((facility) => {
@@ -346,7 +438,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
             bounds.extend(center)
           }
 
-          mapItems.forEach(({ facility, lat, lng }, index) => {
+          mapItems.forEach(({ facility, lat, lng }) => {
             const position = { lat, lng }
             bounds.extend(position)
             if (google.maps.marker?.AdvancedMarkerElement) {
@@ -354,17 +446,31 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                 map,
                 position,
                 title: facility.facility_name,
-                content: createMarkerContent(facility, index),
+                content: createMarkerContent(facility, facility.id === activeId),
               })
-              marker.addEventListener('gmp-click', () => setActiveId(facility.id))
+              marker.addEventListener('gmp-click', () => {
+                setActiveId(facility.id)
+                map.panTo(position)
+              })
             } else {
+              const style = getMapServiceStyle(facility.service_type)
               const marker = new google.maps.Marker({
                 map,
                 position,
                 title: facility.facility_name,
-                label: facility.rating_average ? formatRating(facility.rating_average) : String(index + 1),
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  fillColor: style.color,
+                  fillOpacity: 1,
+                  strokeColor: '#ffffff',
+                  strokeWeight: 3,
+                  scale: facility.id === activeId ? 11 : 9,
+                },
               })
-              marker.addListener('click', () => setActiveId(facility.id))
+              marker.addListener('click', () => {
+                setActiveId(facility.id)
+                map.panTo(position)
+              })
             }
           })
 
@@ -380,7 +486,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
     return () => {
       cancelled = true
     }
-  }, [area, mapItems, userLatitude, userLongitude])
+  }, [activeId, area, mapItems, userLatitude, userLongitude])
 
   const activeFacility =
     mapItems.find((item) => item.facility.id === activeId)?.facility ||
@@ -596,31 +702,35 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
               <div className="absolute -right-16 bottom-20 h-20 w-[120%] rotate-[11deg] rounded-full bg-white/60" />
               <div className="absolute left-8 top-1/2 h-14 w-[90%] -translate-y-1/2 rotate-[4deg] rounded-full bg-cares-100/80" />
 
-              {mapItems.map(({ facility, x, y }, index) => {
+              {mapItems.map(({ facility, x, y }) => {
                 const active = facility.id === activeFacility?.id
+                const markerStyle = getMapServiceStyle(facility.service_type)
+                const MarkerIcon = getFallbackMarkerIcon(facility.service_type)
                 return (
-                  <a
+                  <button
                     key={facility.id}
-                    href={`/directory/${facility.id}`}
+                    type="button"
                     onPointerDown={(event) => event.stopPropagation()}
-                    onMouseEnter={() => setActiveId(facility.id)}
-                    onFocus={() => setActiveId(facility.id)}
+                    onClick={() => setActiveId(facility.id)}
                     className="absolute z-10 -translate-x-1/2 -translate-y-full cursor-pointer outline-none"
                     style={{ left: `${x}%`, top: `${y}%` }}
-                    aria-label={`${facility.facility_name}を開く`}
+                    aria-label={`${facility.facility_name}を選択`}
                   >
                     <span
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold shadow-lg ring-2 transition-all ${
+                      className={`flex h-9 w-9 items-center justify-center rounded-full shadow-lg ring-2 transition-all ${
                         active
-                          ? 'scale-110 bg-slate-950 text-white ring-white'
-                          : 'bg-white text-slate-900 ring-white/80 hover:scale-105'
+                          ? 'scale-110 text-white ring-white'
+                          : 'text-white ring-white/80 hover:scale-105'
                       }`}
+                      style={{ backgroundColor: markerStyle.color }}
                     >
-                      <span className={`h-2 w-2 rounded-full ${facility.is_owner_verified ? 'bg-blue-400' : 'bg-cares-500'}`} />
-                      {facility.rating_average ? formatRating(facility.rating_average) : index + 1}
+                      <MarkerIcon className="h-4 w-4" />
                     </span>
-                    <span className={`mx-auto block h-3 w-3 rotate-45 rounded-sm shadow-md ${active ? 'bg-slate-950' : 'bg-white'}`} />
-                  </a>
+                    <span
+                      className="mx-auto block h-3 w-3 rotate-45 rounded-sm shadow-md"
+                      style={{ backgroundColor: markerStyle.color }}
+                    />
+                  </button>
                 )
               })}
             </div>
@@ -674,11 +784,14 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
             className="absolute bottom-4 left-4 right-4 z-20 rounded-2xl border border-white/70 bg-white/95 p-4 shadow-xl shadow-slate-900/10 backdrop-blur sm:left-auto sm:right-5 sm:w-80"
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="line-clamp-2 text-sm font-bold leading-snug text-slate-950">
-                  {activeFacility.facility_name}
-                </p>
-                <p className="mt-1 truncate text-xs text-slate-500">{activeFacility.address || '住所未登録'}</p>
+              <div className="flex min-w-0 items-start gap-2.5">
+                <ServiceTypeIcon serviceType={activeFacility.service_type} size="sm" className="mt-0.5" />
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-sm font-bold leading-snug text-slate-950">
+                    {activeFacility.facility_name}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-slate-500">{activeFacility.address || '住所未登録'}</p>
+                </div>
               </div>
               {activeFacility.is_owner_verified && (
                 <span className="shrink-0 rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
