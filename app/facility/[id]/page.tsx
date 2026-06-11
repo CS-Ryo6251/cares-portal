@@ -353,6 +353,17 @@ export default async function FacilityDetailPage({
 
   const serviceTypeLabel = facilityTypeLabels[f.service_type] || f.service_type
 
+  // 実績スタッツとフォトギャラリー（投稿メディアから生成）
+  const totalViews = facility.posts.reduce((sum: number, p: any) => sum + (p.view_count || 0), 0)
+  const totalLikes = facility.posts.reduce((sum: number, p: any) => sum + (p.like_count || 0), 0)
+  const galleryImages = facility.posts
+    .flatMap((p: any) =>
+      (p.facility_portal_post_media || [])
+        .filter((m: any) => !m.media_type || m.media_type.startsWith('image'))
+        .map((m: any) => ({ id: m.id, url: m.media_url, postId: p.id }))
+    )
+    .slice(0, 10)
+
   // 最終更新日: last_activity_at（トリガーで自動更新）をフォールバック付きで使用
   const activityDate = facility.last_activity_at || facility.updated_at
   const lastUpdatedLabel = activityDate
@@ -432,104 +443,84 @@ export default async function FacilityDetailPage({
           フィードに戻る
         </Link>
 
-        {/* Hero / Cover image section */}
-        {facility.cover_image_url ? (
-          <div className="relative rounded-2xl overflow-hidden mb-6 shadow-sm">
-            <img
-              src={facility.cover_image_url}
-              alt={f.name}
-              className="w-full h-48 sm:h-56 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-              <div className="flex items-end gap-2 sm:gap-3 flex-wrap">
-                {facility.icon_url ? (
-                  <img
-                    src={facility.icon_url}
-                    alt={f.name}
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
-                  />
-                ) : (
-                  <ServiceTypeIcon serviceType={f.service_type} size="md" className="shadow-lg" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
-                    <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500 text-white">
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                      公式
+        {/* Hero */}
+        <div className="relative rounded-3xl overflow-hidden mb-6 shadow-lg shadow-slate-200/60 animate-fade-up">
+          {facility.cover_image_url ? (
+            <>
+              <img
+                src={facility.cover_image_url}
+                alt={f.name}
+                className="w-full h-56 sm:h-72 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+            </>
+          ) : (
+            <div className="hero-mesh hero-grain relative w-full h-56 sm:h-72" />
+          )}
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
+            <div className="flex items-end gap-3 sm:gap-4 flex-wrap">
+              {facility.icon_url ? (
+                <img
+                  src={facility.icon_url}
+                  alt={f.name}
+                  className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover ring-4 ring-white/90 shadow-xl shrink-0"
+                />
+              ) : (
+                <ServiceTypeIcon serviceType={f.service_type} size="md" className="ring-4 ring-white/90 shadow-xl" />
+              )}
+              <div className="flex-1 min-w-0 pb-0.5">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
+                  <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-cares-700 shadow-sm">
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    公式
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <p className="text-xs sm:text-sm text-white/90 font-semibold">
+                    {serviceTypeLabel}
+                  </p>
+                  <span
+                    className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${
+                      acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
+                    }`}
+                  >
+                    {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
+                  </span>
+                  {lastUpdatedLabel && (
+                    <span className="text-[10px] sm:text-xs text-white/70 font-medium">
+                      {lastUpdatedLabel}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <p className="text-xs sm:text-sm text-white/80 font-medium">
-                      {serviceTypeLabel}
-                    </p>
-                    <span
-                      className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold border backdrop-blur-sm ${
-                        acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
-                      }`}
-                    >
-                      {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
-                    </span>
-                    {lastUpdatedLabel && (
-                      <span className="text-[10px] sm:text-xs text-white/60 font-medium">
-                        {lastUpdatedLabel}
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        ) : (
-          /* No cover image: gradient hero for visitors */
-          <div className="relative rounded-2xl overflow-hidden mb-6 shadow-sm">
-            <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-cares-600 via-cares-500 to-emerald-400" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-              <div className="flex items-end gap-2 sm:gap-3 flex-wrap">
-                {facility.icon_url ? (
-                  <img
-                    src={facility.icon_url}
-                    alt={f.name}
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0"
-                  />
-                ) : (
-                  <ServiceTypeIcon serviceType={f.service_type} size="md" className="shadow-lg" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
-                    <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500 text-white">
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                      公式
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <p className="text-xs sm:text-sm text-white/80 font-medium">
-                      {serviceTypeLabel}
-                    </p>
-                    <span
-                      className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold border backdrop-blur-sm ${
-                        acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
-                      }`}
-                    >
-                      {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
-                    </span>
-                    {lastUpdatedLabel && (
-                      <span className="text-[10px] sm:text-xs text-white/60 font-medium">
-                        {lastUpdatedLabel}
-                      </span>
-                    )}
-                  </div>
-                </div>
+        </div>
+
+        {/* Activity stats */}
+        {facility.posts.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6 animate-fade-up-delay-1">
+            {[
+              { label: '投稿', value: facility.posts.length },
+              { label: '閲覧', value: totalViews },
+              { label: 'いいね', value: totalLikes },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl border border-slate-200/80 bg-white/95 px-3 py-3 sm:py-4 text-center shadow-sm"
+              >
+                <p className="text-xl sm:text-2xl font-black tabular-nums tracking-tight text-slate-950">
+                  {stat.value.toLocaleString()}
+                </p>
+                <p className="mt-0.5 text-[11px] sm:text-xs font-semibold text-slate-400">{stat.label}</p>
               </div>
-            </div>
+            ))}
           </div>
         )}
 
         {/* Info & Actions card */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 mb-6 shadow-sm">
+        <div className="surface-card rounded-3xl p-5 sm:p-6 mb-6 animate-fade-up-delay-2">
           {/* Address & Phone */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-base text-gray-600">
@@ -599,54 +590,36 @@ export default async function FacilityDetailPage({
             <InquiryButton facilityId={facility.facility_id} facilityName={f.name} />
           </div>
 
-          {/* SNS Icons */}
-          <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-            {facility.sns_x ? (
-              <a href={facility.sns_x} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <svg className="w-4 h-4 text-gray-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              </a>
-            ) : (
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50">
-                <svg className="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              </span>
-            )}
-            {facility.sns_instagram ? (
-              <a href={facility.sns_instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <svg className="w-4 h-4 text-pink-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-              </a>
-            ) : (
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50">
-                <svg className="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-              </span>
-            )}
-            {facility.sns_tiktok ? (
-              <a href={facility.sns_tiktok} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <svg className="w-4 h-4 text-gray-900" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.87a8.16 8.16 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.3z"/></svg>
-              </a>
-            ) : (
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50">
-                <svg className="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.87a8.16 8.16 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.3z"/></svg>
-              </span>
-            )}
-            {facility.sns_youtube ? (
-              <a href={facility.sns_youtube} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <svg className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-              </a>
-            ) : (
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50">
-                <svg className="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-              </span>
-            )}
-            {facility.sns_facebook ? (
-              <a href={facility.sns_facebook} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </a>
-            ) : (
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50">
-                <svg className="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </span>
-            )}
-          </div>
+          {/* SNS Icons — 登録済みのものだけ表示 */}
+          {(facility.sns_x || facility.sns_instagram || facility.sns_tiktok || facility.sns_youtube || facility.sns_facebook) && (
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+              {facility.sns_x && (
+                <a href={facility.sns_x} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4 text-gray-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+              )}
+              {facility.sns_instagram && (
+                <a href={facility.sns_instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4 text-pink-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                </a>
+              )}
+              {facility.sns_tiktok && (
+                <a href={facility.sns_tiktok} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4 text-gray-900" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.87a8.16 8.16 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.3z"/></svg>
+                </a>
+              )}
+              {facility.sns_youtube && (
+                <a href={facility.sns_youtube} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+              )}
+              {facility.sns_facebook && (
+                <a href={facility.sns_facebook} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Share buttons */}
           <ShareButtons facilityName={f.name} facilityId={facility.facility_id} />
@@ -672,6 +645,30 @@ export default async function FacilityDetailPage({
             </div>
           )}
         </div>
+
+        {/* Photo gallery — 投稿写真から自動生成 */}
+        {galleryImages.length >= 3 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-px flex-1 bg-gray-200" />
+              <h2 className="text-lg font-bold text-gray-900 shrink-0">施設のようす</h2>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+            <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+              {galleryImages.map((img: any, i: number) => (
+                <a
+                  key={img.id}
+                  href={`#post-${img.postId}`}
+                  className={`relative shrink-0 snap-start overflow-hidden rounded-2xl shadow-sm transition-transform hover:scale-[1.02] ${
+                    i === 0 ? 'w-56 h-40 sm:w-72 sm:h-52' : 'w-32 h-40 sm:w-40 sm:h-52'
+                  }`}
+                >
+                  <img src={img.url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Mobile category tabs */}
         {facility.posts.length > 0 && (
@@ -705,6 +702,13 @@ export default async function FacilityDetailPage({
         )}
 
         {/* Posts timeline */}
+        {filteredPosts.length > 0 && (
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-gray-200" />
+            <h2 className="text-lg font-bold text-gray-900 shrink-0">最新の投稿</h2>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+        )}
         <div className="space-y-6">
           {filteredPosts.map((post: any) => (
             <PostCard

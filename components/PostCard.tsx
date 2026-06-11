@@ -46,7 +46,7 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
   const hasImages = sortedMedia.length > 0
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cares-200 hover:shadow-xl hover:shadow-slate-200/70">
+    <article className="card-lift overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm hover:border-cares-200">
       {/* Facility header */}
       <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
         <div className="flex items-center gap-2 flex-wrap">

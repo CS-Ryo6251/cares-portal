@@ -619,14 +619,18 @@ export default async function FeedPage({
         <GeolocationBanner />
 
         {/* Site intro */}
-        <div className="surface-card soft-ring mb-5 rounded-2xl p-5 sm:p-7">
+        <div className="surface-card soft-ring mb-5 rounded-3xl p-6 sm:p-8 animate-fade-up">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-cares-700">
+              <p className="mb-2.5 text-xs font-bold uppercase tracking-[0.22em] text-cares-700">
                 Cares Platform
               </p>
-              <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-slate-950">
-                近くの介護事業所を、わかりやすく探せる。
+              <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-slate-950">
+                近くの介護事業所を、
+                <span className="bg-gradient-to-r from-cares-600 to-cares-400 bg-clip-text text-transparent">
+                  わかりやすく
+                </span>
+                探せる。
               </h1>
               <p className="mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-600">
                 全国の介護事業所を、地域やサービス内容から検索できます。空き状況・口コミ・現場メモを見ながら、気になる事業所の情報を確認できます。
@@ -634,18 +638,18 @@ export default async function FeedPage({
             </div>
             <a
               href="/for-business"
-              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/10 transition-colors hover:bg-cares-800"
+              className="btn-cares inline-flex shrink-0 items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white"
             >
               事業所ページを作る
             </a>
           </div>
-          <div className="mt-5 grid gap-2 text-center sm:grid-cols-3">
+          <div className="mt-6 grid gap-2.5 text-center sm:grid-cols-3">
             {[
               ['公表DB', '最初から掲載'],
               ['口コミ', '誰でも追記'],
               ['公式管理', '事業所が更新'],
             ].map(([title, body]) => (
-              <div key={title} className="rounded-xl bg-slate-50 px-3 py-3">
+              <div key={title} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3.5">
                 <p className="text-sm font-bold text-slate-900">{title}</p>
                 <p className="mt-1 text-xs text-slate-500">{body}</p>
               </div>
@@ -842,7 +846,7 @@ export default async function FeedPage({
               <a
                 key={item.id}
                 href={`/directory/${item.id}`}
-                className="group block rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cares-200 hover:shadow-xl hover:shadow-slate-200/70"
+                className="card-lift group block rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm hover:border-cares-200"
               >
                 <div className="px-4 py-4 sm:px-5 sm:py-5">
                   <div className="flex items-center gap-2 flex-wrap">

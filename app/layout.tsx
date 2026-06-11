@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from 'next'
+import { Noto_Sans_JP } from 'next/font/google'
 import './globals.css'
 import AuthHeader from '@/components/AuthHeader'
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ['latin'],
+  weight: ['400', '500', '700', '900'],
+  display: 'swap',
+  variable: '--font-noto-sans-jp',
+})
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -40,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const gaId = process.env.NEXT_PUBLIC_GA_ID
 
   return (
-    <html lang="ja">
+    <html lang="ja" className={notoSansJP.variable}>
       {gaId && (
         <head>
           <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
@@ -51,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </head>
       )}
-      <body className="notebook-bg text-gray-900 antialiased">
+      <body className="notebook-bg font-sans text-gray-900 antialiased">
         {/* Header */}
         <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200/80 sticky top-0 z-50">
           <div className="px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
@@ -85,16 +93,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 py-6">
-          <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-400">
-            <div className="flex items-center justify-center gap-4 mb-3">
+        <footer className="bg-white border-t border-gray-200 py-10">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <img src="/logo.png" alt="Cares" className="h-8 mx-auto mb-2" />
+            <p className="text-xs text-gray-400 mb-5">介護事業所の情報発信プラットフォーム</p>
+            <div className="flex items-center justify-center gap-4 mb-5 text-sm text-gray-500">
               <a href="/directory" className="hover:text-cares-600 transition-colors">施設を探す</a>
               <span className="text-gray-200">|</span>
               <a href="/area" className="hover:text-cares-600 transition-colors">エリアから探す</a>
               <span className="text-gray-200">|</span>
               <a href="/for-business" className="hover:text-cares-600 transition-colors">施設掲載</a>
             </div>
-            <p>&copy; {new Date().getFullYear()} 株式会社CARESPACE</p>
+            <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} 株式会社CARESPACE</p>
           </div>
         </footer>
       </body>

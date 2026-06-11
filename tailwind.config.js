@@ -20,6 +20,15 @@ module.exports = {
           900: '#042f2e',
         },
       },
+      fontFamily: {
+        sans: [
+          'var(--font-noto-sans-jp)',
+          'Hiragino Kaku Gothic ProN',
+          'Hiragino Sans',
+          'system-ui',
+          'sans-serif',
+        ],
+      },
     },
   },
   plugins: [],

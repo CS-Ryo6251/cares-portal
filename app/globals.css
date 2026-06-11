@@ -11,9 +11,22 @@
   animation: slide-in-right 0.25s ease-out;
 }
 
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+
+.animate-fade-up-delay-1 { animation: fade-up 0.5s ease-out 0.08s both; }
+.animate-fade-up-delay-2 { animation: fade-up 0.5s ease-out 0.16s both; }
+
 .notebook-bg {
   background:
     radial-gradient(circle at top left, rgba(20, 184, 166, 0.08), transparent 28rem),
+    radial-gradient(circle at 85% 12rem, rgba(45, 212, 191, 0.06), transparent 24rem),
     linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #f8fafc 100%);
 }
 
@@ -25,6 +38,48 @@
 
 .soft-ring {
   box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.08);
+}
+
+/* 公式ページ ヒーロー（カバー画像なし時の上質なフォールバック） */
+.hero-mesh {
+  background:
+    radial-gradient(ellipse at 18% 8%, rgba(94, 234, 212, 0.55), transparent 52%),
+    radial-gradient(ellipse at 82% 18%, rgba(13, 148, 136, 0.5), transparent 56%),
+    radial-gradient(ellipse at 55% 95%, rgba(4, 47, 46, 0.65), transparent 62%),
+    linear-gradient(135deg, #115e59 0%, #0f766e 45%, #134e4a 100%);
+}
+
+.hero-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent 70%);
+  pointer-events: none;
+}
+
+/* CTA グラデーションボタン */
+.btn-cares {
+  background-image: linear-gradient(135deg, #14b8a6 0%, #0f766e 55%, #115e59 100%);
+  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.btn-cares:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(15, 118, 110, 0.36);
+  filter: brightness(1.04);
+}
+
+/* カードのホバーリフト */
+.card-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.1);
 }
 
 .cares-google-marker {

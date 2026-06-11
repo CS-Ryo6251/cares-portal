@@ -16,7 +16,7 @@ export default function InquiryButton({ facilityId, facilityName }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 px-4 py-2 bg-cares-50 text-cares-700 rounded-lg text-sm font-medium hover:bg-cares-100 transition-colors"
+        className="btn-cares inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-sm font-bold"
       >
         <Mail className="w-4 h-4" />
         お問い合わせ
