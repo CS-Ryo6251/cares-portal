@@ -58,15 +58,15 @@ export default function GeolocationBanner() {
   if (!visible) return null
 
   return (
-    <div className="mb-4 bg-cares-50 border border-cares-200 rounded-2xl px-4 py-3 flex items-center gap-3">
+    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-cares-200 bg-cares-50 px-4 py-3">
       <MapPin className="w-5 h-5 text-cares-600 shrink-0" />
-      <p className="text-sm text-cares-800 flex-1">
+      <p className="min-w-0 flex-1 text-sm text-cares-800">
         現在地から近くの施設を探しませんか？
       </p>
       <button
         onClick={handleDetect}
         disabled={loading}
-        className="shrink-0 px-4 py-2 bg-cares-600 text-white rounded-lg text-sm font-medium hover:bg-cares-700 transition-colors disabled:opacity-50"
+        className="order-4 w-full shrink-0 rounded-lg bg-cares-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-cares-700 disabled:opacity-50 sm:order-none sm:w-auto"
       >
         {loading ? '取得中...' : '現在地から検索'}
       </button>

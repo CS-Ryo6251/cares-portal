@@ -477,21 +477,30 @@ export default function DirectoryDetailClient({
         )}
       </div>
 
-      {/* Owner claim CTA (only for non-verified) */}
+      {/* CareSpaceOS connection */}
       {!isOwnerVerified && (
-        <div className="mt-6 bg-cares-50 border border-cares-200 rounded-2xl p-5">
+        <div className="mt-6 rounded-2xl border border-cares-200 bg-gradient-to-br from-cares-50 to-white p-5">
           <p className="text-sm font-bold text-cares-800 mb-1">
-            この事業所をCareSpaceで管理しますか？
+            この事業所にお勤めの方へ
           </p>
           <p className="text-sm text-cares-600 mb-3">
-            事業所番号の一致と本人確認により、公表データのページを公式情報として管理できます。
+            CareSpaceOSへ登録すると、事業所番号で自動照合され、空き状況や写真を公式情報として更新できます。
           </p>
           <button
             onClick={() => setShowClaim(true)}
             className="inline-flex items-center px-4 py-2.5 bg-cares-600 text-white rounded-xl text-sm font-semibold hover:bg-cares-700 transition-colors"
           >
-            オーナー登録を申請する
+            私たちの事業所も掲載・更新する
           </button>
+        </div>
+      )}
+      {isOwnerVerified && (
+        <div className="mt-6 rounded-2xl border border-cares-200 bg-cares-50 p-5">
+          <p className="text-sm font-bold text-cares-800">このページはCareSpaceOSと連携済みです</p>
+          <p className="mt-1 text-sm leading-6 text-cares-700">空き状況、写真、料金、パンフレットはCareSpaceOSから更新できます。</p>
+          <a href="https://app.carespace.jp/analytics?tab=cares" className="mt-3 inline-flex items-center rounded-xl bg-cares-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-cares-700">
+            公式情報を更新する
+          </a>
         </div>
       )}
 

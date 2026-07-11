@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Noto_Sans_JP } from 'next/font/google'
+import { ArrowRight, HeartHandshake } from 'lucide-react'
 import './globals.css'
 import AuthHeader from '@/components/AuthHeader'
 
@@ -18,10 +19,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Cares — 介護事業所の情報発信プラットフォーム',
-    template: '%s — Cares',
+    default: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
+    template: '%s — Cares by CareSpace',
   },
-  description: '介護事業所の公式情報、空き状況、料金表、現場の声をまとめて発信・確認できる情報プラットフォーム。',
+  description: '介護事業所の公式情報、現在の空き状況、料金、写真、現場の評価をひとつのページで確認できます。',
   icons: {
     icon: '/favicon.png',
   },
@@ -29,15 +30,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ja_JP',
-    siteName: 'Cares — 介護事業所の情報発信プラットフォーム',
-    title: 'Cares — 介護事業所の情報発信プラットフォーム',
-    description: '介護事業所の公式情報、空き状況、料金表、現場の声をまとめて確認できます。',
+    siteName: 'Cares by CareSpace',
+    title: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
+    description: '空き状況、料金、写真、現場の評価から、地域の介護事業所を探せます。',
     url: 'https://cares.carespace.jp',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cares — 介護事業所の情報発信プラットフォーム',
-    description: '介護事業所の公式情報、空き状況、料金表、現場の声をまとめて確認できます。',
+    title: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
+    description: '空き状況、料金、写真、現場の評価から、地域の介護事業所を探せます。',
   },
   alternates: {
     canonical: 'https://cares.carespace.jp',
@@ -61,26 +62,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       )}
       <body className="notebook-bg font-sans text-gray-900 antialiased">
         {/* Header */}
-        <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200/80 sticky top-0 z-50">
-          <div className="px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
-            <a href="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="Cares" className="h-8 sm:h-12" />
-              <span className="hidden sm:inline text-sm font-semibold text-slate-600 whitespace-nowrap">
-                介護事業所の情報発信プラットフォーム
+        <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/95 shadow-[0_1px_18px_rgba(159,18,57,0.06)] backdrop-blur-xl">
+          <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-2 px-3 sm:h-16 sm:px-6">
+            <a href="/" className="flex min-w-0 items-center gap-2.5" aria-label="Cares by CareSpace ホーム">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cares-500 to-cares-700 text-white shadow-lg shadow-cares-200/70">
+                <HeartHandshake className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 leading-none">
+                <span className="block text-lg font-black tracking-tight text-slate-950">Cares</span>
+                <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.14em] text-cares-600">by CareSpace</span>
+              </span>
+              <span className="hidden border-l border-slate-200 pl-3 text-xs font-semibold text-slate-500 lg:inline">
+                介護事業所の「いま」が見つかる
               </span>
             </a>
-            <nav className="flex min-w-0 items-center gap-2 sm:gap-4 text-sm">
+            <nav className="flex min-w-0 items-center gap-2 text-sm sm:gap-3">
               <a
-                href="/for-business"
-                className="hidden sm:inline-flex items-center rounded-full bg-cares-50 px-3 py-1.5 text-cares-700 hover:bg-cares-100 font-semibold transition-colors"
+                href="/directory"
+                className="hidden font-semibold text-slate-600 transition-colors hover:text-cares-600 sm:inline"
               >
-                事業所向け
+                事業所を探す
               </a>
               <a
-                href="/for-business"
-                className="hidden min-[390px]:inline text-gray-500 hover:text-cares-600 font-medium"
+                href="https://app.carespace.jp/signup/new-organization?source=cares"
+                className="hidden items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 font-bold text-white shadow-sm transition hover:bg-cares-700 min-[430px]:inline-flex"
               >
-                施設掲載
+                掲載・更新する
+                <ArrowRight className="h-3.5 w-3.5" />
               </a>
               <AuthHeader />
             </nav>
@@ -93,18 +101,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 py-10">
+        <footer className="border-t border-rose-100 bg-slate-950 py-10 text-white">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <img src="/logo.png" alt="Cares" className="h-8 mx-auto mb-2" />
-            <p className="text-xs text-gray-400 mb-5">介護事業所の情報発信プラットフォーム</p>
-            <div className="flex items-center justify-center gap-4 mb-5 text-sm text-gray-500">
-              <a href="/directory" className="hover:text-cares-600 transition-colors">施設を探す</a>
-              <span className="text-gray-200">|</span>
-              <a href="/area" className="hover:text-cares-600 transition-colors">エリアから探す</a>
-              <span className="text-gray-200">|</span>
-              <a href="/for-business" className="hover:text-cares-600 transition-colors">施設掲載</a>
+            <div className="mb-2 flex items-center justify-center gap-2 font-black"><HeartHandshake className="h-5 w-5 text-cares-400" />Cares <span className="text-xs font-bold text-white/45">by CareSpace</span></div>
+            <p className="mb-5 text-xs text-white/45">介護事業所の「いま」を、必要な人へ。</p>
+            <div className="mb-5 flex flex-wrap items-center justify-center gap-4 text-sm text-white/60">
+              <a href="/directory" className="transition-colors hover:text-white">事業所を探す</a>
+              <a href="/area" className="transition-colors hover:text-white">エリアから探す</a>
+              <a href="/for-business" className="transition-colors hover:text-white">掲載について</a>
+              <a href="https://app.carespace.jp" className="transition-colors hover:text-white">CareSpaceOS</a>
             </div>
-            <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} 株式会社CARESPACE</p>
+            <p className="text-xs text-white/35">&copy; {new Date().getFullYear()} 株式会社CARESPACE</p>
           </div>
         </footer>
       </body>
