@@ -1,6 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase'
-import Link from 'next/link'
-import { Search, Star } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Search, Sparkles, Star } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
@@ -9,7 +8,7 @@ import FacilityMapPreview from '@/components/FacilityMapPreview'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import CompletenessBar from '@/components/CompletenessBar'
 import FilterChipLink from '@/components/FilterChipLink'
-import { vacancyStatusMap, facilityTypeLabels } from '@/lib/constants'
+import { vacancyStatusMap } from '@/lib/constants'
 
 const postCategories = [
   { key: '', label: 'すべて' },
@@ -352,7 +351,10 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     query = query.range(from, to)
   }
 
-  let { data, error, count } = await query
+  const queryResult = await query
+  let data = queryResult.data
+  const error = queryResult.error
+  let count = queryResult.count
 
   if (error) {
     console.error('施設取得エラー:', error)
@@ -591,7 +593,7 @@ export default async function FeedPage({
       </aside>
 
       {/* Feed */}
-      <div className="flex-1 max-w-3xl mx-auto px-4 py-6 sm:py-8">
+      <div className="min-w-0 w-full flex-1 max-w-3xl mx-auto px-4 py-6 sm:py-8">
         {/* Mobile search bar */}
         <div className="lg:hidden mb-4">
           <form method="GET" action="/">
@@ -619,39 +621,40 @@ export default async function FeedPage({
         <GeolocationBanner />
 
         {/* Site intro */}
-        <div className="surface-card soft-ring mb-5 rounded-3xl p-6 sm:p-8 animate-fade-up">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="relative mb-5 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cares-950 via-cares-700 to-cares-500 p-6 text-white shadow-2xl shadow-cares-200/70 animate-fade-up sm:p-8">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-24 left-20 h-52 w-52 rounded-full bg-cares-300/25 blur-3xl" />
+          <div className="relative">
             <div>
-              <p className="mb-2.5 text-xs font-bold uppercase tracking-[0.22em] text-cares-700">
-                Cares Platform
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-white ring-1 ring-white/20">
+                <Sparkles className="h-3.5 w-3.5" />
+                CARESPACE OFFICIAL DIRECTORY
               </p>
-              <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-slate-950">
-                近くの介護事業所を、
-                <span className="bg-gradient-to-r from-cares-600 to-cares-400 bg-clip-text text-transparent">
-                  わかりやすく
-                </span>
-                探せる。
+              <h1 className="text-3xl font-black leading-[1.2] tracking-tight sm:text-4xl">
+                介護事業所の<span className="whitespace-nowrap">「いま」が、</span>
+                <br />ひと目で見つかる。
               </h1>
-              <p className="mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-600">
-                全国の介護事業所を、地域やサービス内容から検索できます。空き状況・口コミ・現場メモを見ながら、気になる事業所の情報を確認できます。
+              <p className="mt-4 max-w-xl text-sm leading-7 text-white/78 sm:text-base">
+                公表データに、事業所公式の空き状況・写真・料金と、地域の専門職から届く評価を重ねて。電話する前に知りたい情報を、ひとつのページへ。
               </p>
             </div>
             <a
-              href="/for-business"
-              className="btn-cares inline-flex shrink-0 items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white"
+              href="https://app.carespace.jp/signup/new-organization?source=cares"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-cares-700 shadow-xl transition hover:-translate-y-0.5 hover:bg-rose-50"
             >
-              事業所ページを作る
+              私たちの事業所も掲載する
+              <ArrowRight className="h-4 w-4" />
             </a>
           </div>
-          <div className="mt-6 grid gap-2.5 text-center sm:grid-cols-3">
+          <div className="relative mt-7 grid gap-2.5 sm:grid-cols-3">
             {[
-              ['公表DB', '最初から掲載'],
-              ['口コミ', '誰でも追記'],
-              ['公式管理', '事業所が更新'],
+              ['全国の公表DB', '未登録の事業所も検索'],
+              ['事業所公式', '空き状況を直接更新'],
+              ['5段階評価', '投稿者の所属は非表示'],
             ].map(([title, body]) => (
-              <div key={title} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3.5">
-                <p className="text-sm font-bold text-slate-900">{title}</p>
-                <p className="mt-1 text-xs text-slate-500">{body}</p>
+              <div key={title} className="rounded-2xl bg-white/10 px-3 py-3.5 ring-1 ring-white/15 backdrop-blur-sm">
+                <p className="flex items-center gap-1.5 text-sm font-bold"><BadgeCheck className="h-4 w-4 text-cares-200" />{title}</p>
+                <p className="mt-1 text-xs text-white/60">{body}</p>
               </div>
             ))}
           </div>
@@ -693,8 +696,8 @@ export default async function FeedPage({
                   href={buildServiceTypeUrl(params, st.key)}
                   className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-gray-800 text-white shadow-sm'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400 hover:text-gray-800'
+                      ? 'bg-cares-600 text-white shadow-sm shadow-cares-100'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-cares-300 hover:text-cares-700'
                   }`}
                 >
                   {st.label}
