@@ -646,6 +646,9 @@ export default async function FacilityDetailPage({
           )}
         </div>
 
+        {/* CareSpaceOS公式料金 — ページ内で見つけやすく表示 */}
+        <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} />
+
         {/* Photo gallery — 投稿写真から自動生成 */}
         {galleryImages.length >= 3 && (
           <div className="mb-6">
@@ -760,9 +763,6 @@ export default async function FacilityDetailPage({
             </div>
           </div>
         )}
-
-        {/* Floating fee simulator button */}
-        <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} />
       </div>
     </>
   )

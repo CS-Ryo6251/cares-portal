@@ -177,14 +177,8 @@ export default function FeeSimulator({ fees }: Props) {
       }, zeroRange)
   }
 
-  const insuranceTotal = useMemo(
-    () => calcSectionTotal('insurance_estimate'),
-    [normalizedFees, selectedCareLevel, selectedOptions, monthlyFrequency, mealsPerDay, hoursPerUse, burdenRatio]
-  )
-  const selfPayTotal = useMemo(
-    () => calcSectionTotal('self_pay'),
-    [normalizedFees, selectedCareLevel, selectedOptions, monthlyFrequency, mealsPerDay, hoursPerUse, burdenRatio]
-  )
+  const insuranceTotal = calcSectionTotal('insurance_estimate')
+  const selfPayTotal = calcSectionTotal('self_pay')
   const monthlyTotal = addRange(insuranceTotal, selfPayTotal)
 
   const selectedOptionCount = optionFees.filter((fee) => selectedOptions.has(fee.id)).length
@@ -541,9 +535,14 @@ export default function FeeSimulator({ fees }: Props) {
             </p>
           </div>
           <p className="shrink-0 text-right text-2xl font-bold text-cares-900">
-            {monthlyTotal.max > 0 ? formatRange(monthlyTotal) : '---'}
+            {needsCareLevel ? '介護度を選択' : monthlyTotal.max > 0 ? formatRange(monthlyTotal) : '---'}
           </p>
         </div>
+        {needsCareLevel && selfPayTotal.max > 0 && (
+          <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs font-semibold leading-relaxed text-cares-800 ring-1 ring-cares-100">
+            現在表示できる自費分は {formatRange(selfPayTotal)} です。介護度を選ぶと、介護保険分を含む月額合計を表示します。
+          </p>
+        )}
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
           <div className="rounded-xl bg-white px-3 py-3 ring-1 ring-cares-100">
             <p className="text-xs font-bold text-slate-500">介護保険分</p>
@@ -573,7 +572,7 @@ export default function FeeSimulator({ fees }: Props) {
         </p>
       </div>
 
-      {monthlyTotal.max > 0 && (
+      {monthlyTotal.max > 0 && !needsCareLevel && (
         <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-cares-700">
           <CheckCircle2 className="h-4 w-4" />
           入力条件に応じて、月額目安が更新されています。

@@ -628,6 +628,11 @@ export default async function DirectoryDetailPage({
           </div>
         )}
 
+        {/* ===== OWNER PORTAL: CareSpaceOS official fee simulator ===== */}
+        {isOwnerVerified && portalFees.length > 0 && (
+          <FloatingActions fees={portalFees} feePattern={portalProfile?.fee_pattern} />
+        )}
+
         {/* ===== OWNER PORTAL: Posts Feed ===== */}
         {isOwnerVerified && portalPosts.length > 0 && (
           <div className="mb-6">
@@ -648,10 +653,6 @@ export default async function DirectoryDetailPage({
         </div>
       </div>
 
-      {/* Fee simulator (owner-verified with fees only) */}
-      {isOwnerVerified && portalFees.length > 0 && (
-        <FloatingActions fees={portalFees} feePattern={portalProfile?.fee_pattern} />
-      )}
     </>
   )
 }
