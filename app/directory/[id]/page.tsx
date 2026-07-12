@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import {
+  ArrowRight,
   ArrowLeft,
   MapPin,
   Phone,
@@ -12,6 +13,7 @@ import {
   Mail,
   Download,
   ExternalLink,
+  Eye,
   Shield,
   Megaphone,
   Leaf,
@@ -74,6 +76,10 @@ type PortalData = {
   fees: any[]
   documents: any[]
 } | null
+
+type DirectorySearchParams = {
+  post_category?: string
+}
 
 async function getListing(id: string) {
   const supabase = getSupabaseClient()
@@ -260,14 +266,15 @@ export async function generateMetadata({
 }
 
 // Post card for owner portal posts
-function PortalPostCard({ post, facilityId }: { post: any; facilityId: string }) {
+function PortalPostCard({ post, facilityId, officialPageHref }: { post: any; facilityId: string; officialPageHref: string }) {
   const catInfo = post.category && postCategoryLabels[post.category]
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+    <div id={`post-${post.id}`} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm scroll-mt-24">
       <ViewTracker postId={post.id} />
       <div className="p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
           {catInfo && (
             <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${catInfo.color}`}>
               {catInfo.label}
@@ -278,6 +285,13 @@ function PortalPostCard({ post, facilityId }: { post: any; facilityId: string })
               year: 'numeric', month: 'long', day: 'numeric',
             })}
           </span>
+          </div>
+          {post.view_count > 0 && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400">
+              <Eye className="w-3.5 h-3.5" />
+              {post.view_count}
+            </span>
+          )}
         </div>
 
         {post.facility_portal_post_media?.length > 0 && (
@@ -308,8 +322,12 @@ function PortalPostCard({ post, facilityId }: { post: any; facilityId: string })
           </a>
         )}
 
-        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-100 flex-wrap">
           <LikeButton postId={post.id} initialLikeCount={post.like_count || 0} />
+          <Link href={`${officialPageHref}#post-${post.id}`} className="inline-flex items-center gap-1.5 rounded-full bg-cares-50 px-3 py-2 text-sm font-bold text-cares-700 transition-colors hover:bg-cares-100">
+            公式ページで大きく見る
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
         <div className="mt-4 pt-4 border-t border-gray-100">
           <CommentSection postId={post.id} facilityId={facilityId} />
@@ -321,10 +339,13 @@ function PortalPostCard({ post, facilityId }: { post: any; facilityId: string })
 
 export default async function DirectoryDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<DirectorySearchParams>
 }) {
   const { id } = await params
+  const sp = await searchParams
   const data = await getListing(id)
 
   if (!data) {
@@ -339,10 +360,20 @@ export default async function DirectoryDetailPage({
 
   // Portal-specific data
   const portalProfile = portalData?.profile
-  const portalFacility = portalProfile?.facilities as any
   const portalPosts = portalData?.posts || []
   const portalFees = portalData?.fees || []
   const portalDocuments = portalData?.documents || []
+  const selectedPostCategory = sp.post_category || ''
+  const portalPostCounts = portalPosts.reduce((acc: Record<string, number>, post: any) => {
+    const category = post.category || 'other'
+    acc[category] = (acc[category] || 0) + 1
+    return acc
+  }, {})
+  const portalPostCategories = Object.keys(portalPostCounts)
+  const filteredPortalPosts = selectedPostCategory
+    ? portalPosts.filter((post: any) => (post.category || 'other') === selectedPostCategory)
+    : portalPosts
+  const officialFacilityPageHref = f.owner_facility_id ? `/facility/${f.owner_facility_id}` : `/directory/${f.id}`
 
   // JSON-LD
   const jsonLd = {
@@ -636,11 +667,56 @@ export default async function DirectoryDetailPage({
         {/* ===== OWNER PORTAL: Posts Feed ===== */}
         {isOwnerVerified && portalPosts.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">施設からの投稿</h2>
+            <div className="mb-4 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">施設からの投稿</h2>
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    事業所がCareSpaceOSから公開した写真・お知らせ・空き情報です。いいねやコメントもできます。
+                  </p>
+                </div>
+                <Link href={officialFacilityPageHref} className="inline-flex items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 text-sm font-bold text-white transition-colors hover:bg-cares-700">
+                  公式投稿ページ
+                  <ExternalLink className="w-4 h-4" />
+                </Link>
+              </div>
+              {portalPostCategories.length > 1 && (
+                <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+                  <Link
+                    href={`/directory/${f.id}`}
+                    className={`shrink-0 rounded-full px-3 py-2 text-sm font-bold transition-colors ${
+                      !selectedPostCategory ? 'bg-slate-950 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    すべて {portalPosts.length}
+                  </Link>
+                  {portalPostCategories.map((category) => {
+                    const catInfo = postCategoryLabels[category] || postCategoryLabels.other
+                    return (
+                      <Link
+                        key={category}
+                        href={`/directory/${f.id}?post_category=${category}`}
+                        className={`shrink-0 rounded-full px-3 py-2 text-sm font-bold transition-colors ${
+                          selectedPostCategory === category ? 'bg-slate-950 text-white' : `${catInfo.color} hover:opacity-80`
+                        }`}
+                      >
+                        {catInfo.label} {portalPostCounts[category]}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
             <div className="space-y-4">
-              {portalPosts.map((post: any) => (
-                <PortalPostCard key={post.id} post={post} facilityId={f.owner_facility_id} />
-              ))}
+              {filteredPortalPosts.length > 0 ? (
+                filteredPortalPosts.map((post: any) => (
+                  <PortalPostCard key={post.id} post={post} facilityId={f.owner_facility_id} officialPageHref={officialFacilityPageHref} />
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
+                  このカテゴリの投稿はまだありません。
+                </div>
+              )}
             </div>
           </div>
         )}
