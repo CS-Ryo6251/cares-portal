@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase'
-import { ArrowRight, BadgeCheck, Search, Sparkles, Star } from 'lucide-react'
+import { ArrowRight, BadgeCheck, HeartHandshake, Search, Sparkles, Star } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
@@ -659,6 +659,14 @@ export default async function FeedPage({
             ))}
           </div>
         </div>
+
+        <a href="/cases" className="group mb-5 flex items-center justify-between gap-4 rounded-2xl border border-rose-200 bg-white px-4 py-4 shadow-sm transition hover:border-cares-300 hover:shadow-md sm:px-5">
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-cares-600"><HeartHandshake className="h-5 w-5" /></span>
+            <span className="min-w-0"><span className="block text-sm font-black text-slate-950">地域の支援案件を見る</span><span className="mt-0.5 block text-xs text-slate-500">事業所名を伏せた受入相談。仲介・成約手数料はかかりません</span></span>
+          </span>
+          <ArrowRight className="h-5 w-5 shrink-0 text-cares-500 transition-transform group-hover:translate-x-1" />
+        </a>
 
         {/* Tab switcher */}
         <div className="flex bg-slate-100 rounded-xl p-1 mb-4">
