@@ -20,7 +20,7 @@ export default function DirectoryDisclaimer({ isOwnerVerified }: DirectoryDiscla
     <div className="flex items-start gap-2.5 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
       <AlertTriangle className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
       <p className="text-sm text-slate-700 leading-relaxed">
-        このページは介護サービス情報公表システムのオープンデータをもとに自動作成されています。口コミ・現場メモはコミュニティ投稿です。正確な情報は事業所へ直接ご確認ください。
+        このページは介護サービス情報公表システムのオープンデータをもとに自動作成されています。口コミは利用者・ご家族等の経験、専門職コメントは連携実務の参考情報です。正確な情報は事業所へ直接ご確認ください。
       </p>
     </div>
   )

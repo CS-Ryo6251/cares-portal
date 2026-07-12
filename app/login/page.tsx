@@ -65,7 +65,7 @@ function LoginForm() {
           <div className="mb-5 rounded-2xl border border-cares-100 bg-cares-50/70 p-4 text-sm text-slate-700">
             <p className="font-semibold text-slate-900">このログインは、Caresを利用する方向けです</p>
             <p className="mt-1 leading-relaxed">
-              ご家族・ケアマネジャー・支援者の方が、口コミ・現場メモ・お気に入りなどを利用できます。事業所の公式ページ・料金表・投稿を管理したい方は、公式管理の申請からお進みください。
+              ご家族・ケアマネジャー・支援者の方が、口コミ・専門職コメント・お気に入りなどを利用できます。事業所の公式ページ・料金表・投稿を管理したい方は、CareSpaceOSからお進みください。
             </p>
           </div>
 

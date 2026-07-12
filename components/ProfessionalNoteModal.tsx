@@ -3,9 +3,12 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
-const REPORTER_TYPES = [
+const REVIEW_REPORTER_TYPES = [
   { value: 'family', label: 'ご家族・利用検討者' },
   { value: 'community', label: '地域の方・関係者' },
+]
+
+const PROFESSIONAL_REPORTER_TYPES = [
   { value: 'care_manager', label: 'ケアマネジャー' },
   { value: 'msw', label: 'MSW（医療ソーシャルワーカー）' },
   { value: 'nurse', label: '看護師' },
@@ -17,12 +20,14 @@ const REPORTER_TYPES = [
 
 type ProfessionalNoteModalProps = {
   listingId: string
+  mode: 'review' | 'professional'
   onClose: () => void
   onSubmitted?: () => void
 }
 
 export default function ProfessionalNoteModal({
   listingId,
+  mode,
   onClose,
   onSubmitted,
 }: ProfessionalNoteModalProps) {
@@ -31,6 +36,8 @@ export default function ProfessionalNoteModal({
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const reporterTypes = mode === 'review' ? REVIEW_REPORTER_TYPES : PROFESSIONAL_REPORTER_TYPES
+  const isReview = mode === 'review'
 
   async function handleSubmit() {
     if (!reporterType || !content.trim()) return
@@ -74,9 +81,11 @@ export default function ProfessionalNoteModal({
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="text-lg font-bold text-gray-900 mb-2">口コミ・現場メモを投稿する</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">{isReview ? '口コミを投稿する' : '専門職コメントを共有する'}</h3>
         <p className="text-sm text-gray-500 mb-4">
-          施設選びに役立つ雰囲気、対応、料金説明、空き状況などを共有できます。
+          {isReview
+            ? '見学・利用時の雰囲気、対応、料金説明など、施設選びに役立つ経験を共有できます。'
+            : '受け入れ相談、連携時の対応、医療・リハビリ体制など、専門職の実務に役立つ情報を共有できます。'}
         </p>
 
         {success ? (
@@ -101,7 +110,7 @@ export default function ProfessionalNoteModal({
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none bg-white"
               >
                 <option value="">選択してください</option>
-                {REPORTER_TYPES.map((type) => (
+                {reporterTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
                   </option>
@@ -112,12 +121,14 @@ export default function ProfessionalNoteModal({
             {/* Content */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                メモ内容 <span className="text-red-500">*</span>
+                {isReview ? '口コミ内容' : '専門職コメント'} <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="施設選びに役立つ情報を共有してください（例: 料金説明が丁寧、見学時の対応が早い、リハビリに力を入れている、など）"
+                placeholder={isReview
+                  ? '例: 見学時の説明が丁寧で、施設内も落ち着いた雰囲気でした'
+                  : '例: 受け入れ相談への返信が早く、医療処置の対応範囲も明確でした'}
                 maxLength={500}
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none resize-none"
@@ -140,7 +151,7 @@ export default function ProfessionalNoteModal({
             </button>
 
             <p className="text-xs text-gray-400 mt-3 text-center">
-              匿名で公開されます。誹謗中傷ではなく、施設選びに役立つ具体的な情報の共有にご協力ください。
+              匿名で公開されます。投稿者の所属事業所は表示されません。具体的で事実に基づく情報の共有にご協力ください。
             </p>
           </>
         )}

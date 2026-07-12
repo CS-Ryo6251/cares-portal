@@ -242,7 +242,7 @@ export async function generateMetadata({
   const city = cityMatch ? cityMatch[1] : ''
   const areaPrefix = city ? `${city}の` : ''
   const title = `${f.facility_name}（${f.service_type || '介護事業所'}）${city ? ` | ${city}` : ''}`
-  const description = `${areaPrefix}${f.facility_name}の空き状況・料金・専門職メモ。${f.service_type || '介護事業所'}。${f.address || ''}`
+  const description = `${areaPrefix}${f.facility_name}の空き状況・料金・口コミ・専門職コメント。${f.service_type || '介護事業所'}。${f.address || ''}`
 
   return {
     title,
