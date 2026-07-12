@@ -84,6 +84,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 事業所を探す
               </a>
               <a
+                href="/cases"
+                className="hidden font-semibold text-slate-600 transition-colors hover:text-cares-600 md:inline"
+              >
+                支援案件
+              </a>
+              <a
                 href="https://app.carespace.jp/signup/new-organization?source=cares"
                 className="hidden items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 font-bold text-white shadow-sm transition hover:bg-cares-700 min-[430px]:inline-flex"
               >
@@ -107,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <p className="mb-5 text-xs text-white/45">介護事業所の「いま」を、必要な人へ。</p>
             <div className="mb-5 flex flex-wrap items-center justify-center gap-4 text-sm text-white/60">
               <a href="/directory" className="transition-colors hover:text-white">事業所を探す</a>
+              <a href="/cases" className="transition-colors hover:text-white">地域の支援案件</a>
               <a href="/area" className="transition-colors hover:text-white">エリアから探す</a>
               <a href="/for-business" className="transition-colors hover:text-white">掲載について</a>
               <a href="https://app.carespace.jp" className="transition-colors hover:text-white">CareSpaceOS</a>
