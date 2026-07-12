@@ -22,13 +22,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${decoded}の介護事業所一覧`,
-    description: `${decoded}の介護事業所を検索。デイサービス、特養、老健、訪問介護、居宅介護支援など、空き状況・料金・専門職メモを確認できます。`,
+    description: `${decoded}の介護事業所を検索。デイサービス、特養、老健、訪問介護、居宅介護支援など、空き状況・料金・口コミ・専門職コメントを確認できます。`,
     alternates: {
       canonical: `https://cares.carespace.jp/area/${encodeURIComponent(decoded)}`,
     },
     openGraph: {
       title: `${decoded}の介護事業所一覧 — Cares`,
-      description: `${decoded}の介護事業所を検索。空き状況・料金・専門職メモをみんなで共有。`,
+      description: `${decoded}の介護事業所を検索。空き状況・料金・口コミ・専門職コメントを確認できます。`,
     },
   }
 }
@@ -313,7 +313,7 @@ export default async function AreaPage({ params, searchParams }: Props) {
             '@context': 'https://schema.org',
             '@type': 'CollectionPage',
             name: `${decoded}の介護事業所一覧`,
-            description: `${decoded}の介護事業所${total}件を掲載。空き状況・料金・専門職メモを確認できます。`,
+            description: `${decoded}の介護事業所${total}件を掲載。空き状況・料金・口コミ・専門職コメントを確認できます。`,
             url: `https://cares.carespace.jp/area/${encodeURIComponent(decoded)}`,
             isPartOf: {
               '@type': 'WebSite',

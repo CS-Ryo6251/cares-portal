@@ -4,7 +4,7 @@ import { MapPin } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'エリアから介護事業所を探す',
-  description: '都道府県別に介護事業所を検索。全国18万件の介護サービスの空き状況・料金・専門職メモを確認できます。',
+  description: '都道府県別に介護事業所を検索。全国18万件の介護サービスの空き状況・料金・口コミ・専門職コメントを確認できます。',
   alternates: {
     canonical: 'https://cares.carespace.jp/area',
   },

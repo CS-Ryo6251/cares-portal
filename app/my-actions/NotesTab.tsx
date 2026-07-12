@@ -224,7 +224,7 @@ export default function NotesTab() {
                 {facility.professionalNotes.map((pn) => (
                   <div key={pn.id} className="bg-blue-50 rounded-xl px-4 py-3">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-xs font-medium text-blue-600">専門職メモ</span>
+                      <span className="text-xs font-medium text-blue-600">専門職コメント</span>
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
                         {reporterTypeLabels[pn.reporter_type] || pn.reporter_type}
                       </span>

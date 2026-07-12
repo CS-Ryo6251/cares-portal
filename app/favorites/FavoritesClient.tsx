@@ -326,9 +326,9 @@ export default function FavoritesClient() {
                     </td>
                   ))}
                 </tr>
-                {/* 専門職メモ数 */}
+                {/* 専門職コメント数 */}
                 <tr>
-                  <td className="py-3 px-4 text-gray-500 font-medium">メモ数</td>
+                  <td className="py-3 px-4 text-gray-500 font-medium">コメント数</td>
                   {selectedFavorites.map((fav) => (
                     <td key={fav.id} className="py-3 px-4 text-gray-700">
                       {fav.note_count > 0 ? `${fav.note_count}件` : '-'}

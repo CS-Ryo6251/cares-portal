@@ -621,26 +621,26 @@ export default async function FeedPage({
         <GeolocationBanner />
 
         {/* Site intro */}
-        <div className="relative mb-5 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cares-950 via-cares-700 to-cares-500 p-6 text-white shadow-2xl shadow-cares-200/70 animate-fade-up sm:p-8">
-          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-24 left-20 h-52 w-52 rounded-full bg-cares-300/25 blur-3xl" />
+        <div className="relative mb-5 overflow-hidden rounded-[2rem] border border-rose-100 bg-[#fffdfb] p-6 shadow-sm animate-fade-up sm:p-8">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full border-[36px] border-rose-50/80" />
+          <div className="pointer-events-none absolute bottom-0 right-12 h-px w-48 bg-gradient-to-r from-transparent via-rose-200 to-transparent" />
           <div className="relative">
             <div>
-              <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-white ring-1 ring-white/20">
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-rose-700 ring-1 ring-rose-100">
                 <Sparkles className="h-3.5 w-3.5" />
-                CARESPACE OFFICIAL DIRECTORY
+                CARES BY CARESPACE
               </p>
-              <h1 className="text-3xl font-black leading-[1.2] tracking-tight sm:text-4xl">
+              <h1 className="text-3xl font-black leading-[1.2] tracking-tight text-slate-950 sm:text-4xl">
                 介護事業所の<span className="whitespace-nowrap">「いま」が、</span>
                 <br />ひと目で見つかる。
               </h1>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-white/78 sm:text-base">
-                公表データに、事業所公式の空き状況・写真・料金と、地域の専門職から届く評価を重ねて。電話する前に知りたい情報を、ひとつのページへ。
+              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+                公表データと事業所公式情報に、利用者の口コミや専門職コメントを整理して掲載。空き状況、料金、パンフレットまで、電話する前に確認できます。
               </p>
             </div>
             <a
               href="https://app.carespace.jp/signup/new-organization?source=cares"
-              className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-cares-700 shadow-xl transition hover:-translate-y-0.5 hover:bg-rose-50"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-cares-600 px-5 py-3.5 text-sm font-black text-white shadow-lg shadow-rose-200/70 transition hover:-translate-y-0.5 hover:bg-cares-700"
             >
               私たちの事業所も掲載する
               <ArrowRight className="h-4 w-4" />
@@ -648,13 +648,13 @@ export default async function FeedPage({
           </div>
           <div className="relative mt-7 grid gap-2.5 sm:grid-cols-3">
             {[
-              ['全国の公表DB', '未登録の事業所も検索'],
-              ['事業所公式', '空き状況を直接更新'],
-              ['5段階評価', '投稿者の所属は非表示'],
+              ['公表DB＋新設事業所', 'OSから新しいページも公開'],
+              ['事業所公式情報', '空き・料金・資料を直接更新'],
+              ['口コミと専門職コメント', '役割を分けて見やすく表示'],
             ].map(([title, body]) => (
-              <div key={title} className="rounded-2xl bg-white/10 px-3 py-3.5 ring-1 ring-white/15 backdrop-blur-sm">
-                <p className="flex items-center gap-1.5 text-sm font-bold"><BadgeCheck className="h-4 w-4 text-cares-200" />{title}</p>
-                <p className="mt-1 text-xs text-white/60">{body}</p>
+              <div key={title} className="rounded-2xl bg-white px-3 py-3.5 ring-1 ring-slate-100">
+                <p className="flex items-center gap-1.5 text-sm font-bold text-slate-800"><BadgeCheck className="h-4 w-4 text-cares-500" />{title}</p>
+                <p className="mt-1 text-xs text-slate-500">{body}</p>
               </div>
             ))}
           </div>

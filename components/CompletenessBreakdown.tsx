@@ -57,7 +57,7 @@ const categories: CategoryConfig[] = [
   },
   {
     key: 'notes',
-    label: '口コミ・現場メモ',
+    label: '口コミ・専門職コメント',
     icon: FileText,
     iconColor: 'text-orange-500',
     barColor: 'bg-orange-500',
