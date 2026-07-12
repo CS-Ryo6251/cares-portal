@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { MessageSquare, Banknote, Lock, Star, StickyNote } from 'lucide-react'
+import { Banknote, Lock, MessageSquareText, Star, StickyNote, Stethoscope } from 'lucide-react'
 import { createAuthClient } from '@/lib/supabase-auth'
 import VacancyReportModal from '@/components/VacancyReportModal'
 import OwnerClaimModal from '@/components/OwnerClaimModal'
@@ -54,6 +54,10 @@ function getRelativeTime(dateStr: string): string {
   if (days < 30) return `${days}日前`
   const months = Math.floor(days / 30)
   return `${months}ヶ月前`
+}
+
+function getNoteKind(reporterType: string): 'review' | 'professional' {
+  return reporterType === 'family' || reporterType === 'community' ? 'review' : 'professional'
 }
 
 type Note = {
@@ -114,7 +118,7 @@ export default function DirectoryDetailClient({
   const [personalNote, setPersonalNote] = useState<PersonalNote | null>(null)
 
   // Tab state for notes section
-  const [activeTab, setActiveTab] = useState<'professional' | 'personal'>('professional')
+  const [activeTab, setActiveTab] = useState<'review' | 'professional' | 'personal'>('review')
 
   // Check auth on mount
   useEffect(() => {
@@ -176,6 +180,9 @@ export default function DirectoryDetailClient({
     fetchMyRating()
     fetchPersonalNote()
   }, [fetchNotes, fetchFees, fetchMyRating, fetchPersonalNote])
+
+  const reviewNotes = notes.filter((note) => getNoteKind(note.reporter_type) === 'review')
+  const professionalNotes = notes.filter((note) => getNoteKind(note.reporter_type) === 'professional')
 
   const handleRatingClick = async (value: number) => {
     if (!userId) {
@@ -333,24 +340,38 @@ export default function DirectoryDetailClient({
       {/* Notes section with tabs */}
       <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
         {/* Tab header */}
-        <div className="flex items-center gap-0 mb-4 border-b border-gray-100">
+        <div className="flex items-center gap-0 mb-4 border-b border-gray-100 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('review')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'review'
+                ? 'border-cares-600 text-cares-700'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <MessageSquareText className="w-4 h-4" />
+            口コミ
+            {reviewNotes.length > 0 && (
+              <span className="text-xs font-normal">({reviewNotes.length})</span>
+            )}
+          </button>
           <button
             onClick={() => setActiveTab('professional')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'professional'
                 ? 'border-cares-600 text-cares-700'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            <MessageSquare className="w-4 h-4" />
-            口コミ・現場メモ
-            {notes.length > 0 && (
-              <span className="text-xs font-normal">({notes.length})</span>
+            <Stethoscope className="w-4 h-4" />
+            専門職メモ
+            {professionalNotes.length > 0 && (
+              <span className="text-xs font-normal">({professionalNotes.length})</span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('personal')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'personal'
                 ? 'border-cares-600 text-cares-700'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
@@ -361,24 +382,70 @@ export default function DirectoryDetailClient({
           </button>
         </div>
 
-        {/* Professional notes tab */}
-        {activeTab === 'professional' && (
+        {/* Review notes tab */}
+        {activeTab === 'review' && (
           <>
-            <div className="flex items-center justify-end mb-3">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <p className="text-xs leading-5 text-gray-500">
+                ご家族・利用検討者・地域の方からの感想です。所属事業所は表示されません。
+              </p>
               <button
                 onClick={() => setShowNote(true)}
-                className="text-sm text-cares-600 hover:text-cares-700 font-medium"
+                className="shrink-0 text-sm text-cares-600 hover:text-cares-700 font-medium"
               >
                 + 口コミを書く
               </button>
             </div>
 
-            {notes.length > 0 ? (
+            {reviewNotes.length > 0 ? (
               <div className="space-y-4">
-                {notes.map((note) => (
+                {reviewNotes.map((note) => (
                   <div key={note.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                      <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                        {REPORTER_TYPE_LABELS[note.reporter_type] || '投稿者'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {getRelativeTime(note.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {note.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">まだ口コミがありません</p>
+            )}
+
+            <p className="text-xs text-gray-400 mt-3">
+              投稿者個人の経験に基づく情報です。正確な条件は事業所へ直接ご確認ください。
+            </p>
+          </>
+        )}
+
+        {/* Professional notes tab */}
+        {activeTab === 'professional' && (
+          <>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <p className="text-xs leading-5 text-gray-500">
+                ケアマネジャー、医療・介護職など専門職からの連携メモです。投稿者の所属事業所は表示されません。
+              </p>
+              <button
+                onClick={() => setShowNote(true)}
+                className="shrink-0 text-sm text-cares-600 hover:text-cares-700 font-medium"
+              >
+                + メモを書く
+              </button>
+            </div>
+
+            {professionalNotes.length > 0 ? (
+              <div className="space-y-4">
+                {professionalNotes.map((note) => (
+                  <div key={note.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-sky-50 text-sky-700">
                         {REPORTER_TYPE_LABELS[note.reporter_type] || '投稿者'}
                       </span>
                       <span className="text-xs text-gray-400">
@@ -412,11 +479,11 @@ export default function DirectoryDetailClient({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">まだ口コミ・現場メモがありません</p>
+              <p className="text-sm text-gray-500">まだ専門職メモがありません</p>
             )}
 
             <p className="text-xs text-gray-400 mt-3">
-              投稿者個人の経験に基づく情報です
+              連携時の参考情報です。受け入れ可否や条件は都度ご確認ください。
             </p>
           </>
         )}
