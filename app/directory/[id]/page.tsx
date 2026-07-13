@@ -374,6 +374,20 @@ export default async function DirectoryDetailPage({
     ? portalPosts.filter((post: any) => (post.category || 'other') === selectedPostCategory)
     : portalPosts
   const officialFacilityPageHref = f.owner_facility_id ? `/facility/${f.owner_facility_id}` : `/directory/${f.id}`
+  const claimParams = new URLSearchParams({
+    source: 'cares',
+    listing_id: f.id,
+    facility_name: f.facility_name,
+  })
+  if (f.jigyosho_number) claimParams.set('facility_number', f.jigyosho_number)
+  const claimHref = `https://app.carespace.jp/signup/new-organization?${claimParams.toString()}`
+  const officialSignals = [
+    isOwnerVerified && { label: '事業所公式', tone: 'bg-blue-50 text-blue-700 border-blue-100' },
+    portalProfile?.acceptance_status && portalProfile.acceptance_status !== 'unknown' && { label: '空き状況更新あり', tone: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+    portalPosts.length > 0 && { label: `写真・投稿 ${portalPosts.length}件`, tone: 'bg-rose-50 text-rose-700 border-rose-100' },
+    portalFees.length > 0 && { label: '料金表あり', tone: 'bg-amber-50 text-amber-700 border-amber-100' },
+    portalDocuments.length > 0 && { label: 'パンフレットあり', tone: 'bg-violet-50 text-violet-700 border-violet-100' },
+  ].filter(Boolean) as Array<{ label: string; tone: string }>
 
   // JSON-LD
   const jsonLd = {
@@ -538,6 +552,16 @@ export default async function DirectoryDetailPage({
             )}
           </div>
 
+          {officialSignals.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+              {officialSignals.map((signal) => (
+                <span key={signal.label} className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold ${signal.tone}`}>
+                  {signal.label}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Owner-only: Action buttons + Overview + Features */}
           {isOwnerVerified && portalProfile && (
             <>
@@ -591,6 +615,46 @@ export default async function DirectoryDetailPage({
             />
           </div>
         </div>
+
+        {!isOwnerVerified && (
+          <div className="mb-6 overflow-hidden rounded-2xl border border-cares-200 bg-gradient-to-br from-cares-50 via-white to-rose-50 shadow-sm">
+            <div className="p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black tracking-[0.16em] text-cares-600">FOR CARE PROVIDERS</p>
+                  <h2 className="mt-2 text-xl font-black leading-tight text-slate-950">
+                    この事業所ページを、公式情報で育てませんか。
+                  </h2>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
+                    このページは公表データをもとに作成されています。CareSpaceOSに登録すると、空き状況・写真・料金表・パンフレットを事業所公式情報として掲載できます。
+                  </p>
+                </div>
+                <div className="hidden rounded-2xl bg-white px-4 py-3 text-center shadow-sm ring-1 ring-cares-100 sm:block">
+                  <p className="text-[10px] font-bold text-slate-400">追加できる情報</p>
+                  <p className="mt-1 text-2xl font-black text-cares-700">5</p>
+                  <p className="text-[10px] font-bold text-slate-400">types</p>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-2 text-xs font-bold text-slate-700 sm:grid-cols-3">
+                {['空き状況を最新化', '料金目安を掲載', '写真・パンフレット追加'].map((item) => (
+                  <span key={item} className="rounded-xl bg-white px-3 py-2 ring-1 ring-cares-100">{item}</span>
+                ))}
+              </div>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                <a href={claimHref} className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-cares-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-cares-100 transition hover:bg-cares-700">
+                  事業所情報を更新する
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <Link href="/for-business" className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-bold text-cares-700 ring-1 ring-cares-100 transition hover:bg-cares-50">
+                  掲載できる内容を見る
+                </Link>
+              </div>
+              <p className="mt-3 text-[11px] leading-5 text-slate-400">
+                登録後、事業所番号・法人情報が一致すると、このページと自動でつながります。
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ===== COMPLETENESS SCORE ===== */}
         <div className="mb-6">

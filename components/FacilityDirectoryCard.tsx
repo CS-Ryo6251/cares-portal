@@ -97,6 +97,24 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
             </span>
           )}
         </div>
+
+        <div className={`mt-4 rounded-2xl px-3 py-2.5 text-xs font-bold ${
+          isOfficial
+            ? 'bg-cares-50 text-cares-800 ring-1 ring-cares-100'
+            : 'bg-slate-50 text-slate-600 ring-1 ring-slate-100'
+        }`}>
+          {isOfficial ? (
+            <div className="flex items-center justify-between gap-2">
+              <span>公式情報を掲載中</span>
+              <span className="text-[10px] text-cares-600">空き・料金・資料を確認</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2">
+              <span>事業所の方は公式情報を追加できます</span>
+              <span className="text-[10px] text-slate-400">無料で更新</span>
+            </div>
+          )}
+        </div>
       </div>
     </Link>
   )
