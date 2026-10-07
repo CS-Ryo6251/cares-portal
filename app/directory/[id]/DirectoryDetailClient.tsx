@@ -88,6 +88,7 @@ type DirectoryDetailClientProps = {
   facilityName: string
   isOwnerVerified: boolean
   jigyoshoNumber?: string | null
+  showHearts?: boolean
 }
 
 export default function DirectoryDetailClient({
@@ -95,6 +96,7 @@ export default function DirectoryDetailClient({
   facilityName,
   isOwnerVerified,
   jigyoshoNumber,
+  showHearts = true,
 }: DirectoryDetailClientProps) {
   const [showVacancy, setShowVacancy] = useState(false)
   const [showClaim, setShowClaim] = useState(false)
@@ -244,7 +246,7 @@ export default function DirectoryDetailClient({
         </p>
       </div>
 
-      <FacilityHearts listingId={listingId} />
+      {showHearts && <FacilityHearts listingId={listingId} />}
 
       {/* Notes section with tabs */}
       <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
