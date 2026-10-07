@@ -19,7 +19,7 @@ export default function NotFound() {
             トップへ戻る
           </a>
           <a
-            href="/directory"
+            href="/"
             className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
           >
             施設を探す

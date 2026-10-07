@@ -1,5 +1,7 @@
+import { applyDirectoryArea } from '@/lib/directory-area'
 import { getHeartSummaries } from '@/lib/hearts'
-import HeartCount from '@/components/HeartCount'
+import FacilityListCard from '@/components/FacilityListCard'
+import { getDirectoryProfiles, directoryProfile } from '@/lib/directory-profiles'
 import { getSupabaseClient } from '@/lib/supabase'
 import { ArrowRight, BadgeCheck, HeartHandshake, Search, Sparkles } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
@@ -7,8 +9,6 @@ import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
 import AreaPreferenceRedirect from '@/components/AreaPreferenceRedirect'
 import FacilityMapPreview from '@/components/FacilityMapPreview'
-import ServiceTypeIcon from '@/components/ServiceTypeIcon'
-import CompletenessBar from '@/components/CompletenessBar'
 import FilterChipLink from '@/components/FilterChipLink'
 import { vacancyStatusMap } from '@/lib/constants'
 
@@ -310,21 +310,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     .order('completeness_score', { ascending: false, nullsFirst: false })
     .order('facility_name', { ascending: true })
 
-  if (searchParams.area) {
-    const area = searchParams.area
-    if (area.includes(':')) {
-      const [pref, citiesStr] = area.split(':')
-      const cities = citiesStr.split(',').filter(Boolean)
-      if (cities.length > 0) {
-        const cityFilters = cities.map(c => `address.ilike.%${pref}${c}%`).join(',')
-        query = query.or(cityFilters)
-      } else {
-        query = query.ilike('address', `%${pref}%`)
-      }
-    } else {
-      query = query.ilike('address', `%${area}%`)
-    }
-  }
+  query = applyDirectoryArea(query, searchParams.area)
 
   if (searchParams.status) {
     const statusMap: Record<string, string[]> = {
@@ -398,13 +384,15 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   const totalPages = Math.ceil(totalCount / FACILITIES_PER_PAGE)
 
   const listingIds = rawData.map((item: any) => item.id)
-  const heartSummaries = await getHeartSummaries(listingIds)
+  const [heartSummaries, profiles] = await Promise.all([getHeartSummaries(listingIds), getDirectoryProfiles(rawData)])
 
   const facilities = rawData.map((item: any) => {
 
     return {
       id: item.id,
       facility_name: item.facility_name,
+      cover_image_url: directoryProfile(item, profiles)?.cover_image_url || null,
+      overview: directoryProfile(item, profiles)?.overview || item.overview || null,
       service_type: item.service_type,
       address: item.address,
       latitude: item.latitude ?? null,
@@ -651,6 +639,10 @@ export default async function FeedPage({
           <ArrowRight className="h-5 w-5 shrink-0 text-cares-500 transition-transform group-hover:translate-x-1" />
         </a>
 
+        <a href="/ranking" className="mb-5 flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-rose-100 bg-rose-50/60 px-5 py-4 text-rose-700 transition hover:bg-rose-50">
+          <span><span className="block text-sm font-bold">応援ランキング</span><span className="mt-1 block text-xs text-slate-500">今週、ハートが集まった事業所を見てみよう</span></span><ArrowRight className="h-4 w-4 shrink-0" />
+        </a>
+
         {/* Tab switcher */}
         <div className="flex bg-slate-100 rounded-xl p-1 mb-4">
           <a
@@ -837,55 +829,7 @@ export default async function FeedPage({
 
           <div className="space-y-4">
             {facilities.map((item: any) => (
-              <a
-                key={item.id}
-                href={`/directory/${item.id}`}
-                className="card-lift group block rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm hover:border-cares-200"
-              >
-                <div className="px-4 py-4 sm:px-5 sm:py-5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <ServiceTypeIcon serviceType={item.service_type} size="sm" />
-                    <span className="text-base sm:text-lg font-bold text-slate-950 leading-snug group-hover:text-cares-800">
-                      {item.facility_name}
-                    </span>
-                    {item.is_owner_verified && (
-                      <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
-                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                        公式
-                      </span>
-                    )}
-                    {!item.is_owner_verified && (
-                      <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">
-                        公表DB
-                      </span>
-                    )}
-                    {item.service_type && (
-                      <span className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-cares-50 text-cares-700">
-                        {item.service_type}
-                      </span>
-                    )}
-                    {item.acceptance_status && vacancyStatusMap[item.acceptance_status] && (
-                      <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${vacancyStatusMap[item.acceptance_status].color}`}>
-                        {vacancyStatusMap[item.acceptance_status].label}
-                      </span>
-                    )}
-                  </div>
-                  {item.address && (
-                    <p className="text-sm text-slate-500 mt-2 leading-relaxed">{item.address}</p>
-                  )}
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {typeof item.distance_km === 'number' && Number.isFinite(item.distance_km) && (
-                      <span className="inline-flex items-center rounded-full bg-cares-50 px-2.5 py-1 text-xs font-bold text-cares-700">
-                        現在地から約{item.distance_km < 1 ? `${Math.round(item.distance_km * 1000)}m` : `${item.distance_km.toFixed(1)}km`}
-                      </span>
-                    )}
-                    <HeartCount total={item.heart_total} />
-                  </div>
-                  <div className="mt-2">
-                    <CompletenessBar score={item.completeness_score} tier={item.completeness_tier} size="sm" />
-                  </div>
-                </div>
-              </a>
+              <FacilityListCard key={item.id} id={item.id} name={item.facility_name} serviceType={item.service_type} address={item.address} coverImage={item.cover_image_url} overview={item.overview} total={item.heart_total} isOfficial={Boolean(item.is_owner_verified)} acceptanceStatus={item.acceptance_status} distanceKm={item.distance_km} />
             ))}
           </div>
 

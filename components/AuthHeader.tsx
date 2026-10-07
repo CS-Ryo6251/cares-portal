@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createAuthClient } from '@/lib/supabase-auth'
-import { Bell, Building2, ClipboardList, Settings, LogOut, ChevronDown, User } from 'lucide-react'
+import { Bell, Building2, ClipboardList, Settings, LogOut, ChevronDown, User, PencilLine } from 'lucide-react'
+
+import { CARESPACE_MANAGEMENT_URL, facilityManagementUrl } from '@/lib/cares-navigation'
 
 const PROFESSION_LABELS: Record<string, string> = {
   care_manager: 'ケアマネ',
@@ -25,6 +27,7 @@ export default function AuthHeader() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [hasMyFacilities, setHasMyFacilities] = useState(false)
+  const [postingUrl, setPostingUrl] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState(false)
@@ -116,6 +119,7 @@ export default function AuthHeader() {
 
   useEffect(() => {
     setHasMyFacilities(false)
+    setPostingUrl(null)
     if (!userId) return
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 10_000)
@@ -124,7 +128,11 @@ export default function AuthHeader() {
       .then(async response => {
         if (!response.ok) return
         const data = await response.json()
-        if (active) setHasMyFacilities(Array.isArray(data.facilities) && data.facilities.length > 0)
+        if (active) {
+          const facilities = Array.isArray(data.facilities) ? data.facilities.filter((f: { id?: unknown }) => typeof f.id === 'string') : []
+          setHasMyFacilities(facilities.length > 0)
+          setPostingUrl(facilities.length === 1 ? facilityManagementUrl(facilities[0].id, 'posts') : facilities.length > 1 ? `${CARESPACE_MANAGEMENT_URL}?cares_section=posts` : null)
+        }
       })
       .catch(() => { /* Shared account login remains usable if facility lookup fails. */ })
       .finally(() => clearTimeout(timeout))
@@ -177,7 +185,8 @@ export default function AuthHeader() {
 
   return (
     <div className="flex items-center gap-2">
-      {hasMyFacilities && <a href="/my-facilities" className="shrink-0 rounded-xl bg-cares-50 px-2 py-2 text-xs font-semibold text-cares-700 sm:px-3 sm:text-sm">自分の事業所</a>}
+      {postingUrl && <a href={postingUrl} aria-label="投稿する" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-rose-600 px-3 text-xs font-bold text-white hover:bg-rose-700 sm:px-4 sm:text-sm"><PencilLine aria-hidden="true" className="h-4 w-4" /><span className="sm:hidden">投稿</span><span className="hidden sm:inline">投稿する</span></a>}
+      {hasMyFacilities && <a href="/my-facilities" className="max-[359px]:hidden shrink-0 rounded-xl bg-cares-50 px-2 py-2 text-xs font-semibold text-cares-700 sm:px-3 sm:text-sm">自分の事業所</a>}
       {/* Notification bell */}
       <a
         href="/notifications"

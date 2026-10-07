@@ -166,7 +166,6 @@ export default async function FacilityDetailPage({ params, searchParams }: {
     {facility.directoryListings.length > 0 && <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">空き情報・みんなの声</h2><p className="mt-2 text-sm leading-6 text-slate-500">地域から届いた良いところや、確認日つきの空き情報をご覧いただけます。</p>{facility.directoryListings.map((listing: { id: string; service_type: string | null }) => <Link key={listing.id} href={`/directory/${listing.id}#community`} className="mt-3 block rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{listing.service_type || '事業所'}の空き情報・良いところを見る →</Link>)}</section>}
   </div>
   const fees = <div className="space-y-5 px-4 pb-20 sm:px-0">
-    <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
     {facility.fee_pattern === 'no_charge' && <p className="rounded-2xl bg-emerald-50 p-6 text-sm text-emerald-900">この事業所は、利用者の費用負担なしとして料金情報を登録しています。詳しくは事業所へお問い合わせください。</p>}
     {!facility.fees.length && !simulationTariffs(f.service_type).length && facility.fee_pattern !== 'no_charge' && <p className="rounded-2xl bg-white p-6 text-sm text-slate-500">料金は事業所にお問い合わせください。</p>}
     <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">パンフレット・資料</h2>{facility.documents.length ? <div className="mt-4 space-y-2">{facility.documents.map((document: { id: string; title: string; file_url: string }) => publicWebUrl(document.file_url) && <a key={document.id} href={publicWebUrl(document.file_url)} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"><Download className="h-4 w-4 shrink-0" />{document.title || 'パンフレット'}</a>)}</div> : <p className="mt-3 text-sm text-slate-500">公開中の資料はありません。</p>}</section>
@@ -179,6 +178,7 @@ export default async function FacilityDetailPage({ params, searchParams }: {
         cover={publicWebUrl(facility.cover_image_url)} icon={publicWebUrl(facility.icon_url)} overview={facility.overview}
         statusLabel={acceptanceLabels[facility.acceptance_status] || '確認中'} statusColor={acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown}
         listingIds={facility.directoryListings.map((listing: { id: string }) => listing.id)} postCount={facility.postCount} photoCount={photos.length} />
+    <FloatingActions providerSettings={facility.simulation_settings} fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
       <FacilityProfileTabs
         posts={<FacilityPostFeed posts={facility.posts} facilityId={id} facilityName={f.name} initialCategory={sp.category} unavailable={facility.postsUnavailable} totalCount={facility.postCount ?? undefined} />}
         photos={<FacilityPhotoGallery photos={photos} name={f.name} />}
