@@ -36,6 +36,7 @@ test('Postgres: Cares単独オーナー受付・組織境界・機密データ�
  create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
  grant all on all tables in schema public,storage to service_role;`)
  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007143356_cares_provider_intake.sql'),'utf8'))
+ await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007144641_cares_intake_cleanup_batch.sql'),'utf8'))
  await db.exec(`insert into cares_listings values('${id(1)}','合成OS事業所','通所介護',true,'${id(11)}','unknown',now()),('${id(2)}','合成Cares専用','通所介護',true,null,'unknown',now()),('${id(3)}','未確認','通所介護',false,null,'unknown',now());
  insert into facilities values('${id(11)}','${id(21)}');
  insert into user_profiles values('${id(31)}','${id(41)}','${id(21)}',true,'manager'),('${id(32)}','${id(42)}','${id(22)}',true,'admin'),('${id(33)}','${id(43)}','${id(21)}',true,'staff'),('${id(34)}','${id(44)}','${id(21)}',false,'admin');
@@ -99,7 +100,7 @@ test('Postgres: Cares単独オーナー受付・組織境界・機密データ�
   let candidates=(await db.query('select * from cares_intake_cleanup_candidates()')).rows.map(r=>r.id);assert(candidates.includes(id(53)));assert(!candidates.includes(id(51)))
   await db.query("update cares_applications set created_at=now()-interval '181 days' where draft_id=$1",[id(51)])
   candidates=(await db.query('select * from cares_intake_cleanup_candidates()')).rows.map(r=>r.id);assert(candidates.includes(id(51)))
-  await db.query('select cares_intake_cleanup_finish($1)',[id(51)]);assert.equal((await db.query('select * from cares_applications where draft_id=$1',[id(51)])).rows.length,0)
+  assert.equal((await db.query('select cares_intake_cleanup_finish_batch($1) as removed',[[id(51),id(53)]])).rows[0].removed,2);assert.equal((await db.query('select * from cares_applications where draft_id=$1',[id(51)])).rows.length,0)
  })
  } finally {await db.close()}
 })
