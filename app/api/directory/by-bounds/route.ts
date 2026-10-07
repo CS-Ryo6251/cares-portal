@@ -1,3 +1,4 @@
+import { getHeartSummaries } from '@/lib/hearts'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -34,8 +35,11 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient()
+    const status = params.get('status')
+    const source = status === 'has_vacancy' || status === 'no_vacancy'
+      ? 'cares_confirmed_directory_listing' : 'cares_directory_listing'
     let query = supabase
-      .from('cares_listings')
+      .from(source)
       .select('*')
       .not('latitude', 'is', null)
       .not('longitude', 'is', null)
@@ -47,10 +51,9 @@ export async function GET(request: NextRequest) {
       .order('completeness_score', { ascending: false, nullsFirst: false })
       .limit(MAX_RESULTS)
 
-    const status = params.get('status')
     if (status) {
       const values = STATUS_MAP[status] || [status]
-      query = query.in('acceptance_status', values)
+      query = query.in('current_acceptance_status', values)
     }
 
     const serviceType = params.get('service_type')
@@ -71,24 +74,9 @@ export async function GET(request: NextRequest) {
 
     const rows = data || []
     const ids = rows.map((row: any) => row.id)
-    const ratingStats: Record<string, { sum: number; count: number }> = {}
-
-    if (ids.length > 0) {
-      const { data: ratings } = await supabase
-        .from('cares_user_ratings')
-        .select('listing_id, rating')
-        .in('listing_id', ids)
-      for (const rating of ratings || []) {
-        const id = (rating as any).listing_id
-        if (!ratingStats[id]) ratingStats[id] = { sum: 0, count: 0 }
-        ratingStats[id].sum += Number((rating as any).rating || 0)
-        ratingStats[id].count += 1
-      }
-    }
+    const heartSummaries = await getHeartSummaries(ids)
 
     const facilities = rows.map((item: any) => {
-      const stats = ratingStats[item.id]
-      const ratingAverage = stats?.count ? Math.round((stats.sum / stats.count) * 10) / 10 : null
       return {
         id: item.id,
         facility_name: item.facility_name,
@@ -96,14 +84,14 @@ export async function GET(request: NextRequest) {
         address: item.address,
         latitude: item.latitude ?? null,
         longitude: item.longitude ?? null,
-        acceptance_status: item.acceptance_status,
+        acceptance_status: item.current_acceptance_status,
         is_owner_verified: !!item.is_owner_verified,
-        rating_average: ratingAverage,
-        rating_count: stats?.count || 0,
+        heart_total: heartSummaries === null ? null : (heartSummaries[item.id]?.total || '0'),
+        heart_supporters: heartSummaries === null ? null : (heartSummaries[item.id]?.supporters || '0'),
       }
     })
 
-    return NextResponse.json({ facilities })
+    return NextResponse.json({ facilities }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('by-bounds error:', error)
     return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })

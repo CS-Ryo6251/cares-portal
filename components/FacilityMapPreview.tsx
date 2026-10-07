@@ -1,5 +1,7 @@
 'use client'
 
+import { formatHearts } from '@/lib/community'
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent, WheelEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -9,7 +11,6 @@ import {
   ChevronDown,
   ClipboardList,
   HandHelping,
-  Heart,
   Home,
   MapPinned,
   Minus,
@@ -17,7 +18,7 @@ import {
   Plus,
   RotateCcw,
   Search,
-  Star,
+  Heart,
   Stethoscope,
   Truck,
   Users,
@@ -35,8 +36,8 @@ type FacilityMapItem = {
   longitude?: number | null
   acceptance_status: string | null
   is_owner_verified: boolean
-  rating_average: number | null
-  rating_count: number
+  heart_total: string | null
+  heart_supporters: string | null
 }
 
 type Props = {
@@ -153,9 +154,7 @@ function parseCoordinate(value: number | string | null | undefined) {
   return Number.isFinite(numericValue) ? numericValue : null
 }
 
-function formatRating(value: number | null) {
-  return value ? value.toFixed(1) : '-'
-}
+
 
 function getMapServiceStyle(serviceType?: string | null) {
   if (!serviceType) return mapServiceStyles.default
@@ -799,7 +798,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
           <div className="min-w-0">
             <h2 className="text-sm font-bold text-slate-950">地図から近くの事業所を見る</h2>
             <p className="mt-0.5 truncate text-xs text-slate-500">
-              {area ? `${area.replace(':', ' / ')} 周辺` : '表示中の事業所'}・評価つき
+              {area ? `${area.replace(':', ' / ')} 周辺` : '表示中の事業所'}・応援のハート
             </p>
           </div>
         </div>
@@ -1108,11 +1107,11 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 font-bold text-amber-700">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                {formatRating(activeFacility.rating_average)}
+                <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
+                {formatHearts(activeFacility.heart_total)}
               </span>
               <span className="font-medium text-slate-500">
-                {activeFacility.rating_count > 0 ? `${activeFacility.rating_count}件の評価` : '評価はまだありません'}
+                {activeFacility.heart_supporters === null ? '応援数を取得できません' : `${formatHearts(activeFacility.heart_supporters)}人の応援`}
               </span>
               {activeFacility.service_type && (
                 <span className="ml-auto truncate text-slate-400">{activeFacility.service_type}</span>

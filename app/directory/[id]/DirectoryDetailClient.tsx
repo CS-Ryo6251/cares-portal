@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Banknote, Lock, MessageSquareText, Star, StickyNote, Stethoscope } from 'lucide-react'
+import { Banknote, Lock, MessageSquareText, StickyNote, Stethoscope } from 'lucide-react'
 import { createAuthClient } from '@/lib/supabase-auth'
+import FacilityHearts from '@/components/FacilityHearts'
 import VacancyReportModal from '@/components/VacancyReportModal'
 import OwnerClaimModal from '@/components/OwnerClaimModal'
 import ProfessionalNoteModal from '@/components/ProfessionalNoteModal'
@@ -109,11 +110,6 @@ export default function DirectoryDetailClient({
   // Auth state
   const [userId, setUserId] = useState<string | null>(null)
 
-  // Personal rating state
-  const [myRating, setMyRating] = useState<number | null>(null)
-  const [hoverRating, setHoverRating] = useState<number | null>(null)
-  const [ratingSaving, setRatingSaving] = useState(false)
-
   // Personal note state
   const [personalNote, setPersonalNote] = useState<PersonalNote | null>(null)
 
@@ -154,16 +150,6 @@ export default function DirectoryDetailClient({
     } catch { /* silent */ }
   }, [listingId])
 
-  const fetchMyRating = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/directory/${listingId}/rating`)
-      if (res.ok) {
-        const data = await res.json()
-        setMyRating(data.rating ?? null)
-      }
-    } catch { /* silent */ }
-  }, [listingId])
-
   const fetchPersonalNote = useCallback(async () => {
     try {
       const res = await fetch(`/api/directory/${listingId}/personal-note`)
@@ -177,42 +163,11 @@ export default function DirectoryDetailClient({
   useEffect(() => {
     fetchNotes()
     fetchFees()
-    fetchMyRating()
     fetchPersonalNote()
-  }, [fetchNotes, fetchFees, fetchMyRating, fetchPersonalNote])
+  }, [fetchNotes, fetchFees, fetchPersonalNote])
 
   const reviewNotes = notes.filter((note) => getNoteKind(note.reporter_type) === 'review')
   const professionalNotes = notes.filter((note) => getNoteKind(note.reporter_type) === 'professional')
-
-  const handleRatingClick = async (value: number) => {
-    if (!userId) {
-      setShowLoginModal(true)
-      return
-    }
-    if (ratingSaving) return
-    setRatingSaving(true)
-
-    const isRemoving = myRating === value
-    const prevRating = myRating
-    setMyRating(isRemoving ? null : value)
-
-    try {
-      const res = isRemoving
-        ? await fetch(`/api/directory/${listingId}/rating`, { method: 'DELETE' })
-        : await fetch(`/api/directory/${listingId}/rating`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rating: value }),
-          })
-      if (!res.ok) {
-        setMyRating(prevRating)
-      }
-    } catch {
-      setMyRating(prevRating)
-    } finally {
-      setRatingSaving(false)
-    }
-  }
 
   return (
     <>
@@ -289,53 +244,7 @@ export default function DirectoryDetailClient({
         </p>
       </div>
 
-      {/* Personal rating section */}
-      <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-3">
-          <Star className="w-5 h-5 text-gray-400" />
-          マイ評価
-        </h2>
-        {userId ? (
-          <div>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((value) => {
-                const active = (hoverRating ?? myRating ?? 0) >= value
-                return (
-                  <button
-                    key={value}
-                    onClick={() => handleRatingClick(value)}
-                    onMouseEnter={() => setHoverRating(value)}
-                    onMouseLeave={() => setHoverRating(null)}
-                    disabled={ratingSaving}
-                    className="p-0.5 transition-transform hover:scale-110 disabled:opacity-50"
-                  >
-                    <Star
-                      className={`w-7 h-7 ${
-                        active
-                          ? 'text-amber-400 fill-amber-400'
-                          : 'text-gray-200'
-                      }`}
-                    />
-                  </button>
-                )
-              })}
-              {myRating && (
-                <span className="ml-2 text-sm text-gray-500">{myRating}/5</span>
-              )}
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              あなただけに表示されます
-            </p>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowLoginModal(true)}
-            className="text-sm text-cares-600 hover:text-cares-700 font-medium"
-          >
-            ログインして評価する
-          </button>
-        )}
-      </div>
+      <FacilityHearts listingId={listingId} />
 
       {/* Notes section with tabs */}
       <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
@@ -350,7 +259,7 @@ export default function DirectoryDetailClient({
             }`}
           >
             <MessageSquareText className="w-4 h-4" />
-            口コミ
+            良いところ
             {reviewNotes.length > 0 && (
               <span className="text-xs font-normal">({reviewNotes.length})</span>
             )}
@@ -364,7 +273,7 @@ export default function DirectoryDetailClient({
             }`}
           >
             <Stethoscope className="w-4 h-4" />
-            専門職メモ
+            専門職の声
             {professionalNotes.length > 0 && (
               <span className="text-xs font-normal">({professionalNotes.length})</span>
             )}
@@ -393,7 +302,7 @@ export default function DirectoryDetailClient({
                 onClick={() => setShowNote(true)}
                 className="shrink-0 text-sm text-cares-600 hover:text-cares-700 font-medium"
               >
-                + 口コミを書く
+                + 良かったところを書く
               </button>
             </div>
 
@@ -416,7 +325,7 @@ export default function DirectoryDetailClient({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">まだ口コミがありません</p>
+              <p className="text-sm text-gray-500">まだ良かった体験の投稿はありません。最初の声を届けませんか。</p>
             )}
 
             <p className="text-xs text-gray-400 mt-3">
@@ -479,7 +388,7 @@ export default function DirectoryDetailClient({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">まだ専門職メモがありません</p>
+              <p className="text-sm text-gray-500">まだ専門職からの声はありません</p>
             )}
 
             <p className="text-xs text-gray-400 mt-3">

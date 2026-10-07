@@ -1,15 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Noto_Sans_JP } from 'next/font/google'
 import { ArrowRight, HeartHandshake } from 'lucide-react'
 import './globals.css'
 import AuthHeader from '@/components/AuthHeader'
 
-const notoSansJP = Noto_Sans_JP({
-  subsets: ['latin'],
-  weight: ['400', '500', '700', '900'],
-  display: 'swap',
-  variable: '--font-noto-sans-jp',
-})
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -22,7 +15,7 @@ export const metadata: Metadata = {
     default: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
     template: '%s — Cares by CareSpace',
   },
-  description: '介護事業所の公式情報、現在の空き状況、料金、写真、現場の評価をひとつのページで確認できます。',
+  description: '介護事業所の公式情報、現在の空き状況、料金、写真、良かった体験と応援の声をひとつのページで確認できます。',
   icons: {
     icon: '/favicon.png',
   },
@@ -32,13 +25,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     siteName: 'Cares by CareSpace',
     title: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
-    description: '空き状況、料金、写真、現場の評価から、地域の介護事業所を探せます。',
+    description: '空き状況、料金、写真、良かった体験と応援の声から、地域の介護事業所を探せます。',
     url: 'https://cares.carespace.jp',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
-    description: '空き状況、料金、写真、現場の評価から、地域の介護事業所を探せます。',
+    description: '空き状況、料金、写真、良かった体験と応援の声から、地域の介護事業所を探せます。',
   },
   alternates: {
     canonical: 'https://cares.carespace.jp',
@@ -49,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const gaId = process.env.NEXT_PUBLIC_GA_ID
 
   return (
-    <html lang="ja" className={notoSansJP.variable}>
+    <html lang="ja">
       {gaId && (
         <head>
           <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />

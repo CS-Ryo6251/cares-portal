@@ -23,9 +23,11 @@ module.exports = {
       },
       fontFamily: {
         sans: [
-          'var(--font-noto-sans-jp)',
+          'Noto Sans JP',
           'Hiragino Kaku Gothic ProN',
           'Hiragino Sans',
+          'Yu Gothic UI',
+          'Meiryo',
           'system-ui',
           'sans-serif',
         ],

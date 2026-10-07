@@ -15,7 +15,7 @@ export async function GET(
     const supabase = getSupabaseClient()
 
     const { data: facility, error } = await supabase
-      .from('cares_listings')
+      .from('cares_directory_listing')
       .select('*')
       .eq('id', id)
       .single()
@@ -27,7 +27,7 @@ export async function GET(
     // Fetch recent vacancy reports (last 10)
     const { data: vacancy_reports } = await supabase
       .from('cares_vacancy_reports')
-      .select('*')
+      .select('id,listing_id,vacancy_type,comment,reported_at,is_verified,information_source,confirmed_on,valid_until')
       .eq('listing_id', id)
       .order('reported_at', { ascending: false })
       .limit(10)
@@ -40,11 +40,11 @@ export async function GET(
       .eq('status', 'approved')
 
     const response = NextResponse.json({
-      facility,
+      facility: { ...facility, acceptance_status: facility.current_acceptance_status },
       vacancy_reports: vacancy_reports || [],
       edit_count: edit_count || 0,
     })
-    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120')
+    response.headers.set('Cache-Control', 'no-store')
     return response
   } catch (error) {
     console.error('Directory detail API error:', error)

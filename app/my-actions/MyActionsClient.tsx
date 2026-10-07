@@ -9,7 +9,7 @@ import NotesTab from './NotesTab'
 
 const TABS = [
   { key: 'favorites', label: 'お気に入り', icon: Heart },
-  { key: 'ratings', label: 'マイ評価', icon: Star },
+  { key: 'ratings', label: '以前のマイ評価', icon: Star },
   { key: 'notes', label: 'マイメモ', icon: FileText },
 ] as const
 

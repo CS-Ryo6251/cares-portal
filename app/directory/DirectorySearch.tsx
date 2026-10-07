@@ -16,12 +16,9 @@ type Facility = {
   jigyosho_number: string | null
   acceptance_status: string | null
   source: string | null
-  vacancy_summary: {
-    has_vacancy: number
-    no_vacancy: number
-    unknown: number
-    latest_report_at: string | null
-  }
+  heart_total: string | null
+  heart_supporters: string | null
+  current_vacancy: { confirmed_on: string; valid_until: string } | null
 }
 
 type ApiResponse = {

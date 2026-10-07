@@ -24,7 +24,6 @@ import type { LucideIcon } from 'lucide-react'
 import ViewTracker from '@/components/ViewTracker'
 import CommentSection from '@/components/CommentSection'
 import LikeButton from '@/components/LikeButton'
-import FavoriteButton from '@/components/FavoriteButton'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import FloatingActions from './FloatingActions'
 import InquiryButton from './InquiryButton'
@@ -156,8 +155,12 @@ async function getFacilityDetail(facilityId: string) {
     .eq('facility_id', facilityId)
     .order('created_at', { ascending: false })
 
+  const { data: directoryListings } = await supabase.from('cares_listings')
+    .select('id,service_type').eq('owner_facility_id', facilityId).eq('is_owner_verified', true)
+
   return {
     ...profile,
+    directoryListings: directoryListings || [],
     posts: posts || [],
     fees: fees || [],
     documents: documents || [],
@@ -589,6 +592,8 @@ export default async function FacilityDetailPage({
             )}
             <InquiryButton facilityId={facility.facility_id} facilityName={f.name} />
           </div>
+
+          {facility.directoryListings.map((listing: { id: string; service_type: string | null }) => <Link key={listing.id} href={`/directory/${listing.id}`} className="mt-3 block rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{listing.service_type ? `${listing.service_type}：` : ''}空き情報・良いところ・応援のハートを見る →</Link>)}
 
           {/* SNS Icons — 登録済みのものだけ表示 */}
           {(facility.sns_x || facility.sns_instagram || facility.sns_tiktok || facility.sns_youtube || facility.sns_facebook) && (

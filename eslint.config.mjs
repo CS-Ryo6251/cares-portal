@@ -9,6 +9,8 @@ const compat = new FlatCompat({ baseDirectory: __dirname })
 const config = [
   { ignores: ['.next/**', 'node_modules/**'] },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  // The Node test harness transpiles route modules with isolated CommonJS mocks.
+  { files: ['tests/**/*.cjs'], rules: { '@typescript-eslint/no-require-imports': 'off' } },
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',

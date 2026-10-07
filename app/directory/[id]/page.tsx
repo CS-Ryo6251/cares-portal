@@ -1,3 +1,5 @@
+import { getCurrentVacancies } from '@/lib/vacancies'
+import { VACANCY_SOURCES } from '@/lib/community'
 import { getSupabaseClient } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -41,7 +43,7 @@ import ShareButtons from '@/app/facility/[id]/ShareButtons'
 const acceptanceLabels: Record<string, string> = {
   has_vacancy: '空きあり',
   no_vacancy: '空きなし',
-  unknown: '確認中',
+  unknown: '要確認',
   accepting: '空きあり',
   limited: '条件付き',
   waitlist: '待機あり',
@@ -95,25 +97,13 @@ async function getListing(id: string) {
   // Recent vacancy reports
   const { data: vacancyReports } = await supabase
     .from('cares_vacancy_reports')
-    .select('*')
+    .select('id,listing_id,vacancy_type,comment,reported_at,is_verified,information_source,confirmed_on,valid_until')
     .eq('listing_id', id)
     .order('reported_at', { ascending: false })
     .limit(10)
 
-  // Vacancy summary (last 30 days)
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-  const recentReports = (vacancyReports || []).filter(
-    (r: any) => new Date(r.reported_at) >= thirtyDaysAgo
-  )
-
-  const vacancySummary = {
-    has_vacancy: recentReports.filter((r: any) => r.vacancy_type === 'has_vacancy').length,
-    no_vacancy: recentReports.filter((r: any) => r.vacancy_type === 'no_vacancy').length,
-    unknown: recentReports.filter((r: any) => r.vacancy_type === 'unknown').length,
-    latest_report_at: recentReports[0]?.reported_at || null,
-  }
+  const currentVacancies = await getCurrentVacancies([id])
+  const currentReport = currentVacancies?.[id] || null
 
   // Fetch notes and listing fees for score calculation
   const [notesResult, listingFeesResult] = await Promise.all([
@@ -215,23 +205,14 @@ async function getListing(id: string) {
   return {
     facility,
     vacancyReports: vacancyReports || [],
-    vacancySummary,
+    currentReport,
+    vacancyUnavailable: currentVacancies === null,
     portalData,
     scoreResult,
   }
 }
 
-function getRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 60) return `${minutes}分前`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}時間前`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}日前`
-  const months = Math.floor(days / 30)
-  return `${months}ヶ月前`
-}
+
 
 export async function generateMetadata({
   params,
@@ -352,11 +333,10 @@ export default async function DirectoryDetailPage({
     notFound()
   }
 
-  const { facility: f, vacancySummary, portalData, scoreResult } = data
+  const { facility: f, currentReport, vacancyUnavailable, portalData, scoreResult } = data
   const isOwnerVerified = f.is_owner_verified
-  const statusLabel = acceptanceLabels[f.acceptance_status || 'unknown'] || '要問合せ'
-  const statusColor = acceptanceColors[f.acceptance_status || 'unknown'] || acceptanceColors.unknown
-  const hasVacancyData = vacancySummary.has_vacancy > 0 || vacancySummary.no_vacancy > 0
+  const statusLabel = acceptanceLabels[currentReport?.vacancy_type || 'unknown'] || '要問合せ'
+  const statusColor = acceptanceColors[currentReport?.vacancy_type || 'unknown'] || acceptanceColors.unknown
 
   // Portal-specific data
   const portalProfile = portalData?.profile
@@ -669,32 +649,12 @@ export default async function DirectoryDetailPage({
         <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 mb-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900 mb-3">空き状況</h2>
 
-          {hasVacancyData ? (
-            <div className="space-y-2 mb-4">
-              <p className="text-sm text-gray-500">直近30日のコミュニティ情報:</p>
-              <div className="flex items-center gap-4 flex-wrap">
-                {vacancySummary.has_vacancy > 0 && (
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />
-                    空きの可能性あり ({vacancySummary.has_vacancy}件)
-                  </span>
-                )}
-                {vacancySummary.no_vacancy > 0 && (
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700">
-                    <span className="w-2 h-2 rounded-full bg-red-500" />
-                    空きなしの可能性 ({vacancySummary.no_vacancy}件)
-                  </span>
-                )}
-              </div>
-              {vacancySummary.latest_report_at && (
-                <p className="text-xs text-gray-400">
-                  最終レポート: {getRelativeTime(vacancySummary.latest_report_at)}
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500 mb-4">まだ空き情報の投稿がありません</p>
-          )}
+          {currentReport ? <div className="mb-4 rounded-xl bg-emerald-50 p-4">
+            <p className="font-bold text-emerald-900">{acceptanceLabels[currentReport.vacancy_type] || '要確認'}</p>
+            <p className="mt-2 text-sm text-gray-700">確認日：{currentReport.confirmed_on} ／ 掲載期限：{currentReport.valid_until}</p>
+            <p className="mt-1 text-sm text-gray-600">情報源：{VACANCY_SOURCES[currentReport.information_source as keyof typeof VACANCY_SOURCES] || '未確認'}（投稿者申告）</p>
+            {currentReport.comment && <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{currentReport.comment}</p>}
+          </div> : <p className="mb-4 text-sm text-gray-600">{vacancyUnavailable ? '空き情報を取得できませんでした。時間をおいて再読み込みしてください。' : '現在確認できる空き情報はありません。期限切れ・確認日不明の情報は要確認として扱います。'}</p>}
 
           {/* Client-side interactive parts */}
           <DirectoryDetailClient

@@ -116,14 +116,17 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    const body = await request.json().catch(() => null)
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return NextResponse.json({ error: '入力内容を確認してください' }, { status: 400 })
     const { reporter_type, content } = body
+
+    if (body.good_point_confirmed !== true) return NextResponse.json({ error: '良いところと公開内容の確認をお願いします' }, { status: 400 })
 
     if (!reporter_type || !ALLOWED_TYPES.includes(reporter_type)) {
       return NextResponse.json({ error: '投稿者の立場を選択してください' }, { status: 400 })
     }
 
-    if (!content || content.trim().length === 0) {
+    if (typeof content !== 'string' || content.trim().length === 0) {
       return NextResponse.json({ error: 'メモ内容を入力してください' }, { status: 400 })
     }
 
@@ -153,11 +156,13 @@ export async function POST(
     const oneDayAgo = new Date()
     oneDayAgo.setDate(oneDayAgo.getDate() - 1)
 
-    const { count } = await supabase
+    const { count, error: limitError } = await supabase
       .from('cares_professional_notes')
       .select('*', { count: 'exact', head: true })
       .eq('reporter_ip_hash', ipHash)
       .gte('created_at', oneDayAgo.toISOString())
+
+    if (limitError) return NextResponse.json({ error: '投稿確認に失敗しました' }, { status: 503 })
 
     if ((count || 0) >= 5) {
       return NextResponse.json({ error: '1日の投稿上限に達しました' }, { status: 429 })
@@ -171,19 +176,9 @@ export async function POST(
       reporter_ip_hash: ipHash,
     }
 
-    // If logged in, attach user_id and use display_name as reporter_name
+    // Store the author privately; public reads select only role and content.
     if (user) {
       insertData.user_id = user.id
-
-      const { data: profile } = await supabase
-        .from('cares_user_profiles')
-        .select('display_name')
-        .eq('user_id', user.id)
-        .single()
-
-      if (profile?.display_name) {
-        insertData.reporter_name = profile.display_name
-      }
     }
 
     const { error } = await supabase
