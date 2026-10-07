@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Banknote, Lock, MessageSquareText, StickyNote, Stethoscope } from 'lucide-react'
+import { Banknote, Lock, MessageSquareText, PenLine, StickyNote, Stethoscope } from 'lucide-react'
 import { createAuthClient } from '@/lib/supabase-auth'
 import FacilityHearts from '@/components/FacilityHearts'
 import VacancyReportModal from '@/components/VacancyReportModal'
@@ -249,18 +249,19 @@ export default function DirectoryDetailClient({
       {showHearts && <FacilityHearts listingId={listingId} />}
 
       {/* Notes section with tabs */}
-      <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <section aria-label="事業所への声とメモ" className="mt-6 bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
         {/* Tab header */}
         <div className="flex items-center gap-0 mb-4 border-b border-gray-100 overflow-x-auto">
           <button
             onClick={() => setActiveTab('review')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            aria-pressed={activeTab === 'review'}
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'review'
                 ? 'border-cares-600 text-cares-700'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            <MessageSquareText className="w-4 h-4" />
+            <MessageSquareText className="hidden sm:block w-4 h-4" />
             良いところ
             {reviewNotes.length > 0 && (
               <span className="text-xs font-normal">({reviewNotes.length})</span>
@@ -268,13 +269,14 @@ export default function DirectoryDetailClient({
           </button>
           <button
             onClick={() => setActiveTab('professional')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            aria-pressed={activeTab === 'professional'}
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'professional'
                 ? 'border-cares-600 text-cares-700'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            <Stethoscope className="w-4 h-4" />
+            <Stethoscope className="hidden sm:block w-4 h-4" />
             専門職の声
             {professionalNotes.length > 0 && (
               <span className="text-xs font-normal">({professionalNotes.length})</span>
@@ -282,13 +284,14 @@ export default function DirectoryDetailClient({
           </button>
           <button
             onClick={() => setActiveTab('personal')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            aria-pressed={activeTab === 'personal'}
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'personal'
                 ? 'border-cares-600 text-cares-700'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            <StickyNote className="w-4 h-4" />
+            <StickyNote className="hidden sm:block w-4 h-4" />
             個人メモ
           </button>
         </div>
@@ -296,19 +299,20 @@ export default function DirectoryDetailClient({
         {/* Review notes tab */}
         {activeTab === 'review' && (
           <>
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <p className="text-xs leading-5 text-gray-500">
-                ご家族・利用検討者・地域の方からの感想です。所属事業所は表示されません。
+            <div className={`flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between ${reviewNotes.length > 0 ? 'mb-4' : 'py-1'}`}>
+              <p className="text-sm text-gray-500">
+                {reviewNotes.length > 0 ? 'ご家族・地域の方の声' : 'まだ投稿がありません'}
               </p>
               <button
                 onClick={() => setShowNote(true)}
-                className="shrink-0 text-sm text-cares-600 hover:text-cares-700 font-medium"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-cares-50 px-4 py-2.5 text-sm font-medium text-cares-700 transition-colors hover:bg-cares-100"
               >
-                + 良かったところを書く
+                <PenLine className="h-4 w-4" aria-hidden="true" />
+                良いところを書く
               </button>
             </div>
 
-            {reviewNotes.length > 0 ? (
+            {reviewNotes.length > 0 && (
               <div className="space-y-4">
                 {reviewNotes.map((note) => (
                   <div key={note.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
@@ -326,32 +330,27 @@ export default function DirectoryDetailClient({
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">まだ良かった体験の投稿はありません。最初の声を届けませんか。</p>
             )}
-
-            <p className="text-xs text-gray-400 mt-3">
-              投稿者個人の経験に基づく情報です。正確な条件は事業所へ直接ご確認ください。
-            </p>
           </>
         )}
 
         {/* Professional notes tab */}
         {activeTab === 'professional' && (
           <>
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <p className="text-xs leading-5 text-gray-500">
-                ケアマネジャー、医療・介護職など専門職からの連携メモです。投稿者の所属事業所は表示されません。
+            <div className={`flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between ${professionalNotes.length > 0 ? 'mb-4' : 'py-1'}`}>
+              <p className="text-sm text-gray-500">
+                {professionalNotes.length > 0 ? '相談・連携で感じた良さ' : 'まだ投稿がありません'}
               </p>
               <button
                 onClick={() => setShowNote(true)}
-                className="shrink-0 text-sm text-cares-600 hover:text-cares-700 font-medium"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-cares-50 px-4 py-2.5 text-sm font-medium text-cares-700 transition-colors hover:bg-cares-100"
               >
-                + メモを書く
+                <PenLine className="h-4 w-4" aria-hidden="true" />
+                専門職の声を書く
               </button>
             </div>
 
-            {professionalNotes.length > 0 ? (
+            {professionalNotes.length > 0 && (
               <div className="space-y-4">
                 {professionalNotes.map((note) => (
                   <div key={note.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
@@ -389,14 +388,12 @@ export default function DirectoryDetailClient({
                   </div>
                 )}
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">まだ専門職からの声はありません</p>
             )}
-
-            <p className="text-xs text-gray-400 mt-3">
-              連携時の参考情報です。受け入れ可否や条件は都度ご確認ください。
-            </p>
           </>
+        )}
+
+        {((activeTab === 'review' && reviewNotes.length > 0) || (activeTab === 'professional' && professionalNotes.length > 0)) && (
+          <p className="mt-3 text-xs text-gray-400">投稿は個人の体験・感想です。</p>
         )}
 
         {/* Personal notes tab */}
@@ -434,14 +431,14 @@ export default function DirectoryDetailClient({
                   </div>
                 )}
                 <p className="text-xs text-gray-400 mt-3">
-                  このメモはあなただけに表示されます
+                  自分だけに表示されます
                 </p>
               </>
             ) : (
               <div className="text-center py-6">
                 <Lock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm text-gray-500 mb-3">
-                  個人メモを使うにはログインが必要です
+                  自分だけのメモを残せます
                 </p>
                 <button
                   onClick={() => setShowLoginModal(true)}
@@ -453,7 +450,7 @@ export default function DirectoryDetailClient({
             )}
           </>
         )}
-      </div>
+      </section>
 
       {/* CareSpaceOS connection */}
       {!isOwnerVerified && (
