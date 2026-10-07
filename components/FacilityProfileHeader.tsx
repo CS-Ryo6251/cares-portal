@@ -1,4 +1,4 @@
-import { BadgeCheck, Building2, MapPin, Phone, Sparkles } from 'lucide-react'
+import { BadgeCheck, Building2, MapPin, Phone } from 'lucide-react'
 import FacilityHearts from './FacilityHearts'
 import FacilityOwnerTools from './FacilityOwnerTools'
 import FacilityProfileShare from './FacilityProfileShare'
@@ -13,11 +13,7 @@ export default function FacilityProfileHeader(props: Props) {
   return <section className="overflow-hidden bg-white sm:rounded-3xl sm:border sm:border-slate-200/80" aria-label="事業所のプロフィール">
     <div className="relative h-48 overflow-hidden bg-[#f7e9e4] sm:h-72">
       {props.cover ? <img src={props.cover} alt={`${props.name}のカバー写真`} fetchPriority="high" className="h-full w-full object-cover" /> :
-        <div className="relative flex h-full items-center justify-center overflow-hidden bg-gradient-to-br from-orange-50 via-rose-100 to-emerald-50">
-          <div className="absolute -left-12 -top-16 h-64 w-64 rounded-full border-[28px] border-white/35" />
-          <div className="absolute -bottom-28 right-0 h-64 w-64 rounded-full bg-white/35" />
-          <div className="relative text-center text-rose-800/70"><Sparkles className="mx-auto mb-3 h-7 w-7" /><p className="text-sm font-medium tracking-widest">日々のようすを、ここから。</p></div>
-        </div>}
+        <img src="/images/facility-cover-home.webp" alt="家と庭を描いたイラスト" width={2172} height={724} fetchPriority="high" className="h-full w-full object-cover object-center" />}
       <div className="absolute right-3 top-3 left-3 sm:right-5 sm:top-5"><FacilityOwnerTools facilityId={props.facilityId} /></div>
     </div>
     <div className="px-5 pb-6 sm:px-8 sm:pb-8">
