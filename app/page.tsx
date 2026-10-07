@@ -8,7 +8,6 @@ import GeolocationBanner from '@/components/GeolocationBanner'
 import AreaPreferenceRedirect from '@/components/AreaPreferenceRedirect'
 import FacilityMapPreview from '@/components/FacilityMapPreview'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
-import CompletenessBar from '@/components/CompletenessBar'
 import FilterChipLink from '@/components/FilterChipLink'
 import { vacancyStatusMap } from '@/lib/constants'
 
@@ -880,9 +879,6 @@ export default async function FeedPage({
                       </span>
                     )}
                     <HeartCount total={item.heart_total} />
-                  </div>
-                  <div className="mt-2">
-                    <CompletenessBar score={item.completeness_score} tier={item.completeness_tier} size="sm" />
                   </div>
                 </div>
               </a>

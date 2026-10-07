@@ -99,30 +99,25 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
     {sent && <p role="status" className="mt-3 text-sm font-semibold text-rose-700">♡ 応援を届けました。ありがとうございます！</p>}
     {error && <p role="alert" className="mt-2 text-sm text-red-700">{error} <button onClick={load} className="min-h-11 underline">再読み込み</button></p>}
   </>
-  const exact = summary && <details className="mt-2 text-xs text-slate-500">
-    <summary className="w-fit cursor-pointer py-2 underline underline-offset-4">正確な合計を見る</summary>
-    <p className="mt-1 max-w-full break-all rounded-xl bg-rose-50 p-3 tabular-nums">{formatHearts(summary.total)} ハート</p>
-    <p className="mt-2 leading-5">公開中の投稿へのいいねと、事業所への直接の応援の合計です。いいねの取り消しや投稿の非公開・削除は合計にも反映されます。直接の応援は同じ方からの繰り返しを含みます。</p>
-  </details>
   if (variant === 'profile') return <section aria-label="事業所への応援" className="border-t border-slate-100 pt-4">
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-wrap items-center gap-5 text-sm">
-        <div aria-live="polite" className="min-w-0" title={formatHearts(summary?.total)}><span className="text-xl font-extrabold tabular-nums text-rose-600">{compactHearts(summary?.total)}</span><span className="ml-1.5 text-xs text-slate-500">応援ハート</span></div>
+        <div aria-live="polite" className="min-w-0" title={formatHearts(summary?.total)} aria-label={`応援ハート ${formatHearts(summary?.total)}`}><span className="text-xl font-extrabold tabular-nums text-rose-600">{compactHearts(summary?.total)}</span><span className="ml-1.5 text-xs text-slate-500">応援ハート</span></div>
         {postCount !== undefined && <p><b className="text-lg tabular-nums text-slate-900">{postCount === null ? '—' : postCount.toLocaleString('ja-JP')}</b><span className="ml-1.5 text-xs text-slate-500">投稿</span></p>}
         {photoCount !== undefined && <p><b className="text-lg tabular-nums text-slate-900">{photoCount.toLocaleString('ja-JP')}</b><span className="ml-1.5 text-xs text-slate-500">写真</span></p>}
       </div>
       {listingId && button}
     </div>
     {listingId ? <p className="mt-2 text-xs text-slate-500">ログインなしで、何度でも応援できます。</p> : <p className="mt-2 text-xs text-slate-500">応援は事業所情報の連携後にご利用いただけます。</p>}
-    {feedback}{exact}
+    {feedback}
   </section>
   return <section className="mt-6 rounded-2xl border border-rose-100 bg-rose-50/60 p-5">
     <h2 className="text-lg font-bold text-gray-900">この事業所に「いいね」を届ける</h2>
     <p className="mt-2 text-sm text-gray-600">良いな、ありがとう。ログインなしで、気軽に応援できます。</p>
     <div className="mt-4 flex flex-wrap items-center gap-4">{button}
-      <div aria-live="polite" className="min-w-0"><p className="text-2xl font-bold tabular-nums text-rose-700">♡ {compactHearts(summary?.total)}</p><p className="text-xs text-gray-600">応援ハートの合計</p></div>
+      <div aria-live="polite" className="min-w-0"><p title={formatHearts(summary?.total)} aria-label={`応援ハート ${formatHearts(summary?.total)}`} className="text-2xl font-bold tabular-nums text-rose-700">♡ {compactHearts(summary?.total)}</p><p className="text-xs text-gray-600">応援ハートの合計</p></div>
     </div>
-    {exact}{feedback}
+    {feedback}
     <p className="mt-3 text-xs leading-5 text-gray-600">直接の応援は、同じ方が何度でも送れます。続けて押すときは少し間をあけてください。事業所選びには、良いところや受入条件もあわせてご覧ください。</p>
   </section>
 }

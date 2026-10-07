@@ -4,7 +4,6 @@ import { MapPin, Building2, ChevronRight } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { prefectures, facilityTypeLabels, vacancyStatusMap } from '@/lib/constants'
 import ServiceTypeIcon from '@/components/ServiceTypeIcon'
-import CompletenessBar from '@/components/CompletenessBar'
 import { notFound } from 'next/navigation'
 
 type Props = {
@@ -221,9 +220,6 @@ export default async function AreaPage({ params, searchParams }: Props) {
                     {item.address && (
                       <p className="text-sm text-gray-500 mt-1.5">{item.address}</p>
                     )}
-                    <div className="mt-1.5">
-                      <CompletenessBar score={item.completeness_score || 0} tier={item.completeness_tier || 'insufficient'} size="sm" />
-                    </div>
                   </div>
                 </Link>
               )
