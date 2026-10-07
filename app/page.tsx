@@ -1,7 +1,7 @@
 import { getHeartSummaries } from '@/lib/hearts'
-import { formatHearts } from '@/lib/community'
+import HeartCount from '@/components/HeartCount'
 import { getSupabaseClient } from '@/lib/supabase'
-import { ArrowRight, BadgeCheck, HeartHandshake, Search, Sparkles, Heart } from 'lucide-react'
+import { ArrowRight, BadgeCheck, HeartHandshake, Search, Sparkles } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
@@ -879,13 +879,7 @@ export default async function FeedPage({
                         現在地から約{item.distance_km < 1 ? `${Math.round(item.distance_km * 1000)}m` : `${item.distance_km.toFixed(1)}km`}
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
-                      <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
-                      {formatHearts(item.heart_total)}
-                    </span>
-                    <span className="text-xs font-medium text-slate-400">
-                      {item.heart_total === null ? '応援数を取得できません' : '応援の累計'}
-                    </span>
+                    <HeartCount total={item.heart_total} />
                   </div>
                   <div className="mt-2">
                     <CompletenessBar score={item.completeness_score} tier={item.completeness_tier} size="sm" />

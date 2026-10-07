@@ -1,6 +1,6 @@
 'use client'
 
-import { formatHearts } from '@/lib/community'
+import HeartCount from '@/components/HeartCount'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent, WheelEvent } from 'react'
@@ -1104,17 +1104,9 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                 </span>
               )}
             </div>
-            <div className="mt-3 flex items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 font-bold text-amber-700">
-                <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
-                {formatHearts(activeFacility.heart_total)}
-              </span>
-              <span className="font-medium text-slate-500">
-                {activeFacility.heart_total === null ? '応援数を取得できません' : '応援の累計'}
-              </span>
-              {activeFacility.service_type && (
-                <span className="ml-auto truncate text-slate-400">{activeFacility.service_type}</span>
-              )}
+            <div className="mt-3 border-t border-slate-100 pt-2.5">
+              {activeFacility.service_type && <p className="mb-2 line-clamp-2 text-xs leading-5 text-slate-500">{activeFacility.service_type}</p>}
+              <HeartCount total={activeFacility.heart_total} />
             </div>
           </a>
         )}

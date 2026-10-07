@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Heart } from 'lucide-react'
-import { formatHearts } from '@/lib/community'
+import { compactHearts, formatHearts } from '@/lib/community'
 import type { HeartSummary } from '@/lib/hearts'
 
 async function requestHeart(url: string, init?: RequestInit) {
@@ -77,9 +77,13 @@ export default function FacilityHearts({ listingId }: { listingId: string }) {
         <Heart aria-hidden="true" className={`h-5 w-5 fill-current ${saving ? 'motion-safe:animate-pulse' : ''}`} />
         {loading ? '読み込み中…' : saving ? '応援を届けています…' : !summary ? '読込を再試行してください' : pendingId.current ? '送信結果を再確認' : sent ? 'もう一度応援する' : 'いいね・応援する'}
       </button>
-      <div aria-live="polite"><p className="text-2xl font-bold text-rose-700">♡ {formatHearts(summary?.total)}</p>
+      <div aria-live="polite" className="min-w-0"><p className="text-2xl font-bold tabular-nums text-rose-700">♡ {compactHearts(summary?.total)}</p>
         <p className="text-xs text-gray-600">応援の累計</p></div>
     </div>
+    {summary && <details className="mt-3 text-xs text-rose-800">
+      <summary className="w-fit cursor-pointer rounded px-1 py-2 underline underline-offset-4">正確な累計を見る</summary>
+      <p className="mt-1 max-w-full break-all rounded-xl bg-white p-3 tabular-nums">{formatHearts(summary.total)}</p>
+    </details>}
     {sent && <p role="status" className="mt-3 rounded-xl bg-white px-3 py-2 text-sm font-bold text-rose-700">♡ 応援を届けました！ありがとうございます。</p>}
     {error && <p role="alert" className="mt-2 text-sm text-red-700">{error} {!summary && <button onClick={load} className="underline">再読み込み</button>}</p>}
     <p className="mt-3 text-xs leading-5 text-gray-600">ハートの累計に上限はなく、同じ方が何度でも送れます。続けて押すときは少し間をあけてください。事業所選びには、良いところや受入条件もあわせてご覧ください。</p>

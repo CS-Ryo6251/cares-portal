@@ -1,3 +1,4 @@
+import { simulationTariffs } from '@/lib/simulation-tariffs'
 import { getCurrentVacancies } from '@/lib/vacancies'
 import { VACANCY_SOURCES } from '@/lib/community'
 import { getSupabaseClient } from '@/lib/supabase'
@@ -76,6 +77,7 @@ type PortalData = {
   profile: any
   posts: any[]
   fees: any[]
+  feesUnavailable: boolean
   documents: any[]
 } | null
 
@@ -119,8 +121,9 @@ async function getListing(id: string) {
 
   // If owner-verified, fetch portal data
   let portalData: PortalData = null
+  let portalProfileUnavailable = false
   if (facility.is_owner_verified && facility.owner_facility_id) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('facility_portal_profiles')
       .select(`
         *,
@@ -128,7 +131,8 @@ async function getListing(id: string) {
       `)
       .eq('facility_id', facility.owner_facility_id)
       .eq('is_published', true)
-      .single()
+      .maybeSingle()
+    portalProfileUnavailable = Boolean(profileError)
 
     if (profile) {
       const { data: posts } = await supabase
@@ -142,7 +146,7 @@ async function getListing(id: string) {
         .order('created_at', { ascending: false })
         .limit(20)
 
-      const { data: fees } = await supabase
+      const { data: fees, error: feesError } = await supabase
         .from('facility_portal_fees')
         .select('*')
         .eq('facility_id', facility.owner_facility_id)
@@ -159,6 +163,7 @@ async function getListing(id: string) {
         profile,
         posts: posts || [],
         fees: fees || [],
+        feesUnavailable: Boolean(feesError),
         documents: documents || [],
       }
     }
@@ -208,6 +213,7 @@ async function getListing(id: string) {
     currentReport,
     vacancyUnavailable: currentVacancies === null,
     portalData,
+    portalProfileUnavailable,
     scoreResult,
   }
 }
@@ -333,7 +339,7 @@ export default async function DirectoryDetailPage({
     notFound()
   }
 
-  const { facility: f, currentReport, vacancyUnavailable, portalData, scoreResult } = data
+  const { facility: f, currentReport, vacancyUnavailable, portalData, portalProfileUnavailable, scoreResult } = data
   const isOwnerVerified = f.is_owner_verified
   const statusLabel = acceptanceLabels[currentReport?.vacancy_type || 'unknown'] || '要問合せ'
   const statusColor = acceptanceColors[currentReport?.vacancy_type || 'unknown'] || acceptanceColors.unknown
@@ -684,8 +690,8 @@ export default async function DirectoryDetailPage({
         )}
 
         {/* ===== OWNER PORTAL: CareSpaceOS official fee simulator ===== */}
-        {isOwnerVerified && portalFees.length > 0 && (
-          <FloatingActions fees={portalFees} feePattern={portalProfile?.fee_pattern} />
+        {(simulationTariffs(f.service_type).length > 0 || isOwnerVerified) && (
+          <FloatingActions fees={portalFees} feePattern={portalProfile?.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.facility_name} address={`${f.prefecture || ''}${f.address || ''}`} feesUnavailable={portalProfileUnavailable || portalData?.feesUnavailable} />
         )}
 
         {/* ===== OWNER PORTAL: Posts Feed ===== */}

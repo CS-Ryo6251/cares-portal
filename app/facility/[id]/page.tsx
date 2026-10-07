@@ -1,3 +1,4 @@
+import { simulationTariffs } from '@/lib/simulation-tariffs'
 import { getSupabaseClient } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -141,7 +142,7 @@ async function getFacilityDetail(facilityId: string) {
     .limit(50)
 
   // 料金取得
-  const { data: fees } = await supabase
+  const { data: fees, error: feesError } = await supabase
     .from('facility_portal_fees')
     .select('*')
     .eq('facility_id', facilityId)
@@ -163,6 +164,7 @@ async function getFacilityDetail(facilityId: string) {
     directoryListings: directoryListings || [],
     posts: posts || [],
     fees: fees || [],
+    feesUnavailable: Boolean(feesError),
     documents: documents || [],
   }
 }
@@ -652,7 +654,7 @@ export default async function FacilityDetailPage({
         </div>
 
         {/* CareSpaceOS公式料金 — ページ内で見つけやすく表示 */}
-        <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} />
+        <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
 
         {/* Photo gallery — 投稿写真から自動生成 */}
         {galleryImages.length >= 3 && (

@@ -1,0 +1,90 @@
+const {test}=require('node:test')
+const assert=require('node:assert/strict')
+const fs=require('node:fs')
+const ts=require('typescript')
+function load(file){const m={exports:{}};new Function('module','exports',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m,m.exports);return m.exports}
+const {unitPrice,frequencyCount,insuranceEstimate,providerFeeTotal}=load('lib/fee-calculation.ts')
+const {compactHearts,formatHearts}=load('lib/community.ts')
+const tariffs=require('../data/simulation-tariffs-2026-06.json').rows
+const tariff=code=>{const t=tariffs.find(t=>t.code===code);assert.ok(t,code);return t}
+const estimate=(code,count,burden=1,price=10,addons=[])=>insuranceEstimate([{tariff:tariff(code),count}],addons.map(([code,count])=>({tariff:tariff(code),count})),price,burden)
+const fee=(id,unit,amount,other={})=>({id,item_name:id,billing_unit:unit,amount,amount_max:null,care_level:null,notes:null,sort_order:0,category:'fixed',is_optional:false,fee_section:'self_pay',...other})
+const opt={care:'要介護1',visits:9,days:9,meals:1,hours:2,quantities:{},selected:[],burden:1}
+
+test('笑顔のたねの条件例: 通常規模・要介護1・7〜8時間・月9回 + 食費600円×9食',()=>{
+ const result=estimate('152441',9)
+ assert.equal(tariff('152441').units,658)
+ assert.equal(result.units,5922)
+ assert.equal(result.selfPay,5922)
+ const food=providerFeeTotal([fee('食費','per_meal',600)],opt)
+ assert.equal(food.total.min,5400)
+ assert.equal(result.selfPay+food.total.min,11322)
+ assert.equal(estimate('152441',9,2).selfPay+5400,17244)
+ assert.equal(estimate('152441',9,3).selfPay+5400,23166)
+})
+test('令和8年6月の処遇改善率・月額加算・日額加算を一度ずつ計算',()=>{
+ const result=estimate('152441',9,1,10,[['155301',4],['155051',9],['155052',1],['156108',1]])
+ // 658*9 + 40*4 + 56*9 + 20 = 6606; 11.1% = 733
+ assert.equal(result.fixedUnits,6606)
+ assert.equal(result.rateUnits,733)
+ assert.equal(result.units,7339)
+ assert.equal(result.selfPay,7339)
+ assert.equal(estimate('152441',0,1,10,[['156108',0]]).selfPay,0)
+})
+test('地域単価はサービス別。金額を月単位で切捨て後、保険給付を控除',()=>{
+ assert.equal(unitPrice('15','1'),10.9)
+ assert.equal(unitPrice('11','1'),11.4)
+ assert.equal(unitPrice('16','7'),10.17)
+ assert.equal(unitPrice('99','1'),null)
+ assert.equal(unitPrice('15',''),null)
+ const result=estimate('152441',1,1,10.14)
+ assert.equal(result.cost,6672)
+ assert.equal(result.insurance,6004)
+ assert.equal(result.selfPay,668)
+})
+test('大規模事業所の給付管理単位を請求単位と混同しない',()=>{
+ const result=estimate('153656',10)
+ assert.equal(result.units,3580)
+ assert.equal(result.limitUnits,3700)
+})
+test('複数の時間帯を合算し、サービスが混ざる入力は拒否',()=>{
+ const result=insuranceEstimate([{tariff:tariff('152241'),count:4},{tariff:tariff('152441'),count:5}],[],10,1)
+ assert.equal(result.selfPay,370*4+658*5)
+ assert.equal(insuranceEstimate([{tariff:tariff('152241'),count:4},{tariff:tariff('111111'),count:5}],[],10,1),null)
+ for(const n of [NaN,Infinity,-1,1.5,1000]) assert.equal(estimate('152441',n),null)
+ assert.equal(estimate('152441',1,0),null)
+})
+test('自費は回数・日数・食数・時間・月固定を分け、初期費用を合算しない',()=>{
+ const result=providerFeeTotal([fee('食費','per_meal',600),fee('日','daily',100),fee('回','per_use',50),fee('時間','per_hour',200),fee('月','monthly',1000),fee('入居','monthly',20000,{fee_section:'initial_cost'}),fee('初回','one_time',5000)],{...opt,days:5})
+ assert.equal(result.total.min,3000+500+450+3600+1000)
+ assert.equal(result.rows.filter(r=>r.initial).length,2)
+ const specified=providerFeeTotal([fee('食費','per_meal',600)],{...opt,quantities:{食費:0}})
+ assert.equal(specified.total.min,0)
+})
+test('未登録の金額と不正な数量は未知のまま残し、任意項目・介護度の条件を両方適用',()=>{
+ const fees=[fee('不明','daily',null),fee('任意','per_meal',500,{is_optional:true,care_level:'要介護1'})]
+ const result=providerFeeTotal(fees,opt)
+ assert.equal(result.unknown.length,1)
+ assert.equal(result.rows.length,1)
+ assert.equal(providerFeeTotal(fees,{...opt,selected:['任意']}).total.min,4500)
+ assert.equal(providerFeeTotal(fees,{...opt,care:'要介護2',selected:['任意']}).rows.length,1)
+ assert.equal(providerFeeTotal([fee('食費','per_meal',600)],{...opt,quantities:{食費:NaN}}).unknown.length,1)
+})
+test('金額幅・旧保険目安は負担割合を正しく反映し、週換算と月の直接指定を区別',()=>{
+ const result=providerFeeTotal([fee('保険','monthly',10000,{fee_section:'insurance_estimate',amount_max:12000})],{...opt,burden:3})
+ assert.deepEqual(result.total,{min:30000,max:36000})
+ assert.equal(frequencyCount('weekly',2),9)
+ assert.equal(frequencyCount('monthly',9),9)
+ assert.equal(frequencyCount('monthly',1.2),null)
+ assert.equal(frequencyCount('monthly',NaN),null)
+})
+test('無制限の応援数は桁を失わず、表示は万・億・兆・指数で一定幅',()=>{
+ const cases={'0':'0','9999':'9,999','10000':'1万','12345':'1.2万','99999999':'9999.9万','100000000':'1億','1234567890123':'1.2兆'}
+ for(const [value,want] of Object.entries(cases))assert.equal(compactHearts(value),want)
+ const huge='9'.repeat(100)
+ assert.equal(compactHearts(huge),'9.9 × 10^99')
+ assert.equal(formatHearts(huge).replaceAll(',',''),huge)
+ assert.equal(compactHearts(null),'—')
+ assert.equal(compactHearts('-1'),'—')
+ assert.equal(compactHearts('00012345'),'1.2万')
+})

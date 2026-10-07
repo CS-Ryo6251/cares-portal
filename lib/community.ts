@@ -51,3 +51,16 @@ export function currentVacancy(reports: VacancyReport[], today = japanDate()) {
 export function formatHearts(value: string | null | undefined) {
   return value != null && /^\d+$/.test(value) ? BigInt(value).toLocaleString('ja-JP') : '—'
 }
+
+/** Compact display only: retain the exact decimal string for counts and accessibility. */
+export function compactHearts(value: string | null | undefined) {
+  if (value == null || !/^\d+$/.test(value)) return '—'
+  const digits = value.replace(/^0+(?=\d)/, '')
+  if (digits.length <= 4) return formatHearts(digits)
+  const units = ['', '万', '億', '兆', '京', '垓', '秭', '穣', '溝', '澗', '正', '載', '極']
+  const group = Math.floor((digits.length - 1) / 4)
+  if (group >= units.length) return `${digits[0]}.${digits[1]} × 10^${digits.length - 1}`
+  const whole = digits.slice(0, digits.length - group * 4)
+  const decimal = digits[whole.length]
+  return `${whole}${decimal !== '0' ? `.${decimal}` : ''}${units[group]}`
+}
