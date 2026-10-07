@@ -46,6 +46,8 @@ export default function ForgotPasswordPage() {
             <h1 className="text-xl font-bold text-gray-900">パスワードをリセット</h1>
           </div>
 
+          <p className="mb-5 text-sm leading-relaxed text-gray-600">ログイン情報はCaresとCareSpace OSで共通です。変更後は、どちらにも新しいパスワードでログインしてください。</p>
+
           {sent ? (
             <div className="text-center py-4">
               <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">

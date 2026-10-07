@@ -82,6 +82,8 @@ function ResetPasswordForm() {
             <h1 className="text-xl font-bold text-gray-900">新しいパスワードを設定</h1>
           </div>
 
+          <p className="mb-5 text-sm leading-relaxed text-gray-600">このパスワードはCareSpace OSにも共通です。変更後は、両方のサービスで新しいパスワードをお使いください。</p>
+
           {success ? (
             <div className="text-center py-4">
               <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">

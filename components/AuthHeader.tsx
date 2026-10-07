@@ -214,7 +214,7 @@ export default function AuthHeader() {
               onClick={() => setMenuOpen(false)}
             >
               <Settings className="w-4 h-4" />
-              アカウント設定
+                Caresの利用者設定
             </a>
 
             <div className="border-t border-gray-100 mt-1 pt-1">

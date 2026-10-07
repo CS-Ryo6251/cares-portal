@@ -628,11 +628,11 @@ export default async function DirectoryDetailPage({
               </div>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                 <a href={claimHref} className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-cares-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-cares-100 transition hover:bg-cares-700">
-                  事業所情報を更新する
+                  未登録の事業所を登録する
                   <ArrowRight className="h-4 w-4" />
                 </a>
                 <Link href="/for-business" className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-bold text-cares-700 ring-1 ring-cares-100 transition hover:bg-cares-50">
-                  掲載できる内容を見る
+                  登録済みの方・掲載管理の案内
                 </Link>
               </div>
               <p className="mt-3 text-[11px] leading-5 text-slate-400">

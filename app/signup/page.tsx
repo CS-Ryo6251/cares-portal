@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { UserPlus, Mail, ArrowLeft } from 'lucide-react'
+import ProviderManagementLink from '@/components/ProviderManagementLink'
+import { safeAuthRedirect } from '@/lib/auth-redirect'
 
 const PROFESSIONS = [
   { value: 'care_manager', label: 'ケアマネジャー' },
@@ -23,9 +25,8 @@ export default function SignupPage() {
 }
 
 function SignupForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = safeAuthRedirect(searchParams.get('redirect'))
 
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
@@ -77,8 +78,7 @@ function SignupForm() {
       if (data.needsEmailConfirmation) {
         setStep(3)
       } else {
-        router.push(redirect)
-        router.refresh()
+        window.location.replace(redirect)
       }
     } catch {
       setError('通信エラーが発生しました')
@@ -124,9 +124,14 @@ function SignupForm() {
                   <UserPlus className="w-5 h-5 text-gray-600" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">アカウント作成</h1>
+                  <h1 className="text-xl font-bold text-gray-900">Caresの利用者登録</h1>
                   <p className="text-xs text-gray-400">1/3 基本情報</p>
                 </div>
+              </div>
+
+              <div className="rounded-xl bg-cares-50 p-4 text-sm leading-relaxed text-slate-700">
+                <p>CareSpace OSのアカウントをお持ちの方は、新規登録せずに同じメールアドレス・パスワードでログインできます。</p>
+                <a href={`/login?redirect=${encodeURIComponent(redirect)}`} className="mt-2 inline-block font-semibold text-cares-700 underline">お持ちのアカウントでログイン</a>
               </div>
 
               <div>
@@ -281,6 +286,7 @@ function SignupForm() {
             </div>
           )}
         </div>
+        {step === 1 && <ProviderManagementLink />}
       </div>
     </div>
   )
