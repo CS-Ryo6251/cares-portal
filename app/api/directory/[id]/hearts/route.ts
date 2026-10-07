@@ -3,6 +3,7 @@ import { heartVisitor, setHeartVisitor } from '@/lib/heart-visitor'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { getHeartSummaries } from '@/lib/hearts'
 import { UUID_PATTERN } from '@/lib/community'
+import { createAuthServerClient } from '@/lib/supabase-server-auth'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -30,18 +31,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (!body || typeof body.request_id !== 'string' || !UUID_PATTERN.test(body.request_id)) {
       return NextResponse.json({ error: '送信IDが不正です' }, { status: 400 })
     }
+    const auth = await createAuthServerClient()
+    const { data: { user }, error: authError } = await auth.auth.getUser()
+    if (authError && authError.name !== 'AuthSessionMissingError') {
+      return NextResponse.json({ error: 'ログイン状態を確認できませんでした。もう一度お試しください' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } })
+    }
     const visitor = heartVisitor(request)
-    const { error } = await getSupabaseServiceClient().rpc('cares_send_guest_heart', {
+    const { data: sent, error } = await getSupabaseServiceClient().rpc('cares_send_support_heart', {
       p_listing_id: id, p_request_id: body.request_id,
       p_visitor_hash: visitor.visitorHash, p_network_hash: visitor.networkHash,
+      p_user_id: user?.id || null,
     })
     if (error) {
+      if (error.message.includes('REQUEST_OWNER_CHANGED')) return setHeartVisitor(NextResponse.json({ error: 'アカウントが変わりました。現在のアカウントで、もう一度応援してください' }, { status: 409, headers: { 'Cache-Control': 'private, no-store' } }), visitor)
       const status = error.message.includes('HEART_TOO_FAST') ? 429 : error.message.includes('LISTING_NOT_FOUND') ? 404 : error.message.includes('REQUEST_CONFLICT') ? 400 : 503
       return setHeartVisitor(NextResponse.json({ error: status === 429 ? '少し間をあけて、もう一度応援してください' : 'ハートを送信できませんでした。同じ送信を再確認できます' }, { status, headers: { 'Cache-Control': 'no-store', ...(status === 429 ? { 'Retry-After': '1' } : {}) } }), visitor)
     }
     const summaries = await getHeartSummaries([id])
     if (!summaries?.[id]) return setHeartVisitor(NextResponse.json({ error: '送信結果を確認できませんでした。同じ送信を再確認できます' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }), visitor)
-    return setHeartVisitor(NextResponse.json(summaries[id], { headers: { 'Cache-Control': 'no-store' } }), visitor)
+    return setHeartVisitor(NextResponse.json({ ...summaries[id], recorded: sent?.recorded === true, authenticated: Boolean(user) }, { headers: { 'Cache-Control': 'private, no-store' } }), visitor)
   } catch {
     return NextResponse.json({ error: '送信結果を確認できませんでした。もう一度お試しください' }, { status: 503 })
   }

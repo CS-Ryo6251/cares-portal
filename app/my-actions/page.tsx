@@ -3,7 +3,8 @@ import MyActionsClient from './MyActionsClient'
 
 export const metadata: Metadata = {
   title: 'Myアクション',
-  description: 'お気に入り・評価・メモを管理できます。',
+  description: '届けた応援のグラフと履歴、お気に入り、メモを振り返れます。',
+  robots: { index: false, follow: false },
 }
 
 export default function MyActionsPage() {

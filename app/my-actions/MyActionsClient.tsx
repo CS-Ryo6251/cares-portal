@@ -2,13 +2,15 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
-import { Heart, Star, FileText } from 'lucide-react'
+import { Heart, Star, FileText, Bookmark } from 'lucide-react'
 import FavoritesTab from './FavoritesTab'
 import RatingsTab from './RatingsTab'
 import NotesTab from './NotesTab'
+import SupportTab from './SupportTab'
 
 const TABS = [
-  { key: 'favorites', label: 'お気に入り', icon: Heart },
+  { key: 'support', label: '応援の記録', icon: Heart },
+  { key: 'favorites', label: 'お気に入り', icon: Bookmark },
   { key: 'ratings', label: '以前のマイ評価', icon: Star },
   { key: 'notes', label: 'マイメモ', icon: FileText },
 ] as const
@@ -18,21 +20,25 @@ type TabKey = (typeof TABS)[number]['key']
 function MyActionsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const currentTab = (searchParams.get('tab') as TabKey) || 'favorites'
+  const requested = searchParams.get('tab')
+  const currentTab: TabKey = TABS.some(tab => tab.key === requested) ? requested as TabKey : 'support'
 
   function handleTabChange(tab: TabKey) {
     router.push(`/my-actions?tab=${tab}`, { scroll: false })
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-5xl mx-auto px-3 py-6 sm:px-6 sm:py-8">
+      <h1 className="text-2xl font-extrabold text-slate-900">Myアクション</h1>
+      <p className="mt-2 mb-5 text-sm text-slate-500">応援も、気になる事業所も。あなたのつながりをひとつに。</p>
       {/* Tab bar */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
+            aria-pressed={currentTab === key}
             onClick={() => handleTabChange(key)}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+            className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
               currentTab === key
                 ? 'bg-gray-800 text-white'
                 : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
@@ -45,6 +51,7 @@ function MyActionsContent() {
       </div>
 
       {/* Tab content */}
+      {currentTab === 'support' && <SupportTab />}
       {currentTab === 'favorites' && <FavoritesTab />}
       {currentTab === 'ratings' && <RatingsTab />}
       {currentTab === 'notes' && <NotesTab />}

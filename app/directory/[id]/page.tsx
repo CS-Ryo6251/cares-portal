@@ -262,7 +262,7 @@ export default async function DirectoryDetailPage({
               listingIds={[f.id]} postCount={portalData?.postCount ?? null} photoCount={profilePhotos(portalProfile.photos, portalPosts).length} />
           </div>
           <section className="-mx-4 mt-7 mb-7 sm:mx-0">
-            <FacilityPostFeed posts={portalPosts} facilityId={f.owner_facility_id} facilityName={f.facility_name}
+            <FacilityPostFeed posts={portalPosts} facilityId={f.owner_facility_id} facilityName={f.facility_name} listingId={f.id}
               initialCategory={selectedPostCategory} unavailable={portalData?.postsUnavailable} totalCount={portalData?.postCount ?? undefined} />
             <Link href={`/facility/${f.owner_facility_id}`} className="mx-4 mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-rose-700 sm:mx-0">写真・プロフィールをもっと見る<ArrowRight className="h-4 w-4" /></Link>
           </section>

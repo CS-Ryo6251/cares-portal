@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createAuthClient } from '@/lib/supabase-auth'
-import { Bell, Building2, ClipboardList, Settings, LogOut, ChevronDown, User, PencilLine } from 'lucide-react'
+import { Bell, Building2, ClipboardList, Settings, LogOut, ChevronDown, User, PencilLine, Heart } from 'lucide-react'
 
 import { CARESPACE_MANAGEMENT_URL, facilityManagementUrl } from '@/lib/cares-navigation'
 
@@ -185,6 +185,7 @@ export default function AuthHeader() {
 
   return (
     <div className="flex items-center gap-2">
+      {!hasMyFacilities && <a href="/my-actions" aria-label="応援の記録" title="応援の記録" className="inline-flex h-11 w-9 items-center justify-center text-rose-600 hover:text-rose-800"><Heart className="h-5 w-5" /></a>}
       {postingUrl && <a href={postingUrl} aria-label="投稿する" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-rose-600 px-3 text-xs font-bold text-white hover:bg-rose-700 sm:px-4 sm:text-sm"><PencilLine aria-hidden="true" className="h-4 w-4" /><span className="sm:hidden">投稿</span><span className="hidden sm:inline">投稿する</span></a>}
       {hasMyFacilities && <a href="/my-facilities" className="max-[359px]:hidden shrink-0 rounded-xl bg-cares-50 px-2 py-2 text-xs font-semibold text-cares-700 sm:px-3 sm:text-sm">自分の事業所</a>}
       {/* Notification bell */}
@@ -237,7 +238,7 @@ export default function AuthHeader() {
               onClick={() => setMenuOpen(false)}
             >
               <ClipboardList className="w-4 h-4" />
-              Myアクション
+              Myアクション・応援の記録
             </a>
 
             <a

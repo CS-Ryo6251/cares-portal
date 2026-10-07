@@ -100,3 +100,20 @@ test('CaresのログアウトでOSなど別セッションを失効させない'
   assert.equal((await route.POST()).status, 200)
   assert.equal(scope, 'local')
 })
+
+test('会員登録の確認メールでも応援画面への戻り先を保持し、外部URLは拒否する', async () => {
+  let redirectTo
+  const route = load('app/api/auth/signup/route.ts', {
+    'next/headers': { cookies: async () => ({ getAll: () => [], set: () => {} }) },
+    '@supabase/ssr': { createServerClient: () => ({ auth: { signUp: async payload => {
+      redirectTo = payload.options.emailRedirectTo
+      return { data: { user: { id: 'synthetic-user', email: 'test@example.invalid' }, session: null } }
+    } } }) },
+    '@/lib/supabase': { getSupabaseServiceClient: () => ({ from: () => ({ insert: async () => ({ error: null }) }) }) },
+  })
+  for (const [redirect, expected] of [['/my-actions', '/my-actions'], ['https://evil.example', '/']]) {
+    const response = await route.POST(new NextRequest('https://cares.example/api/auth/signup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'test@example.invalid', password: 'synthetic-password', displayName: '検証用', profession: 'family', redirect }) }))
+    assert.equal(response.status, 200)
+    assert.equal(new URL(redirectTo).searchParams.get('redirect'), expected)
+  }
+})

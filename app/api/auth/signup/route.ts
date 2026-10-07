@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getSupabaseServiceClient } from '@/lib/supabase'
+import { safeAuthRedirect } from '@/lib/auth-redirect'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, displayName, profession } = await request.json()
+    const { email, password, displayName, profession, redirect: requestedRedirect } = await request.json()
+    const redirect = safeAuthRedirect(typeof requestedRedirect === 'string' ? requestedRedirect : null)
 
     if (!email || !password || !displayName || !profession) {
       return NextResponse.json({ error: '必須項目を入力してください' }, { status: 400 })
@@ -43,7 +45,7 @@ export async function POST(request: NextRequest) {
       email,
       password,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        emailRedirectTo: `${siteUrl}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
         data: {
           display_name: displayName,
           profession,

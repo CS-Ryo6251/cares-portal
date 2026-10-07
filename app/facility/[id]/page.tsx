@@ -180,7 +180,7 @@ export default async function FacilityDetailPage({ params, searchParams }: {
         listingIds={facility.directoryListings.map((listing: { id: string }) => listing.id)} postCount={facility.postCount} photoCount={photos.length} />
     <FloatingActions providerSettings={facility.simulation_settings} fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
       <FacilityProfileTabs
-        posts={<FacilityPostFeed posts={facility.posts} facilityId={id} facilityName={f.name} initialCategory={sp.category} unavailable={facility.postsUnavailable} totalCount={facility.postCount ?? undefined} />}
+        posts={<FacilityPostFeed posts={facility.posts} facilityId={id} facilityName={f.name} listingId={facility.directoryListings[0]?.id} initialCategory={sp.category} unavailable={facility.postsUnavailable} totalCount={facility.postCount ?? undefined} />}
         photos={<FacilityPhotoGallery photos={photos} name={f.name} />}
         information={information} fees={fees} />
       <div className="mx-4 mt-8 border-t border-rose-100 pt-5 text-center sm:mx-0"><p className="text-xs text-slate-500">この事業所の担当者の方へ</p><a href={facilityManagementUrl(id)} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-rose-700 underline underline-offset-4">写真やプロフィールを編集する</a></div>

@@ -47,14 +47,14 @@ test('ハートAPI：ログイン不要・サーバー識別子・再送ID・外
   let call
   const service={getSupabaseServiceClient:()=>({rpc:async(name,args)=>{call={name,args};return {data:{total:'6'},error:null}}})}
   const visitor={'@/lib/heart-visitor':{heartVisitor:()=>({visitorHash:'a'.repeat(64),networkHash:'b'.repeat(64)}),setHeartVisitor:r=>r}}
-  const route=load('app/api/directory/[id]/hearts/route.ts',{'@/lib/supabase':service,'@/lib/hearts':{getHeartSummaries:async()=>({[listing]:{total:'6'}})},...visitor})
+  const route=load('app/api/directory/[id]/hearts/route.ts',{'@/lib/supabase':service,'@/lib/supabase-server-auth':{createAuthServerClient:async()=>({auth:{getUser:async()=>({data:{user:null},error:{name:'AuthSessionMissingError'}})}})},'@/lib/hearts':{getHeartSummaries:async()=>({[listing]:{total:'6'}})},...visitor})
   assert.equal((await route.POST(post({request_id:'bad'}),context)).status,400)
   const res=await route.POST(post({request_id:requestId,user_id:'another-account',visitor_hash:'spoofed'}),context)
   assert.equal(res.status,200)
-  assert.deepEqual(await res.json(),{total:'6'})
-  assert.equal(call.name,'cares_send_guest_heart')
+  assert.deepEqual(await res.json(),{total:'6',recorded:false,authenticated:false})
+  assert.equal(call.name,'cares_send_support_heart')
   assert.equal(call.args.p_visitor_hash,'a'.repeat(64))
-  assert.equal(Object.hasOwn(call.args,'p_user_id'),false)
+  assert.equal(call.args.p_user_id,null)
   assert.equal(call.args.p_request_id,requestId)
   call=undefined
   const foreign=post({request_id:requestId});foreign.headers.set('origin','https://another.example')

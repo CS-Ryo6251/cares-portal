@@ -65,7 +65,7 @@ function SignupForm() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName, profession }),
+        body: JSON.stringify({ email, password, displayName, profession, redirect }),
       })
 
       const data = await res.json()
@@ -130,6 +130,7 @@ function SignupForm() {
               </div>
 
               <div className="rounded-xl bg-cares-50 p-4 text-sm leading-relaxed text-slate-700">
+                <p className="mb-3 font-semibold text-rose-700">登録すると、応援した事業所とハートの積み重ねを、あなた専用のグラフで振り返れます。</p>
                 <p>CareSpace OSのアカウントをお持ちの方は、新規登録せずに同じメールアドレス・パスワードでログインできます。</p>
                 <a href={`/login?redirect=${encodeURIComponent(redirect)}`} className="mt-2 inline-block font-semibold text-cares-700 underline">お持ちのアカウントでログイン</a>
               </div>
