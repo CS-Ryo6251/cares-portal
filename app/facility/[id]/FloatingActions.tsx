@@ -1,39 +1,46 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, BadgeCheck, Calculator, Clock3, RefreshCw, X } from 'lucide-react'
 import FeeSimulator from './FeeSimulator'
 
-type Fee = {
-  id: string
-  category: string
-  item_name: string
-  amount: number | null
-  care_level: string | null
-  notes: string | null
-  sort_order: number
-  billing_unit: string
-  fee_section: string
-  amount_max: number | null
-  is_optional: boolean
-  created_at?: string | null
-  updated_at?: string | null
-}
+import type { Fee, Tariff } from '@/lib/fee-calculation'
 
 type Props = {
   fees: Fee[]
   feePattern?: string
+  tariffs?: Tariff[]
+  serviceType?: string
+  facilityName?: string
+  address?: string
+  feesUnavailable?: boolean
 }
 
-export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
+export default function FloatingFeeSimulator({ fees, feePattern, tariffs = [], serviceType, facilityName, address, feesUnavailable }: Props) {
   const [open, setOpen] = useState(false)
-
-  // パターンA（自己負担なし）または料金未設定の場合は非表示
-  if (feePattern === 'no_charge' || fees.length === 0) return null
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
+  function openDialog() { openerRef.current = document.activeElement as HTMLElement; setOpen(true) }
+  useEffect(() => {
+    if (!open) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+      if (e.key !== 'Tab') return
+      const controls = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button, input, select, summary, a[href]') || []).filter(el => el.getClientRects().length && !el.hasAttribute('disabled'))
+      const first = controls[0], last = controls[controls.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = previous; document.removeEventListener('keydown', onKey); openerRef.current?.focus() }
+  }, [open])
+  if (feePattern === 'no_charge' || (!fees.length && !tariffs.length && !feesUnavailable)) return null
 
   const latestFeeUpdate = fees.reduce<string | null>((latest, fee) => {
     const candidate = fee.updated_at || fee.created_at || null
-    if (!candidate) return latest
+    if (!candidate || !Number.isFinite(new Date(candidate).getTime())) return latest
     if (!latest || new Date(candidate).getTime() > new Date(latest).getTime()) return candidate
     return latest
   }, null)
@@ -50,18 +57,18 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-full bg-cares-600 px-2.5 py-1 text-xs font-bold text-white">
                   <BadgeCheck className="h-3.5 w-3.5" />
-                  事業所公式料金
+                  {tariffs.length ? '公定単価で試算' : '事業所の登録料金'}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-bold text-cares-700 ring-1 ring-cares-200">
                   <RefreshCw className="h-3.5 w-3.5" />
-                  CareSpaceOS連携
+                  {fees.length ? 'CareSpace OS 料金連携' : '自費料金は事業所に確認'}
                 </span>
               </div>
               <h2 className="mt-3 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
                 この事業所の月額料金を計算
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-                事業所がCareSpaceOSで設定した最新の料金表をもとに、介護度・負担割合・利用頻度から月額の目安を確認できます。
+                介護度・負担割合・利用時間・回数から試算。事業所が公開した食費などの自費も、内訳とあわせて確認できます。
               </p>
               {latestFeeUpdateLabel && (
                 <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
@@ -72,7 +79,7 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
             </div>
             <button
               type="button"
-              onClick={() => setOpen(true)}
+              onClick={openDialog}
               className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-cares-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-cares-200 transition hover:bg-cares-700 sm:w-auto"
             >
               <Calculator className="h-5 w-5" />
@@ -85,7 +92,7 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
 
       {/* Mobile: bottom-fixed horizontal button */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={openDialog}
         className="md:hidden fixed bottom-4 left-4 right-4 z-40 bg-cares-600 text-white rounded-xl shadow-lg hover:bg-cares-700 transition-all px-4 py-3.5 flex items-center justify-center gap-2"
       >
         <Calculator className="w-5 h-5" />
@@ -94,7 +101,7 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
 
       {/* Desktop: right-side vertical button */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={openDialog}
         className="hidden md:block fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-cares-600 text-white rounded-l-xl shadow-lg hover:bg-cares-700 transition-all px-2 py-5"
         style={{ writingMode: 'vertical-rl' }}
       >
@@ -108,10 +115,10 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
       {open && (
         <>
           <div
-            className="fixed inset-0 bg-black/30 z-50"
+            className="!m-0 fixed inset-0 bg-black/30 z-50"
             onClick={() => setOpen(false)}
           />
-          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:h-full md:w-full md:max-w-md bg-white shadow-2xl z-50 overflow-y-auto animate-slide-in-right">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="料金シミュレーション" className="!m-0 fixed inset-0 md:inset-auto md:top-0 md:right-0 md:h-full md:w-full md:max-w-xl bg-white shadow-2xl z-50 overflow-y-auto animate-slide-in-right">
             <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between z-10">
               <div className="flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-cares-600" />
@@ -119,6 +126,8 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
               </div>
               <button
                 onClick={() => setOpen(false)}
+                aria-label="料金シミュレーションを閉じる"
+                autoFocus
                 className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors -mr-1"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -126,9 +135,9 @@ export default function FloatingFeeSimulator({ fees, feePattern }: Props) {
             </div>
             <div className="p-4 sm:p-5 pb-20 md:pb-5">
               <p className="text-sm text-gray-500 mb-4">
-                CareSpaceOSで事業所が設定した料金表を使って、条件に応じた月額料金を計算します
+                条件を変えると金額が更新されます。利用者への説明用に、条件と内訳をコピーできます。
               </p>
-              <FeeSimulator fees={fees} />
+              <FeeSimulator fees={fees} tariffs={tariffs} serviceType={serviceType} facilityName={facilityName} address={address} feesUnavailable={feesUnavailable} />
             </div>
           </div>
         </>

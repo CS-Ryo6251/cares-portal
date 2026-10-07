@@ -1,6 +1,6 @@
-import { formatHearts } from '@/lib/community'
+import HeartCount from '@/components/HeartCount'
 import Link from 'next/link'
-import { MapPin, Phone, Heart } from 'lucide-react'
+import { MapPin, Phone } from 'lucide-react'
 import { facilityTypeLabels, acceptanceStatusMap } from '@/lib/constants'
 
 type FacilityDirectoryCardProps = {
@@ -63,7 +63,7 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
 
         </div>
 
-        <div className="mt-3 flex items-center gap-2 text-sm text-rose-700"><Heart className="h-4 w-4 fill-current" />{formatHearts(facility.heart_total)}<span className="text-xs text-gray-500">{facility.heart_total == null ? '応援数を取得できません' : '応援の累計'}</span></div>
+        <div className="mt-3"><HeartCount total={facility.heart_total} /></div>
         {facility.current_vacancy && <p className="mt-2 text-xs text-gray-500">{facility.current_vacancy.confirmed_on} 確認・{facility.current_vacancy.valid_until} まで</p>}
         {/* Address */}
         {facility.address && (
