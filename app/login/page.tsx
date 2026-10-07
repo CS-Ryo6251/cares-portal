@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Building2, LogIn } from 'lucide-react'
+import { safeAuthRedirect } from '@/lib/auth-redirect'
 
 export default function LoginPage() {
   return (
@@ -13,9 +14,8 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = safeAuthRedirect(searchParams.get('redirect'))
   const errorParam = searchParams.get('error')
 
   const [email, setEmail] = useState('')
@@ -27,26 +27,33 @@ function LoginForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 15_000)
 
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
+        signal: controller.signal,
       })
 
       const data = await res.json()
 
-      if (!res.ok) {
-        setError(data.error)
+      if (!res.ok || !data.success) {
+        setError(data.error || 'ログインできませんでした。もう一度お試しください')
         return
       }
 
-      router.push(redirect)
-      router.refresh()
+      // The API sets session cookies, but does not emit a browser auth event.
+      // Reload the document so the shared header and Supabase client read them.
+      window.location.replace(redirect)
     } catch {
-      setError('通信エラーが発生しました')
+      setError(controller.signal.aborted
+        ? 'ログインの確認に時間がかかっています。画面を再読み込みするか、少し待ってもう一度お試しください'
+        : '通信エラーが発生しました。接続を確認してもう一度お試しください')
     } finally {
+      clearTimeout(timeout)
       setLoading(false)
     }
   }
@@ -70,7 +77,7 @@ function LoginForm() {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+            <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
               {error}
             </div>
           )}
@@ -83,6 +90,7 @@ function LoginForm() {
               <input
                 id="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -98,6 +106,7 @@ function LoginForm() {
               <input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
