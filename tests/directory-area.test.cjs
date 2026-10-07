@@ -3,7 +3,7 @@ function load(file){const mod={exports:{}};new Function('require','module','expo
 const {applyDirectoryArea}=load('lib/directory-area.ts')
 test('県名のない住所も登録済みの都道府県で検索できる',()=>{
  const rows=[{prefecture:'山形県',address:'山形市西田1丁目2-5'},{prefecture:'東京都',address:'東京都テスト市山形1'}]
- let result=rows,calls=[]
+ let result=rows;const calls=[]
  const query={eq:(key,value)=>{calls.push(['eq',key,value]);result=result.filter(row=>row[key]===value);return query},ilike:()=>{throw Error('県の検索で住所に依存しない')},or:()=>query}
  assert.equal(applyDirectoryArea(query,'山形県'),query);assert.deepEqual(result,[rows[0]]);assert.deepEqual(calls,[['eq','prefecture','山形県']])
 })
