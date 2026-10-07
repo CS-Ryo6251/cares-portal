@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ArrowLeft, ArrowRight, Heart } from 'lucide-react'
 import FacilityListCard from '@/components/FacilityListCard'
+import PrefectureRankingMap from '@/components/PrefectureRankingMap'
 import { prefectures, facilityTypeLabels } from '@/lib/constants'
 import { rankingFilters, rankingUrl } from '@/lib/support-ranking'
 import { getSupportRanking } from '@/lib/support-ranking-server'
@@ -19,16 +20,16 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   const label = filters.period === 'week' ? '今週' : '累計'
 
   return <div className="min-h-screen bg-[#fffcf9]">
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
-      <a href="/" className="inline-flex min-h-11 items-center gap-2 text-sm text-slate-500 hover:text-rose-700"><ArrowLeft className="h-4 w-4" />事業所をさがす</a>
-      <div className="mt-5 border-b border-rose-100 pb-8 sm:mt-8 sm:pb-10">
-        <p className="flex items-center gap-2 text-sm font-semibold text-rose-600"><Heart className="h-4 w-4 fill-current" />地域の「いいね」が集まる場所</p>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">応援ランキング</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">日々の発信や、事業所へのあたたかな応援。<br className="hidden sm:block" />ハートをきっかけに、地域の事業所を知ってみませんか。</p>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
+      <a href={filters.prefecture ? rankingUrl({ ...filters, prefecture: '' }) : '/'} className="inline-flex min-h-11 items-center gap-2 text-sm text-slate-500 hover:text-[#805f63]"><ArrowLeft className="h-4 w-4" />{filters.prefecture ? '全国の応援マップへ' : '事業所をさがす'}</a>
+      <div className="mt-5 border-b border-stone-200 pb-8 sm:mt-8 sm:pb-10">
+        <p className="flex items-center gap-2 text-sm font-semibold text-[#805f63]"><Heart className="h-4 w-4 fill-current" />地域の「いいね」が集まる場所</p>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{filters.prefecture ? `${filters.prefecture}の応援ランキング` : '全国の応援ランキング'}</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">日々の発信や、事業所へのあたたかな応援。<br className="hidden sm:block" />あなたのまちで応援を集める事業所を、見つけてみませんか。</p>
       </div>
 
-      <div className="my-7 flex rounded-full bg-rose-50 p-1 sm:w-72" aria-label="集計期間">
-        {(['week', 'all'] as const).map(period => <a key={period} href={rankingUrl({ ...filters, period })} aria-current={filters.period === period ? 'page' : undefined} className={`flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-bold ${filters.period === period ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-rose-700'}`}>{period === 'week' ? '今週の応援' : '累計の応援'}</a>)}
+      <div className="my-7 flex rounded-full bg-[#f1ece7] p-1 sm:w-72" aria-label="集計期間">
+        {(['week', 'all'] as const).map(period => <a key={period} href={rankingUrl({ ...filters, period })} aria-current={filters.period === period ? 'page' : undefined} className={`flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-bold ${filters.period === period ? 'bg-white text-[#805f63] shadow-sm' : 'text-slate-500 hover:text-[#805f63]'}`}>{period === 'week' ? '今週の応援' : '累計の応援'}</a>)}
       </div>
 
       <form action="/ranking" className="grid gap-3 rounded-2xl border border-[#eee6e2] bg-white p-4 sm:grid-cols-[1fr_1.4fr_auto] sm:items-end sm:p-5">
@@ -38,12 +39,14 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
         <button className="min-h-11 rounded-xl bg-slate-800 px-6 text-sm font-bold text-white hover:bg-slate-700">表示する</button>
       </form>
 
+      {!filters.prefecture && <PrefectureRankingMap key={`${filters.period}-${filters.service}`} period={filters.period} service={filters.service} initialPrefecture={ranking?.items.find(item => item.prefecture && prefectures.some(prefecture => prefecture === item.prefecture))?.prefecture || ''} />}
+
       <div className="mb-4 mt-8 flex flex-wrap items-end justify-between gap-2">
         <h2 className="text-lg font-bold text-slate-900">{filters.prefecture || '全国'}の{label}の応援</h2>
         {ranking && <p className="text-xs leading-6 text-slate-500">{date(ranking.asOf)} 時点<span className="ml-2">上位50事業所まで</span></p>}
       </div>
-      {!ranking ? <div role="status" className="rounded-2xl border border-rose-100 bg-white p-7 text-center"><p className="font-semibold text-slate-700">ランキングを読み込めませんでした</p><a href={rankingUrl(filters)} className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-rose-700 underline underline-offset-4">もう一度読み込む</a></div>
-        : ranking.items.length === 0 ? <div className="rounded-3xl border border-dashed border-rose-200 bg-white px-5 py-12 text-center"><Heart className="mx-auto h-8 w-8 text-rose-300" /><h3 className="mt-4 font-bold text-slate-800">{label}の応援を待っています</h3><p className="mt-3 text-sm leading-7 text-slate-500">この条件に合う事業所には、まだ応援がありません。<br />気になる事業所を見つけたら、ハートで気持ちを届けてみませんか。</p><a href={`/?${new URLSearchParams({ ...(filters.prefecture ? {area:filters.prefecture} : {}), ...(filters.service ? {service_type:filters.service} : {}) })}`} className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-rose-700">事業所をさがす<ArrowRight className="h-4 w-4" /></a></div>
+      {!ranking ? <div role="status" className="rounded-2xl border border-stone-200 bg-white p-7 text-center"><p className="font-semibold text-slate-700">ランキングを読み込めませんでした</p><a href={rankingUrl(filters)} className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-[#805f63] underline underline-offset-4">もう一度読み込む</a></div>
+        : ranking.items.length === 0 ? <div className="rounded-3xl border border-dashed border-stone-200 bg-white px-5 py-12 text-center"><Heart className="mx-auto h-8 w-8 text-[#b28d8b]" /><h3 className="mt-4 font-bold text-slate-800">{label}の応援を待っています</h3><p className="mt-3 text-sm leading-7 text-slate-500">この条件に合う事業所には、まだ応援がありません。<br />気になる事業所を見つけたら、ハートで気持ちを届けてみませんか。</p><a href={`/?${new URLSearchParams({ ...(filters.prefecture ? {area:filters.prefecture} : {}), ...(filters.service ? {service_type:filters.service} : {}) })}`} className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#805f63]">事業所をさがす<ArrowRight className="h-4 w-4" /></a></div>
         : <ol className="space-y-3">{ranking.items.map(item => <li key={item.id}>
           <FacilityListCard id={item.id} name={item.name} serviceType={item.serviceType} address={item.address} coverImage={item.coverImage} overview={item.overview} total={item.total} rank={item.rank} supportLabel={`${label}の応援ハート`} />
         </li>)}</ol>}
