@@ -14,7 +14,6 @@ type FacilityDirectoryCardProps = {
     acceptance_status: string | null
     source: string | null
     heart_total?: string | null
-    heart_supporters?: string | null
     current_vacancy?: { confirmed_on: string; valid_until: string } | null
   }
 }
@@ -64,7 +63,7 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
 
         </div>
 
-        <div className="mt-3 flex items-center gap-2 text-sm text-rose-700"><Heart className="h-4 w-4 fill-current" />{formatHearts(facility.heart_total)}<span className="text-xs text-gray-500">{facility.heart_supporters == null ? '応援数を取得できません' : `${formatHearts(facility.heart_supporters)}人の応援`}</span></div>
+        <div className="mt-3 flex items-center gap-2 text-sm text-rose-700"><Heart className="h-4 w-4 fill-current" />{formatHearts(facility.heart_total)}<span className="text-xs text-gray-500">{facility.heart_total == null ? '応援数を取得できません' : '応援の累計'}</span></div>
         {facility.current_vacancy && <p className="mt-2 text-xs text-gray-500">{facility.current_vacancy.confirmed_on} 確認・{facility.current_vacancy.valid_until} まで</p>}
         {/* Address */}
         {facility.address && (

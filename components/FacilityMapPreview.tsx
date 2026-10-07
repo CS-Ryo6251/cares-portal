@@ -37,7 +37,6 @@ type FacilityMapItem = {
   acceptance_status: string | null
   is_owner_verified: boolean
   heart_total: string | null
-  heart_supporters: string | null
 }
 
 type Props = {
@@ -1111,7 +1110,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                 {formatHearts(activeFacility.heart_total)}
               </span>
               <span className="font-medium text-slate-500">
-                {activeFacility.heart_supporters === null ? '応援数を取得できません' : `${formatHearts(activeFacility.heart_supporters)}人の応援`}
+                {activeFacility.heart_total === null ? '応援数を取得できません' : '応援の累計'}
               </span>
               {activeFacility.service_type && (
                 <span className="ml-auto truncate text-slate-400">{activeFacility.service_type}</span>

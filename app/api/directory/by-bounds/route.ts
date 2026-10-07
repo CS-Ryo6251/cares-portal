@@ -87,7 +87,6 @@ export async function GET(request: NextRequest) {
         acceptance_status: item.current_acceptance_status,
         is_owner_verified: !!item.is_owner_verified,
         heart_total: heartSummaries === null ? null : (heartSummaries[item.id]?.total || '0'),
-        heart_supporters: heartSummaries === null ? null : (heartSummaries[item.id]?.supporters || '0'),
       }
     })
 

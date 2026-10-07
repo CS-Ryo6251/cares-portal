@@ -415,7 +415,6 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
       completeness_score: item.completeness_score || 0,
       completeness_tier: item.completeness_tier || 'insufficient',
       heart_total: heartSummaries === null ? null : (heartSummaries[item.id]?.total || '0'),
-      heart_supporters: heartSummaries === null ? null : (heartSummaries[item.id]?.supporters || '0'),
       distance_km: item.distance_km ?? null,
     }
   })
@@ -885,7 +884,7 @@ export default async function FeedPage({
                       {formatHearts(item.heart_total)}
                     </span>
                     <span className="text-xs font-medium text-slate-400">
-                      {item.heart_supporters === null ? '応援数を取得できません' : `${formatHearts(item.heart_supporters)}人の応援`}
+                      {item.heart_total === null ? '応援数を取得できません' : '応援の累計'}
                     </span>
                   </div>
                   <div className="mt-2">
