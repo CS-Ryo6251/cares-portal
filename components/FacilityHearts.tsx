@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Heart } from 'lucide-react'
+import Link from 'next/link'
 import { compactHearts, formatHearts } from '@/lib/community'
 
 
@@ -34,6 +35,7 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
   const pendingId = useRef<string | null>(null)
   const busy = useRef(false)
   const [sent, setSent] = useState(false)
+  const [receipt, setReceipt] = useState<{ recorded: boolean; authenticated: boolean } | null>(null)
   const load = useCallback(async () => {
     const current = revision.current
     const read = ++readRevision.current
@@ -50,7 +52,7 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
   }, [target])
   useEffect(() => {
     revision.current += 1
-    setSummary(null); setSent(false); pendingId.current = null; busy.current = false; setSaving(false)
+    setSummary(null); setSent(false); setReceipt(null); pendingId.current = null; busy.current = false; setSaving(false)
     void load()
     return () => { revision.current += 1 }
   }, [load])
@@ -90,13 +92,14 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
       })
       if (current !== revision.current) return
       if (!res.ok) {
-        if (res.status === 429 || res.status === 400 || res.status === 404) pendingId.current = null
+        if ([400, 404, 409, 429].includes(res.status)) pendingId.current = null
         throw new Error(data.error || '送信結果を確認できませんでした')
       }
       if (typeof data?.total !== 'string' || !/^\d+$/.test(data.total)) throw new Error('送信結果を確認できませんでした')
       setSummary(data)
       pendingId.current = null
       setSent(true)
+      setReceipt({ recorded: data.recorded === true, authenticated: data.authenticated === true })
       window.dispatchEvent(new CustomEvent('cares:heart-sent', { detail: { facilityId, listingId, total: data.total } }))
     } catch (e) {
       if (current !== revision.current) return
@@ -111,6 +114,11 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
   </button>
   const feedback = <>
     {sent && <p role="status" className="mt-3 text-sm font-semibold text-rose-700">♡ +1 応援を届けました。ありがとうございます！</p>}
+    {sent && receipt && <div className="mt-3 rounded-xl border border-rose-100 bg-white p-3 text-xs leading-5 text-slate-600">
+      <p>{receipt.recorded ? 'あなたの応援の記録に保存しました。' : receipt.authenticated ? 'この応援はログイン前に送ったため、個人の記録には含まれません。' : '登録すると、これからの応援をグラフと履歴で振り返れます。'}</p>
+      <Link href={receipt.authenticated ? '/my-actions' : '/signup?redirect=%2Fmy-actions'} className="mt-1 inline-flex min-h-11 items-center font-bold text-rose-700 underline">{receipt.authenticated ? '自分の応援の記録を見る' : '無料登録して、応援の記録をはじめる'}</Link>
+      {!receipt.authenticated && <Link href="/login?redirect=%2Fmy-actions" className="block min-h-10 py-2 text-slate-500 underline">アカウントをお持ちの方はログイン</Link>}
+    </div>}
     {error && <p role="alert" className="mt-2 text-sm text-red-700">{error} <button onClick={load} className="min-h-11 underline">再読み込み</button></p>}
   </>
   if (variant === 'quick') return <section aria-label="事業所への応援" className="rounded-2xl border border-rose-100 bg-rose-50/80 p-3 sm:p-4">

@@ -71,7 +71,8 @@ function LoginForm() {
           </div>
 
           <div className="mb-5 rounded-2xl border border-cares-100 bg-cares-50/70 p-4 text-sm text-slate-700">
-            <p className="font-semibold text-slate-900">口コミ・お気に入り・個人メモを使う</p>
+            <p className="font-semibold text-slate-900">応援の記録・お気に入り・個人メモを使う</p>
+            <p className="mt-2 text-sm leading-relaxed text-rose-700">届けたハートを、あなた専用のグラフと履歴で振り返れます。</p>
             <p className="mt-1 leading-relaxed">
               CareSpace OSに登録済みの方は、同じメールアドレス・パスワードでログインできます。再登録は不要です。
             </p>
