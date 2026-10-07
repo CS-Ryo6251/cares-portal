@@ -88,7 +88,7 @@ export default function ProfessionalNoteModal({
 
         <h3 id="good-point-title" className="text-lg font-bold text-gray-900 mb-2">良かったところを届ける</h3>
         <p className="text-sm text-gray-500 mb-4">
-          うれしかった対応や、助かった体験を教えてください。投稿者の立場を添えて公開します。
+          うれしかった対応や、助かった体験を教えてください。
         </p>
 
         {success ? (
@@ -129,6 +129,7 @@ export default function ProfessionalNoteModal({
                   ))}
                 </optgroup>
               </select>
+              <p className="mt-2 text-xs text-gray-500">立場のみ表示され、氏名・所属先は公開されません。</p>
             </div>
 
             <div className={`mb-4 rounded-xl border p-3 ${
