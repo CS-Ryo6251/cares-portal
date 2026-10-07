@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createAuthClient } from '@/lib/supabase-auth'
-import { Bell, ClipboardList, Settings, LogOut, ChevronDown, User } from 'lucide-react'
+import { Bell, Building2, ClipboardList, Settings, LogOut, ChevronDown, User } from 'lucide-react'
 
 const PROFESSION_LABELS: Record<string, string> = {
   care_manager: 'ケアマネ',
@@ -24,6 +24,7 @@ export default function AuthHeader() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [hasMyFacilities, setHasMyFacilities] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState(false)
@@ -113,6 +114,23 @@ export default function AuthHeader() {
     return () => { active = false; clearTimeout(timeout); controller.abort() }
   }, [userId])
 
+  useEffect(() => {
+    setHasMyFacilities(false)
+    if (!userId) return
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10_000)
+    let active = true
+    fetch('/api/my-facilities', { signal: controller.signal, cache: 'no-store' })
+      .then(async response => {
+        if (!response.ok) return
+        const data = await response.json()
+        if (active) setHasMyFacilities(Array.isArray(data.facilities) && data.facilities.length > 0)
+      })
+      .catch(() => { /* Shared account login remains usable if facility lookup fails. */ })
+      .finally(() => clearTimeout(timeout))
+    return () => { active = false; clearTimeout(timeout); controller.abort() }
+  }, [userId])
+
   // 外部クリックでメニュー閉じる
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -159,10 +177,12 @@ export default function AuthHeader() {
 
   return (
     <div className="flex items-center gap-2">
+      {hasMyFacilities && <a href="/my-facilities" className="shrink-0 rounded-xl bg-cares-50 px-2 py-2 text-xs font-semibold text-cares-700 sm:px-3 sm:text-sm">自分の事業所</a>}
       {/* Notification bell */}
       <a
         href="/notifications"
-        className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors"
+        aria-label="通知"
+        className={`relative p-2 text-gray-400 hover:text-gray-600 transition-colors ${hasMyFacilities ? 'hidden sm:block' : ''}`}
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -198,6 +218,9 @@ export default function AuthHeader() {
                   : (profile ? '' : 'プロフィール未設定')}
               </p>
             </div>
+
+            {hasMyFacilities && <a href="/my-facilities" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-cares-700 hover:bg-cares-50"><Building2 className="w-4 h-4" />自分の事業所</a>}
+            <a href="/notifications" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"><Bell className="w-4 h-4" />通知{unreadCount > 0 ? `（${unreadCount}件）` : ''}</a>
 
             <a
               href="/my-actions"
