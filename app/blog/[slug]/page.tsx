@@ -29,7 +29,7 @@ export default async function BlogPostPage({ params }: Props) {
     { '@context': 'https://schema.org', '@type': 'Article', headline: post.title, description: post.description, datePublished: post.publishedAt, dateModified: post.updatedAt, author: { '@type': 'Organization', name: post.author }, publisher: { '@type': 'Organization', name: 'Cares by CareSpace', url: BASE_URL }, mainEntityOfPage: url, image: `${BASE_URL}${getBlogImage(post)}`, articleSection: category.label, inLanguage: 'ja', ...(post.original ? { isBasedOn: { '@type': 'Article', url: post.original.url, headline: post.original.title, datePublished: post.original.publishedAt } } : {}) },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'ホーム', item: BASE_URL }, { '@type': 'ListItem', position: 2, name: 'コラム', item: `${BASE_URL}/blog` }, { '@type': 'ListItem', position: 3, name: post.title, item: url }] },
   ]
-  return <main className="bg-[#fbf9f5] text-stone-800">
+  return <div className="bg-[#fbf9f5] text-stone-800">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
     <div className="mx-auto max-w-6xl px-5 pb-16 pt-7 sm:px-8 sm:pb-24 sm:pt-10">
       <nav aria-label="パンくず" className="mb-8 flex flex-wrap items-center gap-2 text-xs text-stone-500"><Link href="/blog" className="inline-flex min-h-11 items-center gap-2 hover:text-cares-700"><ArrowLeft aria-hidden="true" className="h-4 w-4" />コラム一覧</Link><span aria-hidden="true">/</span><Link href={`/blog?category=${post.category}#articles`} className="inline-flex min-h-11 items-center hover:text-cares-700">{category.label}</Link></nav>
@@ -59,5 +59,5 @@ export default async function BlogPostPage({ params }: Props) {
       </article>
       <section aria-labelledby="related-heading" className="mt-16 border-t border-stone-200 pt-9"><div className="mb-7 flex items-center justify-between gap-4"><h2 id="related-heading" className="font-serif text-2xl font-semibold">あわせて読みたい</h2><Link href="/blog" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold text-cares-800">コラム一覧<ArrowRight aria-hidden="true" className="h-4 w-4" /></Link></div><div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">{related.map((item) => <ArticleCard key={item.slug} post={item} />)}</div></section>
     </div>
-  </main>
+  </div>
 }

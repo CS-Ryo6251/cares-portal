@@ -25,7 +25,7 @@ export default async function BlogIndexPage({ searchParams }: PageProps) {
   const isFiltered = !!(library.q || library.category || library.year || library.page > 1 || library.sort === 'oldest')
   const featured = getBlogPost('first-care-consultation')!
   const picks = ['day-service-visit-checklist', 'care-service-cost-basics'].map((slug) => getBlogPost(slug)!)
-  return <main className="bg-[#fbf9f5] text-stone-800">
+  return <div className="bg-[#fbf9f5] text-stone-800">
     <div className="mx-auto max-w-7xl px-5 pb-16 pt-7 sm:px-8 sm:pb-24 sm:pt-10">
       <nav aria-label="パンくず" className="mb-9 flex items-center gap-2 text-xs text-stone-500"><Link href="/" className="py-2 hover:text-cares-700">ホーム</Link><span aria-hidden="true">/</span><span>コラム</span></nav>
       <header className="mb-9 border-b border-stone-200 pb-8 sm:mb-11 sm:flex sm:items-end sm:justify-between sm:gap-8">
@@ -66,5 +66,5 @@ export default async function BlogIndexPage({ searchParams }: PageProps) {
       </section>
       <aside className="mt-16 border-t border-stone-200 pt-6 text-xs leading-7 text-stone-500"><p>Cares編集部が、介護の相談・比較に役立つ情報をお届けします。過去記事の再編集版は原記事の日付を表示し、本文でCares掲載日と出典をご案内しています。</p><p>制度に関する情報は各記事の確認日時点のものです。手続きや費用の詳細は、お住まいの自治体・事業所にご確認ください。</p></aside>
     </div>
-  </main>
+  </div>
 }
