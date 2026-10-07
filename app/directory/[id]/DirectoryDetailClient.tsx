@@ -460,7 +460,7 @@ export default function DirectoryDetailClient({
             この事業所にお勤めの方へ
           </p>
           <p className="text-sm text-cares-600 mb-3">
-            CareSpaceOSへ登録すると、事業所番号で自動照合され、空き状況や写真を公式情報として更新できます。
+            集まった応援を励みに、事業所の魅力をもっと届けませんか。CareSpace OSと事業所情報を連携すると、応援の増加を確認しながら、空き状況・写真・料金を更新できます。
           </p>
           <button
             onClick={() => setShowClaim(true)}
@@ -477,6 +477,7 @@ export default function DirectoryDetailClient({
           <a href="https://app.carespace.jp/cares-management" className="mt-3 inline-flex items-center rounded-xl bg-cares-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-cares-700">
             CareSpace OSで掲載管理を開く
           </a>
+          <a href="/my-facilities" className="mt-3 block py-2 text-sm font-semibold text-cares-700 underline underline-offset-4">自分の事業所への応援を確認する</a>
         </div>
       )}
 

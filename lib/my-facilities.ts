@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { FacilitySupport } from './facility-support'
 
 export interface MyFacility {
   id: string
@@ -6,6 +7,7 @@ export interface MyFacility {
   serviceType: string | null
   isPublished: boolean
   publicUrl: string | null
+  support?: FacilitySupport
 }
 
 // Called only on the server with the verified Auth user ID, never a request ID.

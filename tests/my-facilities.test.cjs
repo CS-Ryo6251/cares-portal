@@ -33,6 +33,7 @@ function clientFor(rows, failure) {
     },
   }
 }
+const support = load('lib/facility-support.ts')
 const { getMyFacilities } = load('lib/my-facilities.ts')
 const fixture = () => ({
   user_profiles: [{ id: 'os-profile', user_id: 'auth-user', organization_id: 'org-a', is_active: true }],
@@ -93,23 +94,24 @@ function routeFor(user, getFacilities) {
     '@/lib/supabase-server-auth': { createAuthServerClient: async () => ({ auth: { getUser: async () => ({ data: { user }, error: null }) } }) },
     '@/lib/supabase': { getSupabaseServiceClient: () => ({ synthetic: true }) },
     '@/lib/my-facilities': { getMyFacilities: getFacilities },
+    '@/lib/facility-support': support,
   })
 }
 
 test('自分の事業所APIは未ログインを拒否しDBを読み出さない', async () => {
-  const response = await routeFor(null, () => { throw new Error('Must not query') }).GET()
+  const response = await routeFor(null, () => { throw new Error('Must not query') }).GET(new Request('https://cares.example/api/my-facilities'))
   assert.equal(response.status, 401)
   assert.equal(response.headers.get('cache-control'), 'private, no-store')
 })
 
 test('自分の事業所APIは認証済みIDだけを利用し、応答は個人キャッシュ不可', async () => {
   let userId
-  const response = await routeFor({ id: 'verified-user' }, async (_client, id) => { userId = id; return [] }).GET()
+  const response = await routeFor({ id: 'verified-user' }, async (_client, id) => { userId = id; return [] }).GET(new Request('https://cares.example/api/my-facilities'))
   assert.equal(userId, 'verified-user')
   assert.equal(response.status, 200)
   assert.deepEqual(await response.json(), { facilities: [] })
   assert.equal(response.headers.get('cache-control'), 'private, no-store')
-  const failed = await routeFor({ id: 'verified-user' }, async () => { throw new Error('Private internal details') }).GET()
+  const failed = await routeFor({ id: 'verified-user' }, async () => { throw new Error('Private internal details') }).GET(new Request('https://cares.example/api/my-facilities'))
   assert.equal(failed.status, 503)
   assert.equal(JSON.stringify(await failed.json()).includes('Private internal'), false)
 })
