@@ -811,14 +811,15 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
           <div className="min-w-0">
             <p className="text-sm font-bold text-slate-950">
               {userLatitude && userLongitude
-                ? '現在地に近い順で表示しています'
+                ? '現在地の近く'
                 : area
-                  ? `${area.replace(':', ' / ')} 周辺を表示しています`
-                  : '現在地またはエリアを指定して探せます'}
+                  ? `${area.replace(':', ' / ')} 周辺`
+                  : '全国の事業所'}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
-              エリア・市区町村・現在地は地図と下の一覧の両方に反映されます。地図上の「この範囲で検索」は地図のマーカーのみ更新します。
-            </p>
+            <details className="mt-1 text-xs leading-6 text-slate-500">
+              <summary className="min-h-6 cursor-pointer">地図の使い方</summary>
+              <p className="mt-1 max-w-md">エリア・市区町村・現在地は地図と下の一覧に反映されます。「この範囲で検索」は地図のマーカーのみ更新します。</p>
+            </details>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch xl:justify-end">

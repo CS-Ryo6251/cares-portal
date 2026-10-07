@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { ArrowRight, Search, HeartHandshake, BookOpen } from 'lucide-react'
+import { Search, HeartHandshake, BookOpen } from 'lucide-react'
 import Image from 'next/image'
 import './globals.css'
 import AuthHeader from '@/components/AuthHeader'
@@ -74,13 +74,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <nav aria-label="メインメニュー" className="hidden items-center gap-2 lg:flex xl:gap-4">
                 {navigation.map(({ href, label, Icon }) => <a key={href} href={href} className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl px-2 text-sm font-medium text-slate-600 transition-colors hover:bg-rose-50 hover:text-cares-700"><Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-rose-500" />{label}</a>)}
               </nav>
-              <a
-                href="/for-business"
-                className="hidden items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 font-bold text-white shadow-sm transition hover:bg-cares-700 xl:inline-flex"
-              >
-                掲載・管理
-                <ArrowRight className="h-3.5 w-3.5" />
-              </a>
               <AuthHeader />
             </div>
           </div>

@@ -3,7 +3,7 @@ import { getHeartSummaries } from '@/lib/hearts'
 import FacilityListCard from '@/components/FacilityListCard'
 import { getDirectoryProfiles, directoryProfile } from '@/lib/directory-profiles'
 import { getSupabaseClient } from '@/lib/supabase'
-import { ArrowRight, BadgeCheck, HeartHandshake, Search, Sparkles } from 'lucide-react'
+import { Search, Trophy } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
@@ -549,8 +549,6 @@ export default async function FeedPage({
   const currentView = params.view || 'facilities'
   const userLatitude = parseCoordinate(params.lat)
   const userLongitude = parseCoordinate(params.lng)
-  const hasUserLocation = userLatitude !== null && userLongitude !== null
-
   const posts = currentView === 'posts' ? await getFeedPosts(params) : []
   const facilitiesResult = currentView === 'facilities' ? await getFacilities(params) : { facilities: [], totalCount: 0, page: 1, totalPages: 0 }
   const { facilities, totalCount, page: currentPage, totalPages } = facilitiesResult
@@ -559,7 +557,7 @@ export default async function FeedPage({
     <div className="flex gap-0">
       <AreaPreferenceRedirect />
       {/* Sidebar - desktop only */}
-      <aside className="hidden lg:block w-72 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-100 bg-white">
+      <aside aria-label="検索とランキング" className="hidden lg:block w-72 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-100 bg-white">
         <Sidebar searchParams={params} />
       </aside>
 
@@ -575,6 +573,7 @@ export default async function FeedPage({
             {params.lat && <input type="hidden" name="lat" value={params.lat} />}
             {params.lng && <input type="hidden" name="lng" value={params.lng} />}
             {params.status && <input type="hidden" name="status" value={params.status} />}
+            {params.service_type && <input type="hidden" name="service_type" value={params.service_type} />}
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -588,83 +587,40 @@ export default async function FeedPage({
           </form>
         </div>
 
-        {/* Geolocation banner */}
-        <GeolocationBanner />
+        <section aria-labelledby="home-title" className="mb-5 px-1 py-2 sm:mb-6">
+          <h1 id="home-title" className="text-2xl font-bold leading-snug tracking-tight text-slate-900 sm:text-3xl">
+            介護事業所の<span className="whitespace-nowrap">「いま」が見つかる。</span>
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">空き状況や日々のようすから、気になる事業所へ。</p>
+        </section>
 
-        {/* Site intro */}
-        <div className="relative mb-5 overflow-hidden rounded-[2rem] border border-rose-100 bg-[#fffdfb] p-6 shadow-sm animate-fade-up sm:p-8">
-          <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full border-[36px] border-rose-50/80" />
-          <div className="pointer-events-none absolute bottom-0 right-12 h-px w-48 bg-gradient-to-r from-transparent via-rose-200 to-transparent" />
-          <div className="relative">
-            <div>
-              <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-rose-700 ring-1 ring-rose-100">
-                <Sparkles className="h-3.5 w-3.5" />
-                CARES BY CARESPACE
-              </p>
-              <h1 className="text-3xl font-black leading-[1.2] tracking-tight text-slate-950 sm:text-4xl">
-                介護事業所の<span className="whitespace-nowrap">「いま」が、</span>
-                <br />ひと目で見つかる。
-              </h1>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-                公表データと事業所公式情報に、良かった体験や専門職からの応援の声を整理して掲載。空き状況、料金、パンフレットまで、電話する前に確認できます。
-              </p>
-            </div>
-            <a
-              href="https://app.carespace.jp/signup/new-organization?source=cares"
-              className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-cares-600 px-5 py-3.5 text-sm font-black text-white shadow-lg shadow-rose-200/70 transition hover:-translate-y-0.5 hover:bg-cares-700"
-            >
-              私たちの事業所も掲載する
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-          <div className="relative mt-7 grid gap-2.5 sm:grid-cols-3">
-            {[
-              ['公表DB＋新設事業所', 'OSから新しいページも公開'],
-              ['事業所公式情報', '空き・料金・資料を直接更新'],
-              ['良いところと応援のハート', 'あたたかな声を事業所選びの手がかりに'],
-            ].map(([title, body]) => (
-              <div key={title} className="rounded-2xl bg-white px-3 py-3.5 ring-1 ring-slate-100">
-                <p className="flex items-center gap-1.5 text-sm font-bold text-slate-800"><BadgeCheck className="h-4 w-4 text-cares-500" />{title}</p>
-                <p className="mt-1 text-xs text-slate-500">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <a href="/cases" className="group mb-5 flex items-center justify-between gap-4 rounded-2xl border border-rose-200 bg-white px-4 py-4 shadow-sm transition hover:border-cares-300 hover:shadow-md sm:px-5">
-          <span className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-cares-600"><HeartHandshake className="h-5 w-5" /></span>
-            <span className="min-w-0"><span className="block text-sm font-black text-slate-950">地域の支援案件を見る</span><span className="mt-0.5 block text-xs text-slate-500">事業所名を伏せた受入相談。仲介・成約手数料はかかりません</span></span>
-          </span>
-          <ArrowRight className="h-5 w-5 shrink-0 text-cares-500 transition-transform group-hover:translate-x-1" />
-        </a>
-
-        <a href="/ranking" className="mb-5 flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-rose-100 bg-rose-50/60 px-5 py-4 text-rose-700 transition hover:bg-rose-50">
-          <span><span className="block text-sm font-bold">応援ランキング</span><span className="mt-1 block text-xs text-slate-500">今週、ハートが集まった事業所を見てみよう</span></span><ArrowRight className="h-4 w-4 shrink-0" />
-        </a>
+        {currentView === 'posts' && <GeolocationBanner />}
 
         {/* Tab switcher */}
-        <div className="flex bg-slate-100 rounded-xl p-1 mb-4">
-          <a
-            href={buildTabUrl(params, 'facilities')}
-            className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              currentView === 'facilities'
-                ? 'bg-white text-slate-950 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            施設
-          </a>
-          <a
-            href={buildTabUrl(params, 'posts')}
-            className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              currentView === 'posts'
-                ? 'bg-white text-slate-950 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            投稿
-          </a>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="flex min-w-[9rem] flex-1 rounded-xl bg-slate-100 p-1">
+            <a
+              href={buildTabUrl(params, 'facilities')}
+              className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                currentView === 'facilities'
+                  ? 'bg-white text-slate-950 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              施設
+            </a>
+            <a
+              href={buildTabUrl(params, 'posts')}
+              className={`flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                currentView === 'posts'
+                  ? 'bg-white text-slate-950 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              投稿
+            </a>
+          </div>
+        <a href="/ranking" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-semibold text-[#526b58] hover:bg-[#f1f4ee] lg:hidden"><Trophy aria-hidden="true" className="h-4 w-4" />応援ランキング</a>
         </div>
 
         {/* Service type pills — facilities tab */}
@@ -798,28 +754,6 @@ export default async function FeedPage({
         {/* Facility list */}
         {currentView === 'facilities' && (
         <>
-          <div className="mb-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-bold text-slate-950">
-                  {hasUserLocation
-                    ? '現在地に近い順で表示しています'
-                    : params.area
-                      ? `${params.area.replace(':', ' / ')}の事業所`
-                      : 'エリアを指定すると近くの事業所を探しやすくなります'}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  検索・エリア・サービス種別の条件は、一覧と地図の両方に反映されます。
-                </p>
-              </div>
-              {!hasUserLocation && (
-                <span className="text-xs font-semibold text-cares-700">
-                  マップ上の「現在地から探す」またはエリア選択を利用できます
-                </span>
-              )}
-            </div>
-          </div>
-
           <FacilityMapPreview
             facilities={facilities}
             area={params.area}

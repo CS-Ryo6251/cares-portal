@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { ArrowUpRight, Search, Trophy } from 'lucide-react'
 import AreaFilter from './AreaFilter'
 
 type SidebarProps = {
@@ -58,6 +58,11 @@ export default function Sidebar({ searchParams }: SidebarProps) {
 
   return (
     <div className="px-4 pt-4 pb-5 space-y-6">
+        <nav aria-label="ランキング">
+          <a href="/ranking" className="flex min-h-12 items-center gap-2.5 rounded-xl border border-[#e3e8de] bg-[#f1f4ee] px-3 text-sm font-bold text-[#526b58] transition-colors hover:bg-[#e5ecdf]">
+            <Trophy aria-hidden="true" className="h-5 w-5 shrink-0" />応援ランキング<ArrowUpRight aria-hidden="true" className="ml-auto h-4 w-4 shrink-0" />
+          </a>
+        </nav>
         {/* Search */}
         <div>
           <form method="GET" action="/">
@@ -68,6 +73,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
             {searchParams.lat && <input type="hidden" name="lat" value={searchParams.lat} />}
             {searchParams.lng && <input type="hidden" name="lng" value={searchParams.lng} />}
             {currentStatus && <input type="hidden" name="status" value={currentStatus} />}
+            {searchParams.service_type && <input type="hidden" name="service_type" value={searchParams.service_type} />}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
               <input
@@ -140,8 +146,8 @@ export default function Sidebar({ searchParams }: SidebarProps) {
           </div>
         </div>
 
-        {/* Category filter */}
-        <div>
+        {/* Categories apply only to the posts view. */}
+        {currentView === 'posts' && <div>
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
             投稿カテゴリ
           </h3>
@@ -171,7 +177,7 @@ export default function Sidebar({ searchParams }: SidebarProps) {
               )
             })}
           </div>
-        </div>
+        </div>}
 
         {/* Clear filters */}
         {(currentQ || currentCategory || currentArea || currentStatus) && (
