@@ -26,6 +26,8 @@ function buildResourceUrl(resourceType: string | null, resourceId: string | null
   if (!resourceType || !resourceId) return null
 
   switch (resourceType) {
+    case 'application':
+      return `/manage/applications/${resourceId}`
     case 'listing':
       return `/directory/${resourceId}`
     case 'facility':

@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
-  const protectedPaths = ['/account', '/favorites', '/my-actions', '/notifications', '/my-facilities']
+  const protectedPaths = ['/account', '/favorites', '/my-actions', '/notifications', '/my-facilities', '/manage']
 
   function redirectWithSession(url: URL) {
     const response = NextResponse.redirect(url)

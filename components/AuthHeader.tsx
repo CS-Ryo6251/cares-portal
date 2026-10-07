@@ -230,6 +230,7 @@ export default function AuthHeader() {
             </div>
 
             {hasMyFacilities && <a href="/my-facilities" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-cares-700 hover:bg-cares-50"><Building2 className="w-4 h-4" />自分の事業所</a>}
+            <a href="/manage" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-cares-700 hover:bg-cares-50"><ClipboardList className="w-4 h-4" />空き情報・申込み受付</a>
             <a href="/notifications" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"><Bell className="w-4 h-4" />通知{unreadCount > 0 ? `（${unreadCount}件）` : ''}</a>
 
             <a

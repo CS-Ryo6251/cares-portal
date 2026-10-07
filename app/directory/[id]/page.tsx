@@ -1,4 +1,5 @@
 import FacilityProfileHeader from '@/components/FacilityProfileHeader'
+import ProviderIntakeSection from '@/components/ProviderIntakeSection'
 import FacilityPostFeed from '@/components/FacilityPostFeed'
 import { profilePhotos, publicWebUrl } from '@/lib/profile-media'
 import { simulationTariffs } from '@/lib/simulation-tariffs'
@@ -196,8 +197,10 @@ export default async function DirectoryDetailPage({
 
   const { facility: f, currentReport, vacancyUnavailable, portalData, portalProfileUnavailable } = data
   const isOwnerVerified = f.is_owner_verified
-  const statusLabel = acceptanceLabels[currentReport?.vacancy_type || 'unknown'] || '要問合せ'
-  const statusColor = acceptanceColors[currentReport?.vacancy_type || 'unknown'] || acceptanceColors.unknown
+  const officialStatus = isOwnerVerified ? (portalData?.profile?.acceptance_status || f.acceptance_status) : null
+  const displayedStatus = officialStatus && officialStatus !== 'unknown' ? officialStatus : currentReport?.vacancy_type || 'unknown'
+  const statusLabel = acceptanceLabels[displayedStatus] || '要問合せ'
+  const statusColor = acceptanceColors[displayedStatus] || acceptanceColors.unknown
 
   // Portal-specific data
   const portalProfile = portalData?.profile
@@ -261,12 +264,15 @@ export default async function DirectoryDetailPage({
               phone={portalProfile.phone || f.phone} statusLabel={statusLabel} statusColor={statusColor}
               listingIds={[f.id]} postCount={portalData?.postCount ?? null} photoCount={profilePhotos(portalProfile.photos, portalPosts).length} />
           </div>
+          <ProviderIntakeSection listingId={f.id} />
           <section className="-mx-4 mt-7 mb-7 sm:mx-0">
             <FacilityPostFeed posts={portalPosts} facilityId={f.owner_facility_id} facilityName={f.facility_name} listingId={f.id}
               initialCategory={selectedPostCategory} unavailable={portalData?.postsUnavailable} totalCount={portalData?.postCount ?? undefined} />
             <Link href={`/facility/${f.owner_facility_id}`} className="mx-4 mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-rose-700 sm:mx-0">写真・プロフィールをもっと見る<ArrowRight className="h-4 w-4" /></Link>
           </section>
         </>}
+
+        {!(isOwnerVerified && portalProfile) && <ProviderIntakeSection listingId={f.id} />}
 
         <details open={!(isOwnerVerified && portalProfile)} className="mb-6 rounded-2xl border border-gray-100 bg-white">
           <summary className="cursor-pointer px-5 py-4 text-sm font-bold text-slate-700">事業所の基本情報・お問い合わせ先</summary>
