@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowRight, BadgeCheck, Building2, ShieldCheck, X } from 'lucide-react'
+import { CARESPACE_MANAGEMENT_URL } from '@/lib/cares-navigation'
 
 type OwnerClaimModalProps = {
   listingId: string
@@ -50,7 +51,7 @@ export default function OwnerClaimModal({
 
         <div className="p-6">
           <p className="text-sm leading-7 text-slate-600">
-            別途「管理申請」は必要ありません。CareSpaceOSへ登録後、事業所番号が一致すると、このページと自動でつながります。
+            登録済みの方は、CareSpace OSの「経営支援 → Cares掲載管理」へお進みください。未登録の場合は、事業所登録・確認後にこのページとつながります。
           </p>
 
           <div className="mt-5 space-y-3">
@@ -66,15 +67,15 @@ export default function OwnerClaimModal({
             ))}
           </div>
 
-          <a href={signupUrl} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-cares-600 px-4 py-3.5 text-base font-black text-white shadow-lg shadow-cares-200 transition hover:bg-cares-700">
-            CareSpaceOSで掲載・更新する
+          <a href={CARESPACE_MANAGEMENT_URL} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-cares-600 px-4 py-3.5 text-base font-black text-white shadow-lg shadow-cares-200 transition hover:bg-cares-700">
+            登録済み：OSで掲載管理を開く
             <ArrowRight className="h-5 w-5" />
           </a>
-          <a href="https://app.carespace.jp/login" className="mt-3 block text-center text-sm font-bold text-cares-700 hover:text-cares-800">
-            登録済みの方はログイン
+          <a href={signupUrl} className="mt-3 block text-center text-sm font-bold text-cares-700 hover:text-cares-800">
+            未登録：事業所の登録を始める
           </a>
           <p className="mt-4 text-center text-[11px] leading-5 text-slate-400">
-            登録時に事業所番号と組織情報を確認します。承認後、追加の所有権申請なしで公式情報を更新できます。
+            掲載情報の編集には該当事業所の管理権限が必要です。Caresへの利用者登録だけでは編集できません。
           </p>
         </div>
       </div>

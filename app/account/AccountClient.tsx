@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Settings, LogOut, Trash2, Loader2, Save, User } from 'lucide-react'
+import ProviderManagementLink from '@/components/ProviderManagementLink'
 
 const PROFESSIONS = [
   { value: 'care_manager', label: 'ケアマネジャー' },
@@ -130,8 +131,9 @@ export default function AccountClient() {
         <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
           <Settings className="w-5 h-5 text-gray-600" />
         </div>
-        <h1 className="text-xl font-bold text-gray-900">アカウント設定</h1>
+        <h1 className="text-xl font-bold text-gray-900">Caresの利用者設定</h1>
       </div>
+      <p className="mb-6 text-sm leading-relaxed text-gray-600">ここではCaresでの表示名・職種・通知を設定します。事業所の掲載情報はCareSpace OSで管理します。</p>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
@@ -265,12 +267,12 @@ export default function AccountClient() {
               className="w-full flex items-center justify-center gap-2 py-2.5 border border-red-200 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              アカウントを削除
+              Caresのプロフィールを削除
             </button>
           ) : (
             <div className="border border-red-200 rounded-xl p-4 bg-red-50">
               <p className="text-sm text-red-600 mb-3">
-                本当にアカウントを削除しますか？この操作は取り消せません。
+                Caresの表示名・職種・通知設定を削除し、この端末のCaresからログアウトします。口コミ・個人メモ・お気に入りは残ります。CareSpace OSのアカウント・事業所情報は削除されません。同じメールアドレス・パスワードで再ログインできます。
               </p>
               <div className="flex gap-2">
                 <button
@@ -291,6 +293,7 @@ export default function AccountClient() {
             </div>
           )}
         </div>
+        <ProviderManagementLink />
       </div>
     </div>
   )

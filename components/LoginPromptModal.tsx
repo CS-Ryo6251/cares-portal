@@ -12,7 +12,7 @@ const VARIANTS = {
   notes: {
     icon: Lock,
     title: '口コミ・現場メモをもっと見るには',
-    subtitle: 'アカウント登録が必要です',
+    subtitle: '利用者ログインが必要です',
   },
   favorite: {
     icon: Heart,
@@ -71,11 +71,11 @@ export default function LoginPromptModal({ isOpen, onClose, variant = 'default' 
           href={`/signup?redirect=${encodeURIComponent(currentPath)}`}
           className="block w-full py-3 bg-gray-800 text-white rounded-xl text-base font-medium text-center hover:bg-gray-700 transition-colors"
         >
-          無料で登録する
+          Caresの利用者登録（無料）
         </a>
 
         <p className="mt-3 text-center text-sm text-gray-500">
-          すでにアカウントをお持ちの方{' '}
+          Cares・CareSpace OSのアカウントをお持ちの方{' '}
           <a href={`/login?redirect=${encodeURIComponent(currentPath)}`} className="text-gray-700 font-medium hover:underline">
             ログイン
           </a>

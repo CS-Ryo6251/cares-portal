@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/supabase-server-auth'
 import AccountClient from './AccountClient'
 
 export const metadata = {
-  title: 'アカウント設定',
+  title: 'Caresの利用者設定',
 }
 
 export default async function AccountPage() {

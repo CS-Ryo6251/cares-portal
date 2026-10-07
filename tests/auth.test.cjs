@@ -60,3 +60,43 @@ test('通常の公開閲覧は通し、認証Cookieを書き換えた応答の�
   assert.equal(refreshed.cookies.get('sb-test-auth-token').value, 'refreshed')
   assert.equal(refreshed.headers.get('cache-control'), 'private, no-store')
 })
+
+test('Caresプロフィール削除は本人の専用プロフィールだけを削除し、共通Authを保持する', async () => {
+  const calls = []
+  const client = {
+    auth: {
+      getUser: async () => ({ data: { user: { id: 'signed-in-user' } } }),
+      signOut: async options => { calls.push(['signOut', options]); return { error: null } },
+    },
+    from: table => ({ delete: () => ({ eq: async (field, value) => {
+      calls.push(['delete', table, field, value]); return { error: null }
+    } }) }),
+  }
+  const route = load('app/api/account/route.ts', {
+    '@/lib/supabase-server-auth': { createAuthServerClient: async () => client },
+    '@/lib/supabase': { getSupabaseServiceClient: () => { throw Error('Shared identity must never be deleted') } },
+  })
+  assert.equal((await route.DELETE()).status, 200)
+  assert.deepEqual(calls, [
+    ['delete', 'cares_user_profiles', 'user_id', 'signed-in-user'],
+    ['signOut', { scope: 'local' }],
+  ])
+})
+
+test('プロフィール削除は未ログインを拒否する', async () => {
+  const route = load('app/api/account/route.ts', {
+    '@/lib/supabase-server-auth': { createAuthServerClient: async () => ({ auth: { getUser: async () => ({ data: { user: null } }) }, from: () => { throw Error('Must not delete') } }) },
+    '@/lib/supabase': { getSupabaseServiceClient: () => { throw Error('Must not access shared auth') } },
+  })
+  assert.equal((await route.DELETE()).status, 401)
+})
+
+test('CaresのログアウトでOSなど別セッションを失効させない', async () => {
+  let scope
+  const route = load('app/api/auth/logout/route.ts', {
+    'next/headers': { cookies: async () => ({ getAll: () => [], set: () => {} }) },
+    '@supabase/ssr': { createServerClient: () => ({ auth: { signOut: async options => { scope = options.scope; return { error: null } } } }) },
+  })
+  assert.equal((await route.POST()).status, 200)
+  assert.equal(scope, 'local')
+})

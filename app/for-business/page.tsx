@@ -17,9 +17,10 @@ import {
   Sparkles,
 } from 'lucide-react'
 import FaqSection from './FaqSection'
+import { CARESPACE_MANAGEMENT_URL, CARESPACE_SIGNUP_URL } from '@/lib/cares-navigation'
 
 export const metadata: Metadata = {
-  title: '事業所ページの掲載・更新 — Cares by CareSpace',
+  title: '事業所の掲載管理・登録案内 — Cares by CareSpace',
   description:
     'CareSpaceOSへ事業所登録すると、公表データと事業所番号で自動照合し、公式情報、料金、空き状況、写真を更新できます。',
 }
@@ -91,6 +92,10 @@ const useCases = [
 
 const faqItems = [
   {
+    question: 'Caresのログインと、事業所の掲載管理はどう違いますか？',
+    answer: 'Caresの利用者ログインでは口コミ・お気に入り・個人メモを利用できます。CareSpace OSと同じメールアドレス・パスワードを使えます。事業所の空き状況・料金・写真・投稿の編集は、掲載管理の権限を持つ担当者がCareSpace OSの「経営支援 → Cares掲載管理」で行います。',
+  },
+  {
     question: 'まだCaresに登録していない事業所も表示されますか？',
     answer:
       'はい。介護サービス情報公表システムのオープンデータをもとに、事業所ページを作成します。CareSpaceOSへ登録すると、事業所番号で自動照合され、追加情報や空き状況を更新できるようになります。',
@@ -98,7 +103,7 @@ const faqItems = [
   {
     question: '掲載情報は誰でも更新できますか？',
     answer:
-      '公式情報は、CareSpaceOSで該当事業所に所属するユーザーだけが更新できます。登録時に事業所番号と組織情報を確認するため、別途所有権を申請する必要はありません。',
+      '公式情報の編集には、CareSpace OSで該当事業所を管理する権限が必要です。Caresへの利用者登録だけでは編集権限は付与されません。掲載管理のタブが表示されない場合は法人の管理者にご確認ください。',
   },
   {
     question: '料金表はどのように使えますか？',
@@ -131,9 +136,9 @@ export default function ForBusinessPage() {
               介護事業所の情報発信プラットフォーム
             </p>
             <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-              事業所の公式情報と料金を、
+              事業所の掲載管理は、
               <br className="hidden sm:block" />
-              必要な人へ正しく届ける。
+              CareSpace OSから。
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
               Caresは、公表データをもとにした事業所ページへ、公式情報・料金表・空き状況・日々の投稿を重ねて発信できる仕組みです。
@@ -149,21 +154,26 @@ export default function ForBusinessPage() {
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-white p-5 text-slate-900">
+                <h2 className="font-bold">CareSpace OSに登録済みの方</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">「経営支援 → Cares掲載管理」から、自分の事業所の空き状況・料金・写真・投稿を編集できます。</p>
+                <a href={CARESPACE_MANAGEMENT_URL} className="mt-4 inline-flex items-center gap-2 font-bold text-cares-700 hover:underline">掲載管理を開く<ArrowRight className="h-4 w-4 shrink-0" /></a>
+                <p className="mt-3 text-xs leading-5 text-slate-500">掲載管理の権限が必要です。OSでログイン後にタブが表示されない場合は、法人の管理者にご確認ください。</p>
+              </div>
+              <div className="rounded-2xl border border-white/30 bg-white/10 p-5 text-white">
+                <h2 className="font-bold">事業所をまだ登録していない方</h2>
+                <p className="mt-2 text-sm leading-6 text-white/80">CareSpace OSで事業所登録を行います。事業所番号・組織情報の確認後に掲載情報を管理できます。</p>
               <a
-                href="https://app.carespace.jp/signup/new-organization?source=cares"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-4 text-base font-bold text-slate-950 shadow-lg shadow-slate-950/20 transition hover:bg-cares-50"
+                href={CARESPACE_SIGNUP_URL}
+                className="mt-4 inline-flex items-center gap-2 font-bold text-white hover:underline"
               >
-                CareSpaceOSで掲載・更新する
-                <ArrowRight className="h-5 w-5" />
+                事業所の登録を始める
+                <ArrowRight className="h-4 w-4 shrink-0" />
               </a>
-              <a
-                href="#how-it-works"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-4 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                仕組みを見る
-              </a>
+              </div>
             </div>
+            <p className="mt-5 text-sm text-white/80">事業所探し・口コミ・お気に入りを利用する方は、<a href="/login" className="font-bold text-white underline underline-offset-4">Caresの利用者ログイン</a>へ。</p>
           </div>
         </div>
       </section>
@@ -376,10 +386,10 @@ export default function ForBusinessPage() {
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
             <a
-              href="https://app.carespace.jp/signup/new-organization?source=cares"
+              href={CARESPACE_SIGNUP_URL}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-cares-700 px-6 py-4 text-base font-bold text-white shadow-lg shadow-cares-700/15 transition hover:bg-cares-800"
             >
-              CareSpaceOSで掲載を始める
+              CareSpace OSに事業所を登録する
               <ArrowRight className="h-5 w-5" />
             </a>
             <a

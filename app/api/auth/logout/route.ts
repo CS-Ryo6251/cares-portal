@@ -19,7 +19,7 @@ export async function POST() {
     }
   )
 
-  await supabase.auth.signOut()
+  await supabase.auth.signOut({ scope: 'local' })
 
   return NextResponse.json({ success: true })
 }

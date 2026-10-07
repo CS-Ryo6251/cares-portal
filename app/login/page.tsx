@@ -2,8 +2,9 @@
 
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Building2, LogIn } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import { safeAuthRedirect } from '@/lib/auth-redirect'
+import ProviderManagementLink from '@/components/ProviderManagementLink'
 
 export default function LoginPage() {
   return (
@@ -66,14 +67,15 @@ function LoginForm() {
             <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
               <LogIn className="w-5 h-5 text-gray-600" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">Caresにログイン</h1>
+            <h1 className="text-xl font-bold text-gray-900">Caresの利用者ログイン</h1>
           </div>
 
           <div className="mb-5 rounded-2xl border border-cares-100 bg-cares-50/70 p-4 text-sm text-slate-700">
-            <p className="font-semibold text-slate-900">このログインは、Caresを利用する方向けです</p>
+            <p className="font-semibold text-slate-900">口コミ・お気に入り・個人メモを使う</p>
             <p className="mt-1 leading-relaxed">
-              ご家族・ケアマネジャー・支援者の方が、口コミ・現場メモ・お気に入りなどを利用できます。事業所の公式ページ・料金表・投稿を管理したい方は、公式管理の申請からお進みください。
+              CareSpace OSに登録済みの方は、同じメールアドレス・パスワードでログインできます。再登録は不要です。
             </p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">事業所の検索やハートでの応援は、ログインせずに利用できます。</p>
           </div>
 
           {error && (
@@ -137,25 +139,7 @@ function LoginForm() {
             </a>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-cares-700 shadow-sm">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900">CareSpaceユーザー・事業所の方へ</p>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                  Caresの事業所管理は、申請内容を確認したあとに担当者からCareSpace側の管理方法をご案内します。
-                </p>
-                <a
-                  href="/for-business"
-                  className="mt-3 inline-flex items-center text-sm font-semibold text-cares-700 hover:text-cares-800"
-                >
-                  公式管理を申請する
-                </a>
-              </div>
-            </div>
-          </div>
+          <ProviderManagementLink />
         </div>
       </div>
     </div>
