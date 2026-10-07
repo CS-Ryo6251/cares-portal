@@ -1,3 +1,4 @@
+import { applyDirectoryArea } from '@/lib/directory-area'
 import { getHeartSummaries } from '@/lib/hearts'
 import FacilityListCard from '@/components/FacilityListCard'
 import { getDirectoryProfiles, directoryProfile } from '@/lib/directory-profiles'
@@ -309,21 +310,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     .order('completeness_score', { ascending: false, nullsFirst: false })
     .order('facility_name', { ascending: true })
 
-  if (searchParams.area) {
-    const area = searchParams.area
-    if (area.includes(':')) {
-      const [pref, citiesStr] = area.split(':')
-      const cities = citiesStr.split(',').filter(Boolean)
-      if (cities.length > 0) {
-        const cityFilters = cities.map(c => `address.ilike.%${pref}${c}%`).join(',')
-        query = query.or(cityFilters)
-      } else {
-        query = query.ilike('address', `%${pref}%`)
-      }
-    } else {
-      query = query.ilike('address', `%${area}%`)
-    }
-  }
+  query = applyDirectoryArea(query, searchParams.area)
 
   if (searchParams.status) {
     const statusMap: Record<string, string[]> = {
