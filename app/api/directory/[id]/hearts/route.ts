@@ -31,7 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: '送信IDが不正です' }, { status: 400 })
     }
     const visitor = heartVisitor(request)
-    const { data, error } = await getSupabaseServiceClient().rpc('cares_send_guest_heart', {
+    const { error } = await getSupabaseServiceClient().rpc('cares_send_guest_heart', {
       p_listing_id: id, p_request_id: body.request_id,
       p_visitor_hash: visitor.visitorHash, p_network_hash: visitor.networkHash,
     })
@@ -39,7 +39,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const status = error.message.includes('HEART_TOO_FAST') ? 429 : error.message.includes('LISTING_NOT_FOUND') ? 404 : error.message.includes('REQUEST_CONFLICT') ? 400 : 503
       return setHeartVisitor(NextResponse.json({ error: status === 429 ? '少し間をあけて、もう一度応援してください' : 'ハートを送信できませんでした。同じ送信を再確認できます' }, { status, headers: { 'Cache-Control': 'no-store', ...(status === 429 ? { 'Retry-After': '1' } : {}) } }), visitor)
     }
-    return setHeartVisitor(NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } }), visitor)
+    const summaries = await getHeartSummaries([id])
+    if (!summaries?.[id]) return setHeartVisitor(NextResponse.json({ error: '送信結果を確認できませんでした。同じ送信を再確認できます' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }), visitor)
+    return setHeartVisitor(NextResponse.json(summaries[id], { headers: { 'Cache-Control': 'no-store' } }), visitor)
   } catch {
     return NextResponse.json({ error: '送信結果を確認できませんでした。もう一度お試しください' }, { status: 503 })
   }

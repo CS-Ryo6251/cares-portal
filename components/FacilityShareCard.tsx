@@ -7,6 +7,7 @@ import FacilitySupportSummary from './FacilitySupportSummary'
 import type { FacilitySupport } from '@/lib/facility-support'
 
 interface Props {
+  facilityId?: string
   facilityName: string
   serviceType?: string | null
   publicUrl: string | null
@@ -16,14 +17,14 @@ interface Props {
   onRefresh?: () => void
 }
 
-export default function FacilityShareCard({ facilityName, serviceType, publicUrl, managementUrl, feesUrl, support, onRefresh }: Props) {
+export default function FacilityShareCard({ facilityId, facilityName, serviceType, publicUrl, managementUrl, feesUrl, support, onRefresh }: Props) {
   const [shareOpen, setShareOpen] = useState(false)
   return <section className="min-w-0 rounded-2xl border border-rose-100 bg-white p-5 sm:p-6">
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0"><p className="text-xs font-semibold text-rose-700">ご家族・ケアマネへのご案内に</p><h2 className="mt-2 break-words text-lg font-bold text-gray-900">{facilityName}</h2>{serviceType && <p className="mt-1 text-sm text-gray-500">{serviceType}</p>}</div>
       <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${publicUrl ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{publicUrl ? '公開中' : '非公開'}</span>
     </div>
-    {support && <div className="mt-4"><FacilitySupportSummary support={support}>
+    {support && <div className="mt-4"><FacilitySupportSummary support={support} facilityId={facilityId}>
       {managementUrl && <a href={managementUrl} className="inline-flex min-h-11 items-center rounded-xl bg-white px-3 py-2 text-sm font-semibold text-rose-800 ring-1 ring-rose-200">空き状況・写真を更新</a>}
       {feesUrl && <a href={feesUrl} className="inline-flex min-h-11 items-center rounded-xl bg-white px-3 py-2 text-sm font-semibold text-rose-800 ring-1 ring-rose-200">料金を確認</a>}
       {onRefresh && <button onClick={onRefresh} className="min-h-11 px-2 text-sm text-gray-600 underline underline-offset-4">応援を再読み込み</button>}

@@ -1,93 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAuthServerClient } from '@/lib/supabase-server-auth'
-
-export async function POST(request: NextRequest) {
+import { UUID_PATTERN } from '@/lib/community'
+const headers = { 'Cache-Control': 'private, no-store' }
+async function setLike(request: NextRequest, liked: boolean) {
   try {
+    if (request.headers.get('origin') !== request.nextUrl.origin) return NextResponse.json({ error: 'Caresの画面から操作してください' }, { status: 403, headers })
+    if (!request.headers.get('content-type')?.startsWith('application/json')) return NextResponse.json({ error: '送信形式が不正です' }, { status: 415, headers })
     const supabase = await createAuthServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const { post_id } = body
-
-    if (!post_id) {
-      return NextResponse.json({ error: 'post_id は必須です' }, { status: 400 })
-    }
-
-    // Check if already liked
-    const { data: existing } = await supabase
-      .from('cares_likes')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('post_id', post_id)
-      .maybeSingle()
-
-    if (existing) {
-      // Unlike: delete existing like
-      const { error } = await supabase
-        .from('cares_likes')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('post_id', post_id)
-
-      if (error) {
-        console.error('Like delete error:', error)
-        return NextResponse.json({ error: 'いいね取消に失敗しました' }, { status: 500 })
-      }
-
-      return NextResponse.json({ liked: false })
-    } else {
-      // Like: insert new like
-      const { error } = await supabase
-        .from('cares_likes')
-        .insert({ user_id: user.id, post_id })
-
-      if (error) {
-        console.error('Like insert error:', error)
-        return NextResponse.json({ error: 'いいねに失敗しました' }, { status: 500 })
-      }
-
-      return NextResponse.json({ liked: true })
-    }
-  } catch (error) {
-    console.error('Likes API error:', error)
-    return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401, headers })
+    const body = await request.json().catch(() => null)
+    if (!body || typeof body.post_id !== 'string' || !UUID_PATTERN.test(body.post_id)) return NextResponse.json({ error: '投稿IDが不正です' }, { status: 400, headers })
+    const postId = body.post_id
+    const existing = await supabase.from('facility_portal_posts').select('id,facility_id').eq('id', postId).eq('status', 'published').maybeSingle()
+    if (existing.error) throw new Error('Post lookup failed')
+    if (!existing.data) return NextResponse.json({ error: '公開中の投稿が見つかりません' }, { status: 404, headers })
+    // Set desired state, never toggle: retries and duplicate requests are safe.
+    const result = liked
+      ? await supabase.from('cares_likes').upsert({ user_id: user.id, post_id: postId }, { onConflict: 'user_id,post_id', ignoreDuplicates: true })
+      : await supabase.from('cares_likes').delete().eq('user_id', user.id).eq('post_id', postId)
+    if (result.error) throw new Error('Like write failed')
+    const count = await supabase.from('facility_portal_posts').select('like_count').eq('id', postId).maybeSingle()
+    if (count.error || !count.data || !Number.isSafeInteger(count.data.like_count)) throw new Error('Count lookup failed')
+    return NextResponse.json({ liked, like_count: count.data.like_count, facility_id: existing.data.facility_id }, { headers })
+  } catch {
+    return NextResponse.json({ error: 'いいねの結果を確認できませんでした。もう一度押して確認できます。' }, { status: 503, headers })
   }
 }
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = await createAuthServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const { post_id } = body
-
-    if (!post_id) {
-      return NextResponse.json({ error: 'post_id は必須です' }, { status: 400 })
-    }
-
-    const { error } = await supabase
-      .from('cares_likes')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('post_id', post_id)
-
-    if (error) {
-      console.error('Like delete error:', error)
-      return NextResponse.json({ error: 'いいね取消に失敗しました' }, { status: 500 })
-    }
-
-    return NextResponse.json({ liked: false })
-  } catch (error) {
-    console.error('Likes DELETE error:', error)
-    return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })
-  }
-}
+export const POST = (request: NextRequest) => setLike(request, true)
+export const DELETE = (request: NextRequest) => setLike(request, false)
