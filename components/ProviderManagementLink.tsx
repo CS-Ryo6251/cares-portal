@@ -11,6 +11,7 @@ export default function ProviderManagementLink() {
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             空き状況・料金・写真・投稿の編集は、CareSpace OSの「経営支援 → Cares掲載管理」で行います。
           </p>
+          <a href="/my-facilities" className="mt-3 block text-sm font-semibold text-cares-700 hover:underline">自分の事業所を見せる・共有する</a>
           <a href={CARESPACE_MANAGEMENT_URL} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-cares-700 hover:underline">
             CareSpace OSで掲載管理を開く<ArrowUpRight className="h-4 w-4 shrink-0" />
           </a>
