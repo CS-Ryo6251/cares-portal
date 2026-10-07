@@ -650,6 +650,10 @@ export default async function FeedPage({
           <ArrowRight className="h-5 w-5 shrink-0 text-cares-500 transition-transform group-hover:translate-x-1" />
         </a>
 
+        <a href="/ranking" className="mb-5 flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-rose-100 bg-rose-50/60 px-5 py-4 text-rose-700 transition hover:bg-rose-50">
+          <span><span className="block text-sm font-bold">応援ランキング</span><span className="mt-1 block text-xs text-slate-500">今週、ハートが集まった事業所を見てみよう</span></span><ArrowRight className="h-4 w-4 shrink-0" />
+        </a>
+
         {/* Tab switcher */}
         <div className="flex bg-slate-100 rounded-xl p-1 mb-4">
           <a

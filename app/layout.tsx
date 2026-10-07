@@ -76,7 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </nav>
               <a
                 href="/for-business"
-                className="hidden items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 font-bold text-white shadow-sm transition hover:bg-cares-700 lg:inline-flex"
+                className="hidden items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 font-bold text-white shadow-sm transition hover:bg-cares-700 xl:inline-flex"
               >
                 掲載・管理
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -102,6 +102,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="mb-5 flex flex-wrap items-center justify-center gap-4 text-sm text-white/60">
               <a href="/" className="transition-colors hover:text-white">事業所をさがす</a>
               <a href="/cases" className="transition-colors hover:text-white">支援の相談</a>
+              <a href="/ranking" className="transition-colors hover:text-white">応援ランキング</a>
               <a href="/blog" className="transition-colors hover:text-white">コラム</a>
               <a href="/area" className="transition-colors hover:text-white">エリアから探す</a>
               <a href="/for-business" className="transition-colors hover:text-white">事業所の掲載管理・登録案内</a>
