@@ -66,6 +66,8 @@ export default function LikeButton({ postId, initialLikeCount }: LikeButtonProps
       <button
         onClick={handleToggle}
         disabled={loading}
+        aria-label={liked ? '投稿のいいねを取り消す' : '投稿にいいね'}
+        aria-pressed={liked}
         className={`inline-flex items-center gap-1.5 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
           liked
             ? 'bg-red-50 text-red-600 hover:bg-red-100'

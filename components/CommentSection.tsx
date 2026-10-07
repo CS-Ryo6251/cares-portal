@@ -143,6 +143,7 @@ export default function CommentSection({ postId, facilityId }: CommentSectionPro
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="お名前"
+            aria-label="コメントする方のお名前"
             maxLength={50}
             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 focus:bg-white outline-none transition-colors placeholder:text-gray-400"
           />
@@ -152,9 +153,10 @@ export default function CommentSection({ postId, facilityId }: CommentSectionPro
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="コメントを書く..."
+            aria-label="投稿へのコメント"
             maxLength={500}
             rows={2}
-            className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 focus:bg-white outline-none transition-colors placeholder:text-gray-400 resize-none"
+            className="min-w-0 flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 focus:bg-white outline-none transition-colors placeholder:text-gray-400 resize-none"
           />
           <button
             type="submit"

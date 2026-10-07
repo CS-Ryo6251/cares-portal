@@ -1,3 +1,6 @@
+import FacilityProfileHeader from '@/components/FacilityProfileHeader'
+import FacilityPostFeed from '@/components/FacilityPostFeed'
+import { profilePhotos, publicWebUrl } from '@/lib/profile-media'
 import { simulationTariffs } from '@/lib/simulation-tariffs'
 import { getCurrentVacancies } from '@/lib/vacancies'
 import { VACANCY_SOURCES } from '@/lib/community'
@@ -15,27 +18,13 @@ import {
   Users,
   Mail,
   Download,
-  ExternalLink,
-  Eye,
   Shield,
-  Megaphone,
-  Leaf,
-  PartyPopper,
-  BedDouble,
-  Smile,
-  Handshake,
-  FileText,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import ServiceTypeIcon from '@/components/ServiceTypeIcon'
 import DirectoryDisclaimer from '@/components/DirectoryDisclaimer'
 import CompletenessBreakdown from '@/components/CompletenessBreakdown'
 import { calculateCompletenessScore } from '@/lib/score'
 import DirectoryDetailClient from './DirectoryDetailClient'
 import EditButton from './EditButton'
-import ViewTracker from '@/components/ViewTracker'
-import CommentSection from '@/components/CommentSection'
-import LikeButton from '@/components/LikeButton'
 import FavoriteButton from '@/components/FavoriteButton'
 import FloatingActions from '@/app/facility/[id]/FloatingActions'
 import InquiryButton from '@/app/facility/[id]/InquiryButton'
@@ -61,21 +50,11 @@ const acceptanceColors: Record<string, string> = {
   not_accepting: 'bg-red-100 text-red-700',
 }
 
-const postCategoryLabels: Record<string, { label: string; color: string; Icon: LucideIcon; dot: string }> = {
-  notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700', Icon: Megaphone, dot: 'bg-blue-400' },
-  daily: { label: '日常', color: 'bg-green-100 text-green-700', Icon: Leaf, dot: 'bg-green-400' },
-  event: { label: 'イベント', color: 'bg-orange-100 text-orange-700', Icon: PartyPopper, dot: 'bg-orange-400' },
-  availability: { label: '空き情報', color: 'bg-emerald-100 text-emerald-700', Icon: BedDouble, dot: 'bg-emerald-400' },
-  recruitment: { label: '求人', color: 'bg-purple-100 text-purple-700', Icon: Users, dot: 'bg-purple-400' },
-  staff: { label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700', Icon: Smile, dot: 'bg-pink-400' },
-  volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700', Icon: Handshake, dot: 'bg-teal-400' },
-  training: { label: 'イベント', color: 'bg-orange-100 text-orange-700', Icon: PartyPopper, dot: 'bg-orange-400' },
-  other: { label: 'その他', color: 'bg-gray-100 text-gray-700', Icon: FileText, dot: 'bg-gray-400' },
-}
-
 type PortalData = {
   profile: any
   posts: any[]
+  postCount: number | null
+  postsUnavailable: boolean
   fees: any[]
   feesUnavailable: boolean
   documents: any[]
@@ -135,12 +114,12 @@ async function getListing(id: string) {
     portalProfileUnavailable = Boolean(profileError)
 
     if (profile) {
-      const { data: posts } = await supabase
+      const { data: posts, error: postsError, count: postCount } = await supabase
         .from('facility_portal_posts')
         .select(`
           *,
           facility_portal_post_media (id, media_url, media_type, sort_order)
-        `)
+        `, { count: 'exact' })
         .eq('facility_id', facility.owner_facility_id)
         .eq('status', 'published')
         .order('created_at', { ascending: false })
@@ -162,6 +141,8 @@ async function getListing(id: string) {
       portalData = {
         profile,
         posts: posts || [],
+        postCount: postsError ? null : (postCount ?? posts?.length ?? 0),
+        postsUnavailable: Boolean(postsError),
         fees: fees || [],
         feesUnavailable: Boolean(feesError),
         documents: documents || [],
@@ -252,78 +233,6 @@ export async function generateMetadata({
   }
 }
 
-// Post card for owner portal posts
-function PortalPostCard({ post, facilityId, officialPageHref }: { post: any; facilityId: string; officialPageHref: string }) {
-  const catInfo = post.category && postCategoryLabels[post.category]
-
-  return (
-    <div id={`post-${post.id}`} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm scroll-mt-24">
-      <ViewTracker postId={post.id} />
-      <div className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-          {catInfo && (
-            <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${catInfo.color}`}>
-              {catInfo.label}
-            </span>
-          )}
-          <span className="text-sm text-gray-400">
-            {new Date(post.created_at).toLocaleDateString('ja-JP', {
-              year: 'numeric', month: 'long', day: 'numeric',
-            })}
-          </span>
-          </div>
-          {post.view_count > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400">
-              <Eye className="w-3.5 h-3.5" />
-              {post.view_count}
-            </span>
-          )}
-        </div>
-
-        {post.facility_portal_post_media?.length > 0 && (
-          <div className={`mb-4 grid gap-2 rounded-xl overflow-hidden ${
-            post.facility_portal_post_media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-          }`}>
-            {post.facility_portal_post_media
-              .sort((a: any, b: any) => a.sort_order - b.sort_order)
-              .map((media: any) => (
-                <img key={media.id} src={media.media_url} alt="" className="w-full rounded-xl object-cover max-h-80" />
-              ))}
-          </div>
-        )}
-
-        {post.title && (
-          <h3 className="text-lg font-bold text-gray-900 mb-2 leading-snug">{post.title}</h3>
-        )}
-
-        <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed line-clamp-6">
-          {post.content}
-        </p>
-
-        {post.link_url && (
-          <a href={post.link_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-base text-cares-600 hover:text-cares-700 mt-3 font-medium">
-            <ExternalLink className="w-4 h-4" />
-            詳細を見る
-          </a>
-        )}
-
-        <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-100 flex-wrap">
-          <LikeButton postId={post.id} initialLikeCount={post.like_count || 0} />
-          <Link href={`${officialPageHref}#post-${post.id}`} className="inline-flex items-center gap-1.5 rounded-full bg-cares-50 px-3 py-2 text-sm font-bold text-cares-700 transition-colors hover:bg-cares-100">
-            公式ページで大きく見る
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <CommentSection postId={post.id} facilityId={facilityId} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default async function DirectoryDetailPage({
   params,
   searchParams,
@@ -350,16 +259,6 @@ export default async function DirectoryDetailPage({
   const portalFees = portalData?.fees || []
   const portalDocuments = portalData?.documents || []
   const selectedPostCategory = sp.post_category || ''
-  const portalPostCounts = portalPosts.reduce((acc: Record<string, number>, post: any) => {
-    const category = post.category || 'other'
-    acc[category] = (acc[category] || 0) + 1
-    return acc
-  }, {})
-  const portalPostCategories = Object.keys(portalPostCounts)
-  const filteredPortalPosts = selectedPostCategory
-    ? portalPosts.filter((post: any) => (post.category || 'other') === selectedPostCategory)
-    : portalPosts
-  const officialFacilityPageHref = f.owner_facility_id ? `/facility/${f.owner_facility_id}` : `/directory/${f.id}`
   const claimParams = new URLSearchParams({
     source: 'cares',
     listing_id: f.id,
@@ -396,10 +295,10 @@ export default async function DirectoryDetailPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6">
         {/* Back link */}
         <Link
           href="/"
@@ -409,48 +308,27 @@ export default async function DirectoryDetailPage({
           戻る
         </Link>
 
-        {/* Disclaimer */}
-        <div className="mb-4">
-          <DirectoryDisclaimer isOwnerVerified={isOwnerVerified} />
-        </div>
-
-        {/* ===== HERO: Owner-verified with cover image ===== */}
-        {isOwnerVerified && portalProfile?.cover_image_url ? (
-          <div className="relative rounded-2xl overflow-hidden mb-6 shadow-sm">
-            <img src={portalProfile.cover_image_url} alt={f.facility_name} className="w-full h-48 sm:h-56 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-              <div className="flex items-end gap-3 flex-wrap">
-                {portalProfile.icon_url ? (
-                  <img src={portalProfile.icon_url} alt={f.facility_name}
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-white shadow-lg shrink-0" />
-                ) : (
-                  <ServiceTypeIcon serviceType={f.service_type} size="md" className="shadow-lg" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow-sm truncate">{f.facility_name}</h1>
-                    <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500 text-white">
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                      公式
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    {f.service_type && <p className="text-xs sm:text-sm text-white/80 font-medium">{f.service_type}</p>}
-                    <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold ${statusColor}`}>
-                      {statusLabel}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {isOwnerVerified && portalProfile && <>
+          <div className="-mx-4 sm:mx-0">
+            <FacilityProfileHeader facilityId={f.owner_facility_id} name={f.facility_name} serviceType={f.service_type} address={f.address}
+              cover={publicWebUrl(portalProfile.cover_image_url)} icon={publicWebUrl(portalProfile.icon_url)} overview={portalProfile.overview}
+              phone={portalProfile.phone || f.phone} statusLabel={statusLabel} statusColor={statusColor}
+              listingIds={[f.id]} postCount={portalData?.postCount ?? null} photoCount={profilePhotos(portalProfile.photos, portalPosts).length} />
           </div>
-        ) : null}
+          <section className="-mx-4 mt-7 mb-7 sm:mx-0">
+            <FacilityPostFeed posts={portalPosts} facilityId={f.owner_facility_id} facilityName={f.facility_name}
+              initialCategory={selectedPostCategory} unavailable={portalData?.postsUnavailable} totalCount={portalData?.postCount ?? undefined} />
+            <Link href={`/facility/${f.owner_facility_id}`} className="mx-4 mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-rose-700 sm:mx-0">写真・プロフィールをもっと見る<ArrowRight className="h-4 w-4" /></Link>
+          </section>
+        </>}
 
+        <details open={!(isOwnerVerified && portalProfile)} className="mb-6 rounded-2xl border border-gray-100 bg-white">
+          <summary className="cursor-pointer px-5 py-4 text-sm font-bold text-slate-700">事業所の基本情報・お問い合わせ先</summary>
+          <div className="px-5 pb-3"><DirectoryDisclaimer isOwnerVerified={isOwnerVerified} /></div>
         {/* ===== MAIN INFO CARD ===== */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 mb-6 shadow-sm">
           {/* Name + badges (only show if no hero) */}
-          {!(isOwnerVerified && portalProfile?.cover_image_url) && (
+          {!(isOwnerVerified && portalProfile) && (
             <>
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -484,14 +362,14 @@ export default async function DirectoryDetailPage({
           )}
 
           {/* Jigyosho number for hero version */}
-          {isOwnerVerified && portalProfile?.cover_image_url && f.jigyosho_number && (
+          {isOwnerVerified && portalProfile && f.jigyosho_number && (
             <p className="text-sm text-gray-500 font-mono mb-3">
               事業所番号: {f.jigyosho_number}
             </p>
           )}
 
           {/* Details */}
-          <div className={`space-y-2 ${!(isOwnerVerified && portalProfile?.cover_image_url) ? 'mt-4' : ''}`}>
+          <div className={`space-y-2 ${!(isOwnerVerified && portalProfile) ? 'mt-4' : ''}`}>
             {f.address && (
               <div className="flex items-center gap-2 text-base text-gray-600">
                 <MapPin className="w-4 h-4 shrink-0 text-gray-400" />
@@ -602,6 +480,8 @@ export default async function DirectoryDetailPage({
           </div>
         </div>
 
+        </details>
+
         {!isOwnerVerified && (
           <div className="mb-6 overflow-hidden rounded-2xl border border-cares-200 bg-gradient-to-br from-cares-50 via-white to-rose-50 shadow-sm">
             <div className="p-5 sm:p-6">
@@ -652,7 +532,7 @@ export default async function DirectoryDetailPage({
         </div>
 
         {/* ===== VACANCY SECTION ===== */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 mb-6 shadow-sm">
+        <div id="community" className="scroll-mt-24 bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 mb-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900 mb-3">空き状況</h2>
 
           {currentReport ? <div className="mb-4 rounded-xl bg-emerald-50 p-4">
@@ -668,6 +548,7 @@ export default async function DirectoryDetailPage({
             facilityName={f.facility_name}
             isOwnerVerified={isOwnerVerified}
             jigyoshoNumber={f.jigyosho_number}
+            showHearts={!(isOwnerVerified && portalProfile)}
           />
 
           {/* Vacancy disclaimer */}
@@ -692,63 +573,6 @@ export default async function DirectoryDetailPage({
         {/* ===== OWNER PORTAL: CareSpaceOS official fee simulator ===== */}
         {(simulationTariffs(f.service_type).length > 0 || isOwnerVerified) && (
           <FloatingActions fees={portalFees} feePattern={portalProfile?.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.facility_name} address={`${f.prefecture || ''}${f.address || ''}`} feesUnavailable={portalProfileUnavailable || portalData?.feesUnavailable} />
-        )}
-
-        {/* ===== OWNER PORTAL: Posts Feed ===== */}
-        {isOwnerVerified && portalPosts.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-4 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">施設からの投稿</h2>
-                  <p className="mt-1 text-sm leading-6 text-gray-500">
-                    事業所がCareSpaceOSから公開した写真・お知らせ・空き情報です。いいねやコメントもできます。
-                  </p>
-                </div>
-                <Link href={officialFacilityPageHref} className="inline-flex items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 text-sm font-bold text-white transition-colors hover:bg-cares-700">
-                  公式投稿ページ
-                  <ExternalLink className="w-4 h-4" />
-                </Link>
-              </div>
-              {portalPostCategories.length > 1 && (
-                <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-                  <Link
-                    href={`/directory/${f.id}`}
-                    className={`shrink-0 rounded-full px-3 py-2 text-sm font-bold transition-colors ${
-                      !selectedPostCategory ? 'bg-slate-950 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    すべて {portalPosts.length}
-                  </Link>
-                  {portalPostCategories.map((category) => {
-                    const catInfo = postCategoryLabels[category] || postCategoryLabels.other
-                    return (
-                      <Link
-                        key={category}
-                        href={`/directory/${f.id}?post_category=${category}`}
-                        className={`shrink-0 rounded-full px-3 py-2 text-sm font-bold transition-colors ${
-                          selectedPostCategory === category ? 'bg-slate-950 text-white' : `${catInfo.color} hover:opacity-80`
-                        }`}
-                      >
-                        {catInfo.label} {portalPostCounts[category]}
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-            <div className="space-y-4">
-              {filteredPortalPosts.length > 0 ? (
-                filteredPortalPosts.map((post: any) => (
-                  <PortalPostCard key={post.id} post={post} facilityId={f.owner_facility_id} officialPageHref={officialFacilityPageHref} />
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-                  このカテゴリの投稿はまだありません。
-                </div>
-              )}
-            </div>
-          </div>
         )}
 
         {/* Attribution */}

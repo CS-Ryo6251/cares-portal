@@ -1,58 +1,15 @@
-import { simulationTariffs } from '@/lib/simulation-tariffs'
 import { getSupabaseClient } from '@/lib/supabase'
+import { simulationTariffs } from '@/lib/simulation-tariffs'
+import { profilePhotos, publicWebUrl } from '@/lib/profile-media'
+import { facilityManagementUrl } from '@/lib/cares-navigation'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import type { Metadata } from 'next'
-import {
-  MapPin,
-  Phone,
-  Mail,
-  Globe,
-  Download,
-  ExternalLink,
-  ArrowLeft,
-  Shield,
-  Megaphone,
-  Leaf,
-  PartyPopper,
-  BedDouble,
-  Users,
-  Smile,
-  Handshake,
-  FileText,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import ViewTracker from '@/components/ViewTracker'
-import CommentSection from '@/components/CommentSection'
-import LikeButton from '@/components/LikeButton'
-import ServiceTypeIcon from '@/components/ServiceTypeIcon'
+import Link from 'next/link'
+import { ArrowLeft, Download, ExternalLink, MapPin, Phone } from 'lucide-react'
+import FacilityProfileHeader from '@/components/FacilityProfileHeader'
+import FacilityProfileTabs from '@/components/FacilityProfileTabs'
+import FacilityPostFeed, { FacilityPhotoGallery } from '@/components/FacilityPostFeed'
 import FloatingActions from './FloatingActions'
-import InquiryButton from './InquiryButton'
-import ShareButtons from './ShareButtons'
-
-const postCategoryLabels: Record<string, { label: string; color: string; Icon: LucideIcon; dot: string }> = {
-  notice: { label: 'お知らせ', color: 'bg-blue-100 text-blue-700', Icon: Megaphone, dot: 'bg-blue-400' },
-  daily: { label: '日常', color: 'bg-green-100 text-green-700', Icon: Leaf, dot: 'bg-green-400' },
-  event: { label: 'イベント', color: 'bg-orange-100 text-orange-700', Icon: PartyPopper, dot: 'bg-orange-400' },
-  availability: { label: '空き情報', color: 'bg-emerald-100 text-emerald-700', Icon: BedDouble, dot: 'bg-emerald-400' },
-  recruitment: { label: '求人', color: 'bg-purple-100 text-purple-700', Icon: Users, dot: 'bg-purple-400' },
-  staff: { label: 'スタッフ紹介', color: 'bg-pink-100 text-pink-700', Icon: Smile, dot: 'bg-pink-400' },
-  volunteer: { label: 'ボランティア', color: 'bg-teal-100 text-teal-700', Icon: Handshake, dot: 'bg-teal-400' },
-  training: { label: 'イベント', color: 'bg-orange-100 text-orange-700', Icon: PartyPopper, dot: 'bg-orange-400' },
-  other: { label: 'その他', color: 'bg-gray-100 text-gray-700', Icon: FileText, dot: 'bg-gray-400' },
-}
-
-const allCategories = [
-  { key: '', label: 'すべて' },
-  { key: 'notice', label: 'お知らせ' },
-  { key: 'daily', label: '日常' },
-  { key: 'event', label: 'イベント' },
-  { key: 'availability', label: '空き情報' },
-  { key: 'recruitment', label: '求人' },
-  { key: 'staff', label: 'スタッフ紹介' },
-  { key: 'volunteer', label: 'ボランティア' },
-  { key: 'other', label: 'その他' },
-]
 
 const acceptanceLabels: Record<string, string> = {
   has_vacancy: '空きあり',
@@ -74,46 +31,9 @@ const acceptanceColors: Record<string, string> = {
   unknown: 'bg-gray-100 text-gray-600 border-gray-200',
 }
 
-const facilityTypeLabels: Record<string, string> = {
-  訪問介護: '訪問介護',
-  訪問入浴介護: '訪問入浴介護',
-  訪問看護: '訪問看護',
-  訪問リハビリテーション: '訪問リハビリテーション',
-  通所介護: 'デイサービス',
-  '通所介護（療養通所介護）': '療養通所介護',
-  通所リハビリテーション: '通所リハビリテーション',
-  短期入所生活介護: 'ショートステイ',
-  '短期入所療養介護（介護老人保健施設）': 'ショートステイ（老健）',
-  '短期入所療養介護（介護療養型医療施設）': 'ショートステイ（療養）',
-  '短期入所療養介護（介護医療院）': 'ショートステイ（医療院）',
-  認知症対応型共同生活介護: 'グループホーム',
-  '特定施設入居者生活介護（有料老人ホーム）': '有料老人ホーム',
-  '特定施設入居者生活介護（軽費老人ホーム）': '軽費老人ホーム',
-  '特定施設入居者生活介護（サービス付き高齢者向け住宅）': 'サービス付き高齢者向け住宅',
-  福祉用具貸与: '福祉用具貸与',
-  特定福祉用具販売: '特定福祉用具販売',
-  居宅介護支援: '居宅介護支援事業所',
-  介護老人福祉施設: '特別養護老人ホーム',
-  介護老人保健施設: '介護老人保健施設',
-  介護療養型医療施設: '介護療養型医療施設',
-  介護医療院: '介護医療院',
-  地域密着型介護老人福祉施設入所者生活介護: '地域密着型特養',
-  夜間対応型訪問介護: '夜間対応型訪問介護',
-  認知症対応型通所介護: '認知症対応型通所介護',
-  小規模多機能型居宅介護: '小規模多機能型居宅介護',
-  '定期巡回・随時対応型訪問介護看護': '定期巡回・随時対応型訪問介護看護',
-  看護小規模多機能型居宅介護: '看護小規模多機能型居宅介護',
-  地域密着型通所介護: '地域密着型通所介護',
-  地域包括支援センター: '地域包括支援センター',
-  // 旧データ互換
-  居宅介護支援事業所: '居宅介護支援事業所',
-  特別養護老人ホーム: '特別養護老人ホーム',
-  グループホーム: 'グループホーム',
-  有料老人ホーム: '有料老人ホーム',
-  サービス付き高齢者向け住宅: 'サービス付き高齢者向け住宅',
-}
 
 async function getFacilityDetail(facilityId: string) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(facilityId)) return null
   const supabase = getSupabaseClient()
 
   // プロフィール取得
@@ -132,14 +52,14 @@ async function getFacilityDetail(facilityId: string) {
   if (profileError || !profile) return null
 
   // 投稿取得（メディア含む）— 多めに取得してカテゴリ別に分配
-  const { data: posts } = await supabase
+  const { data: posts, error: postsError, count: postCount } = await supabase
     .from('facility_portal_posts')
     .select(`
       *,
       facility_portal_post_media (
         id, media_url, media_type, sort_order
       )
-    `)
+    `, { count: 'exact' })
     .eq('facility_id', facilityId)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
@@ -161,133 +81,18 @@ async function getFacilityDetail(facilityId: string) {
     .order('created_at', { ascending: false })
 
   const { data: directoryListings } = await supabase.from('cares_listings')
-    .select('id,service_type').eq('owner_facility_id', facilityId).eq('is_owner_verified', true)
+    .select('id,service_type').eq('owner_facility_id', facilityId).eq('is_owner_verified', true).order('id')
 
   return {
     ...profile,
     directoryListings: directoryListings || [],
     posts: posts || [],
+    postCount: postsError ? null : (postCount ?? posts?.length ?? 0),
+    postsUnavailable: Boolean(postsError),
     fees: fees || [],
     feesUnavailable: Boolean(feesError),
     documents: documents || [],
   }
-}
-
-// Post card component
-function PostCard({ post, facilityId }: { post: any; facilityId: string }) {
-  const catInfo = post.category && postCategoryLabels[post.category]
-
-  return (
-    <div
-      id={`post-${post.id}`}
-      className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
-    >
-      <ViewTracker postId={post.id} />
-      <div className="p-4 sm:p-6">
-        {/* Category and date */}
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          {catInfo && (
-            <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${catInfo.color}`}>
-              {catInfo.label}
-            </span>
-          )}
-          <span className="text-sm text-gray-400">
-            {new Date(post.created_at).toLocaleDateString('ja-JP', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </span>
-          {post.view_count > 0 && (
-            <span className="text-sm text-gray-400 ml-auto">
-              {post.view_count.toLocaleString()} views
-            </span>
-          )}
-        </div>
-
-        {/* Media */}
-        {post.facility_portal_post_media &&
-        post.facility_portal_post_media.length > 0 ? (
-          <div
-            className={`mb-4 grid gap-2 rounded-xl overflow-hidden ${
-              post.facility_portal_post_media.length === 1
-                ? 'grid-cols-1'
-                : 'grid-cols-2'
-            }`}
-          >
-            {post.facility_portal_post_media
-              .sort((a: any, b: any) => a.sort_order - b.sort_order)
-              .map((media: any) => (
-                <img
-                  key={media.id}
-                  src={media.media_url}
-                  alt=""
-                  className="w-full rounded-xl object-cover max-h-80"
-                />
-              ))}
-          </div>
-        ) : post.media_url && post.media_type === 'image' ? (
-          <img
-            src={post.media_url}
-            alt=""
-            className="mb-4 rounded-xl max-h-80 w-full object-cover"
-          />
-        ) : null}
-
-        {/* Title */}
-        {post.title && (
-          <h3 className="text-xl font-bold text-gray-900 mb-2 leading-snug">
-            {post.title}
-          </h3>
-        )}
-
-        {/* Content */}
-        <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
-          {post.content}
-        </p>
-
-        {/* Link */}
-        {post.link_url && (
-          <a
-            href={post.link_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-base text-cares-600 hover:text-cares-700 mt-3 font-medium"
-          >
-            <ExternalLink className="w-4 h-4" />
-            詳細を見る
-          </a>
-        )}
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-          <LikeButton postId={post.id} initialLikeCount={post.like_count || 0} />
-          <a
-            href={`#comments-${post.id}`}
-            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm sm:text-base font-medium hover:bg-gray-200 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            コメント
-          </a>
-        </div>
-      </div>
-
-      {/* Comments */}
-      <div
-        id={`comments-${post.id}`}
-        className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 border-t border-gray-100 bg-gray-50/50"
-      >
-        <CommentSection postId={post.id} facilityId={facilityId} />
-      </div>
-    </div>
-  )
 }
 
 export async function generateMetadata({
@@ -318,6 +123,7 @@ export async function generateMetadata({
       description,
       url: `https://cares.carespace.jp/facility/${id}`,
       type: 'website',
+      ...(publicWebUrl(facility.cover_image_url) ? { images: [{ url: facility.cover_image_url, alt: name }] } : {}),
     },
     alternates: {
       canonical: `https://cares.carespace.jp/facility/${id}`,
@@ -325,456 +131,59 @@ export async function generateMetadata({
   }
 }
 
-export default async function FacilityDetailPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{ [key: string]: string | undefined }>
+export default async function FacilityDetailPage({ params, searchParams }: {
+  params: Promise<{ id: string }>; searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
   const { id } = await params
   const sp = await searchParams
   const facility = await getFacilityDetail(id)
-
-  if (!facility) {
-    notFound()
-  }
-
-  const f = facility.facilities as any
-  const phoneNumber = facility.phone || f.phone
-  const activeCategory = sp.category || ''
-
-  // Group posts by category (training → event に統合)
-  const postsByCategory: Record<string, any[]> = {}
-  for (const post of facility.posts) {
-    const cat = post.category === 'training' ? 'event' : (post.category || 'other')
-    if (!postsByCategory[cat]) postsByCategory[cat] = []
-    postsByCategory[cat].push(post)
-  }
-
-  // Filter posts for specific category view (event にはtraining投稿も含む)
-  const filteredPosts = activeCategory
-    ? facility.posts.filter((post: any) => {
-        if (activeCategory === 'event') return post.category === 'event' || post.category === 'training'
-        return post.category === activeCategory
-      })
-    : facility.posts
-
-  const serviceTypeLabel = facilityTypeLabels[f.service_type] || f.service_type
-
-  // 実績スタッツとフォトギャラリー（投稿メディアから生成）
-  const totalViews = facility.posts.reduce((sum: number, p: any) => sum + (p.view_count || 0), 0)
-  const totalLikes = facility.posts.reduce((sum: number, p: any) => sum + (p.like_count || 0), 0)
-  const galleryImages = facility.posts
-    .flatMap((p: any) =>
-      (p.facility_portal_post_media || [])
-        .filter((m: any) => !m.media_type || m.media_type.startsWith('image'))
-        .map((m: any) => ({ id: m.id, url: m.media_url, postId: p.id }))
-    )
-    .slice(0, 10)
-
-  // 最終更新日: last_activity_at（トリガーで自動更新）をフォールバック付きで使用
-  const activityDate = facility.last_activity_at || facility.updated_at
-  const lastUpdatedLabel = activityDate
-    ? `${new Date(activityDate).getFullYear()}/${String(new Date(activityDate).getMonth() + 1).padStart(2, '0')}/${String(new Date(activityDate).getDate()).padStart(2, '0')} 更新`
-    : null
-
-  // JSON-LD structured data for SEO
+  if (!facility) notFound()
+  const joined = facility.facilities
+  const f = Array.isArray(joined) ? joined[0] : joined
+  if (!f) notFound()
+  const phone = facility.phone || f.phone
+  const photos = profilePhotos(facility.photos, facility.posts)
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: f.name,
-    description: facility.overview || `${f.name}（${serviceTypeLabel}）の施設情報`,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: f.address,
-      addressCountry: 'JP',
-    },
-    ...(phoneNumber ? { telephone: phoneNumber } : {}),
-    ...(facility.website ? { url: facility.website } : {}),
-    ...(facility.icon_url ? { image: facility.icon_url } : {}),
-    ...(facility.cover_image_url ? { photo: facility.cover_image_url } : {}),
-    additionalType: 'https://schema.org/MedicalBusiness',
+    '@context': 'https://schema.org', '@type': 'LocalBusiness', name: f.name,
+    description: facility.overview || f.name,
+    address: { '@type': 'PostalAddress', streetAddress: f.address, addressCountry: 'JP' },
+    ...(phone ? { telephone: phone } : {}),
+    ...(publicWebUrl(facility.cover_image_url) ? { image: facility.cover_image_url } : {}),
   }
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {/* ===== FLOATING CATEGORY NAV (desktop only) ===== */}
-      {facility.posts.length > 0 && (
-        <nav className="hidden xl:flex fixed left-4 top-1/2 -translate-y-1/2 z-40 flex-col bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/60 py-3 px-2 space-y-1">
-          {allCategories.map((cat) => {
-            const isActive = activeCategory === cat.key
-            const count = cat.key ? (postsByCategory[cat.key]?.length || 0) : facility.posts.length
-            const catInfo = cat.key ? postCategoryLabels[cat.key] : null
-            const href = cat.key
-              ? `/facility/${id}?category=${cat.key}`
-              : `/facility/${id}`
-            return (
-              <a
-                key={cat.key || '__all__'}
-                href={href}
-                title={`${cat.label}${count > 0 ? ` (${count})` : ''}`}
-                className={`group flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-cares-600 text-white shadow-sm'
-                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-              >
-                {catInfo ? (
-                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isActive ? 'bg-white/70' : catInfo.dot}`} />
-                ) : (
-                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isActive ? 'bg-white/70' : 'bg-gray-300'}`} />
-                )}
-                <span>{cat.label}</span>
-                {count > 0 && (
-                  <span className={`text-xs tabular-nums ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
-                    {count}
-                  </span>
-                )}
-              </a>
-            )
-          })}
-        </nav>
-      )}
-
-      {/* ===== MAIN CONTENT ===== */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Back button */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-base text-gray-500 hover:text-cares-600 mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          フィードに戻る
-        </Link>
-
-        {/* Hero */}
-        <div className="relative rounded-3xl overflow-hidden mb-6 shadow-lg shadow-slate-200/60 animate-fade-up">
-          {facility.cover_image_url ? (
-            <>
-              <img
-                src={facility.cover_image_url}
-                alt={f.name}
-                className="w-full h-56 sm:h-72 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
-            </>
-          ) : (
-            <div className="hero-mesh hero-grain relative w-full h-56 sm:h-72" />
-          )}
-          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
-            <div className="flex items-end gap-3 sm:gap-4 flex-wrap">
-              {facility.icon_url ? (
-                <img
-                  src={facility.icon_url}
-                  alt={f.name}
-                  className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover ring-4 ring-white/90 shadow-xl shrink-0"
-                />
-              ) : (
-                <ServiceTypeIcon serviceType={f.service_type} size="md" className="ring-4 ring-white/90 shadow-xl" />
-              )}
-              <div className="flex-1 min-w-0 pb-0.5">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white leading-tight drop-shadow-sm truncate">{f.name}</h1>
-                  <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-cares-700 shadow-sm">
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                    公式
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <p className="text-xs sm:text-sm text-white/90 font-semibold">
-                    {serviceTypeLabel}
-                  </p>
-                  <span
-                    className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${
-                      acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown
-                    }`}
-                  >
-                    {acceptanceLabels[facility.acceptance_status] || '要問合せ'}
-                  </span>
-                  {lastUpdatedLabel && (
-                    <span className="text-[10px] sm:text-xs text-white/70 font-medium">
-                      {lastUpdatedLabel}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Activity stats */}
-        {facility.posts.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6 animate-fade-up-delay-1">
-            {[
-              { label: '投稿', value: facility.posts.length },
-              { label: '閲覧', value: totalViews },
-              { label: 'いいね', value: totalLikes },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-2xl border border-slate-200/80 bg-white/95 px-3 py-3 sm:py-4 text-center shadow-sm"
-              >
-                <p className="text-xl sm:text-2xl font-black tabular-nums tracking-tight text-slate-950">
-                  {stat.value.toLocaleString()}
-                </p>
-                <p className="mt-0.5 text-[11px] sm:text-xs font-semibold text-slate-400">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Info & Actions card */}
-        <div className="surface-card rounded-3xl p-5 sm:p-6 mb-6 animate-fade-up-delay-2">
-          {/* Address & Phone */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-base text-gray-600">
-              <MapPin className="w-4 h-4 shrink-0 text-gray-400" />
-              <span>{f.address}</span>
-            </div>
-            {phoneNumber && (
-              <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
-                <a
-                  href={`tel:${phoneNumber}`}
-                  className="inline-flex items-center gap-1.5 text-base text-gray-600 hover:text-green-700 transition-colors"
-                >
-                  <Phone className="w-4 h-4 shrink-0 text-gray-400" />
-                  <span>{phoneNumber}</span>
-                </a>
-                {facility.fax && (
-                  <span className="inline-flex items-center gap-1.5 text-sm text-gray-400">
-                    <span>FAX: {facility.fax}</span>
-                  </span>
-                )}
-                {facility.email && (
-                  <a
-                    href={`mailto:${facility.email}`}
-                    className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>メール</span>
-                  </a>
-                )}
-              </div>
-            )}
-            {!phoneNumber && facility.email && (
-              <a
-                href={`mailto:${facility.email}`}
-                className="inline-flex items-center gap-1.5 text-base text-gray-600 hover:text-gray-700 transition-colors"
-              >
-                <Mail className="w-4 h-4 shrink-0 text-gray-400" />
-                <span>{facility.email}</span>
-              </a>
-            )}
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            {facility.website && (
-              <a
-                href={facility.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-              >
-                <Globe className="w-4 h-4" />
-                Webサイト
-              </a>
-            )}
-            {facility.documents.length > 0 && (
-              <a
-                href={facility.documents[0].file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                パンフレット
-              </a>
-            )}
-            <InquiryButton facilityId={facility.facility_id} facilityName={f.name} />
-          </div>
-
-          {facility.directoryListings.map((listing: { id: string; service_type: string | null }) => <Link key={listing.id} href={`/directory/${listing.id}`} className="mt-3 block rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{listing.service_type ? `${listing.service_type}：` : ''}空き情報・良いところ・応援のハートを見る →</Link>)}
-
-          {/* SNS Icons — 登録済みのものだけ表示 */}
-          {(facility.sns_x || facility.sns_instagram || facility.sns_tiktok || facility.sns_youtube || facility.sns_facebook) && (
-            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-              {facility.sns_x && (
-                <a href={facility.sns_x} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <svg className="w-4 h-4 text-gray-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                </a>
-              )}
-              {facility.sns_instagram && (
-                <a href={facility.sns_instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <svg className="w-4 h-4 text-pink-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                </a>
-              )}
-              {facility.sns_tiktok && (
-                <a href={facility.sns_tiktok} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <svg className="w-4 h-4 text-gray-900" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.87a8.16 8.16 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.3z"/></svg>
-                </a>
-              )}
-              {facility.sns_youtube && (
-                <a href={facility.sns_youtube} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <svg className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                </a>
-              )}
-              {facility.sns_facebook && (
-                <a href={facility.sns_facebook} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Share buttons */}
-          <ShareButtons facilityName={f.name} facilityId={facility.facility_id} />
-
-          {/* Overview */}
-          {facility.overview && (
-            <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed mt-4 pt-4 border-t border-gray-100">
-              {facility.overview}
-            </p>
-          )}
-
-          {/* Features */}
-          {facility.features && facility.features.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {facility.features.map((feature: string, i: number) => (
-                <span
-                  key={i}
-                  className="px-3 py-1.5 bg-cares-50 text-cares-700 rounded-lg text-sm font-medium"
-                >
-                  {feature}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* CareSpaceOS公式料金 — ページ内で見つけやすく表示 */}
-        <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
-
-        {/* Photo gallery — 投稿写真から自動生成 */}
-        {galleryImages.length >= 3 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-px flex-1 bg-gray-200" />
-              <h2 className="text-lg font-bold text-gray-900 shrink-0">施設のようす</h2>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
-            <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
-              {galleryImages.map((img: any, i: number) => (
-                <a
-                  key={img.id}
-                  href={`#post-${img.postId}`}
-                  className={`relative shrink-0 snap-start overflow-hidden rounded-2xl shadow-sm transition-transform hover:scale-[1.02] ${
-                    i === 0 ? 'w-56 h-40 sm:w-72 sm:h-52' : 'w-32 h-40 sm:w-40 sm:h-52'
-                  }`}
-                >
-                  <img src={img.url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Mobile category tabs */}
-        {facility.posts.length > 0 && (
-          <div className="xl:hidden flex gap-2 overflow-x-auto pb-3 mb-4 -mx-4 px-4 scrollbar-hide">
-            {allCategories.map((cat) => {
-              const isActive = activeCategory === cat.key
-              const count = cat.key ? (postsByCategory[cat.key]?.length || 0) : facility.posts.length
-              const href = cat.key
-                ? `/facility/${id}?category=${cat.key}`
-                : `/facility/${id}`
-              return (
-                <a
-                  key={cat.key}
-                  href={href}
-                  className={`shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-cares-600 text-white shadow-sm'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-cares-300 hover:text-cares-600'
-                  }`}
-                >
-                  {cat.label}
-                  {count > 0 && (
-                    <span className={`ml-1.5 text-xs ${isActive ? 'text-white/70' : 'text-gray-400'}`}>
-                      {count}
-                    </span>
-                  )}
-                </a>
-              )
-            })}
-          </div>
-        )}
-
-        {/* Posts timeline */}
-        {filteredPosts.length > 0 && (
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-px flex-1 bg-gray-200" />
-            <h2 className="text-lg font-bold text-gray-900 shrink-0">最新の投稿</h2>
-            <div className="h-px flex-1 bg-gray-200" />
-          </div>
-        )}
-        <div className="space-y-6">
-          {filteredPosts.map((post: any) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              facilityId={facility.facility_id}
-            />
-          ))}
-        </div>
-
-        {/* No posts */}
-        {filteredPosts.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              {activeCategory && postCategoryLabels[activeCategory] ? (
-                (() => {
-                  const CategoryIcon = postCategoryLabels[activeCategory].Icon
-                  return <CategoryIcon className="w-7 h-7 text-gray-400" />
-                })()
-              ) : (
-                <FileText className="w-7 h-7 text-gray-300" />
-              )}
-            </div>
-            <p className="text-base text-gray-500">
-              {activeCategory
-                ? `${postCategoryLabels[activeCategory]?.label || activeCategory}の投稿はまだありません`
-                : 'まだ投稿がありません'
-              }
-            </p>
-          </div>
-        )}
-
-        {/* パターンA: 自己負担なしの表示 */}
-        {facility.fee_pattern === 'no_charge' && (
-          <div className="mb-8 mt-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-px flex-1 bg-gray-200" />
-              <h2 className="text-lg font-bold text-gray-900 shrink-0">料金について</h2>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
-            <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
-              <Shield className="w-10 h-10 text-green-600 mx-auto mb-3" />
-              <p className="text-base font-semibold text-green-800">
-                利用者の費用負担はありません
-              </p>
-              <p className="text-sm text-green-600 mt-2">
-                全額介護保険で賄われます
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  )
+  const information = <div className="space-y-5 px-4 sm:px-0">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+      <h2 className="text-lg font-bold">事業所について</h2>
+      <dl className="mt-5 space-y-4 text-sm">
+        <div><dt className="text-xs text-slate-400">サービス</dt><dd className="mt-1 font-medium">{f.service_type}</dd></div>
+        <div><dt className="text-xs text-slate-400">住所</dt><dd className="mt-1 flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />{f.address || '事業所にお問い合わせください'}</dd></div>
+        {phone && <div><dt className="text-xs text-slate-400">電話</dt><dd><a href={`tel:${phone}`} className="inline-flex min-h-11 items-center gap-2 font-semibold text-rose-700"><Phone className="h-4 w-4" />{phone}</a></dd></div>}
+        {facility.fax && <div><dt className="text-xs text-slate-400">FAX</dt><dd className="mt-1">{facility.fax}</dd></div>}
+        {facility.email && <div><dt className="text-xs text-slate-400">メール</dt><dd><a href={`mailto:${facility.email}`} className="inline-flex min-h-11 break-all items-center text-rose-700">{facility.email}</a></dd></div>}
+      </dl>
+      <div className="mt-5 flex flex-wrap gap-2">{[['Webサイト', facility.website], ['Instagram', facility.sns_instagram], ['X', facility.sns_x], ['YouTube', facility.sns_youtube], ['TikTok', facility.sns_tiktok], ['Facebook', facility.sns_facebook]].filter(([, url]) => publicWebUrl(url)).map(([label, url]) => <a key={label} href={publicWebUrl(url)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 px-4 text-xs font-semibold text-slate-700">{label}<ExternalLink className="h-3.5 w-3.5" /></a>)}</div>
+      {facility.features?.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{facility.features.map((feature: string) => <span key={feature} className="rounded-full bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">{feature}</span>)}</div>}
+    </section>
+    {facility.directoryListings.length > 0 && <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">空き情報・みんなの声</h2><p className="mt-2 text-sm leading-6 text-slate-500">地域から届いた良いところや、確認日つきの空き情報をご覧いただけます。</p>{facility.directoryListings.map((listing: { id: string; service_type: string | null }) => <Link key={listing.id} href={`/directory/${listing.id}#community`} className="mt-3 block rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{listing.service_type || '事業所'}の空き情報・良いところを見る →</Link>)}</section>}
+  </div>
+  const fees = <div className="space-y-5 px-4 pb-20 sm:px-0">
+    <FloatingActions fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
+    {facility.fee_pattern === 'no_charge' && <p className="rounded-2xl bg-emerald-50 p-6 text-sm text-emerald-900">この事業所は、利用者の費用負担なしとして料金情報を登録しています。詳しくは事業所へお問い合わせください。</p>}
+    {!facility.fees.length && !simulationTariffs(f.service_type).length && facility.fee_pattern !== 'no_charge' && <p className="rounded-2xl bg-white p-6 text-sm text-slate-500">料金は事業所にお問い合わせください。</p>}
+    <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">パンフレット・資料</h2>{facility.documents.length ? <div className="mt-4 space-y-2">{facility.documents.map((document: { id: string; title: string; file_url: string }) => publicWebUrl(document.file_url) && <a key={document.id} href={publicWebUrl(document.file_url)} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"><Download className="h-4 w-4 shrink-0" />{document.title || 'パンフレット'}</a>)}</div> : <p className="mt-3 text-sm text-slate-500">公開中の資料はありません。</p>}</section>
+  </div>
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+    <div className="mx-auto max-w-4xl pb-16 sm:px-6">
+      <Link href="/" className="mx-4 inline-flex min-h-14 items-center gap-2 text-xs font-semibold text-slate-500 sm:mx-0"><ArrowLeft className="h-4 w-4" />事業所を探す</Link>
+      <FacilityProfileHeader facilityId={id} name={f.name} serviceType={f.service_type} address={f.address} phone={phone}
+        cover={publicWebUrl(facility.cover_image_url)} icon={publicWebUrl(facility.icon_url)} overview={facility.overview}
+        statusLabel={acceptanceLabels[facility.acceptance_status] || '確認中'} statusColor={acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown}
+        listingIds={facility.directoryListings.map((listing: { id: string }) => listing.id)} postCount={facility.postCount} photoCount={photos.length} />
+      <FacilityProfileTabs
+        posts={<FacilityPostFeed posts={facility.posts} facilityId={id} facilityName={f.name} initialCategory={sp.category} unavailable={facility.postsUnavailable} totalCount={facility.postCount ?? undefined} />}
+        photos={<FacilityPhotoGallery photos={photos} name={f.name} />}
+        information={information} fees={fees} />
+      <div className="mx-4 mt-8 border-t border-rose-100 pt-5 text-center sm:mx-0"><p className="text-xs text-slate-500">この事業所の担当者の方へ</p><a href={facilityManagementUrl(id)} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-rose-700 underline underline-offset-4">写真やプロフィールを編集する</a></div>
+    </div>
+  </>
 }
