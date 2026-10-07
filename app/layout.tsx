@@ -1,15 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Noto_Sans_JP } from 'next/font/google'
 import { ArrowRight, HeartHandshake } from 'lucide-react'
 import './globals.css'
 import AuthHeader from '@/components/AuthHeader'
 
-const notoSansJP = Noto_Sans_JP({
-  subsets: ['latin'],
-  weight: ['400', '500', '700', '900'],
-  display: 'swap',
-  variable: '--font-noto-sans-jp',
-})
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -49,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const gaId = process.env.NEXT_PUBLIC_GA_ID
 
   return (
-    <html lang="ja" className={notoSansJP.variable}>
+    <html lang="ja">
       {gaId && (
         <head>
           <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
