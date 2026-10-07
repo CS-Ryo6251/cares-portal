@@ -6,6 +6,8 @@ import { postCategory, postMedia, profileCategories, publicWebUrl, type ProfileP
 import LikeButton from './LikeButton'
 import CommentSection from './CommentSection'
 import ViewTracker from './ViewTracker'
+import FacilityHearts from './FacilityHearts'
+import PostShareButton from './PostShareButton'
 
 function ProfileDialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -47,8 +49,8 @@ export function FacilityPhotoGallery({ photos, name }: { photos: string[]; name:
   </div>
 }
 
-export default function FacilityPostFeed({ posts, facilityId, facilityName, initialCategory = '', unavailable = false, totalCount }: {
-  posts: ProfilePost[]; facilityId: string; facilityName: string; initialCategory?: string; unavailable?: boolean; totalCount?: number
+export default function FacilityPostFeed({ posts, facilityId, facilityName, listingId, initialCategory = '', unavailable = false, totalCount }: {
+  posts: ProfilePost[]; facilityId: string; facilityName: string; listingId?: string; initialCategory?: string; unavailable?: boolean; totalCount?: number
 }) {
   const [category, setCategory] = useState(initialCategory)
   const [selected, setSelected] = useState<ProfilePost | null>(null)
@@ -96,6 +98,11 @@ export default function FacilityPostFeed({ posts, facilityId, facilityName, init
     {totalCount && totalCount > posts.length ? <p className="mt-5 text-xs text-slate-500">全{totalCount}件のうち、最新{posts.length}件を表示しています。</p> : null}
     {selected && <ProfileDialog title={facilityName} onClose={closePost}>
       <ViewTracker postId={selected.id} />
+      <div className="p-3 sm:p-5">
+        <h3 className="mb-3 line-clamp-2 text-lg font-bold">{selected.title || '日々のようす'}</h3>
+        <FacilityHearts key={selected.id} facilityId={facilityId} listingId={listingId} variant="quick" />
+        <div className="mt-3 text-center"><PostShareButton facilityId={facilityId} facilityName={facilityName} postId={selected.id} title={selected.title} canSupport={Boolean(listingId)} /></div>
+      </div>
       <div className="space-y-2">{selectedMedia.map((media, index) => media.type === 'video' ?
         <video key={media.id} src={media.url} controls playsInline preload="metadata" className="max-h-[65dvh] w-full bg-black" /> :
         <Photo key={media.id} src={media.url} alt={(selected.title || facilityName) + ' 写真' + (index + 1)} className="max-h-[65dvh] w-full bg-slate-50 object-contain" />)}</div>
@@ -104,7 +111,7 @@ export default function FacilityPostFeed({ posts, facilityId, facilityName, init
         {selected.title && <h3 className="mt-2 text-xl font-bold leading-snug">{selected.title}</h3>}
         <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">{selected.content}</p>
         {publicWebUrl(selected.link_url) && <a href={publicWebUrl(selected.link_url)} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-rose-700">関連ページを見る<ChevronRight className="h-4 w-4" /></a>}
-        <div className="mt-5 border-t border-slate-100 pt-4"><LikeButton key={selected.id} postId={selected.id} initialLikeCount={selected.like_count || 0} /></div>
+        <details className="mt-5 border-t border-slate-100 pt-4"><summary className="cursor-pointer py-2 text-xs text-slate-500">会員向け：この投稿へのいいね</summary><LikeButton key={selected.id} postId={selected.id} initialLikeCount={selected.like_count || 0} /></details>
         <div id={'comments-' + selected.id} className="mt-5 border-t border-slate-100 pt-4"><CommentSection key={selected.id} postId={selected.id} facilityId={facilityId} /></div>
       </div>
     </ProfileDialog>}

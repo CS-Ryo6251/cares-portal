@@ -23,10 +23,11 @@ function newRequestId() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
-export default function FacilityHearts({ listingId, facilityId, variant = 'card', postCount, photoCount }: { listingId?: string; facilityId?: string; variant?: 'card' | 'profile'; postCount?: number | null; photoCount?: number }) {
+export default function FacilityHearts({ listingId, facilityId, variant = 'card', postCount, photoCount }: { listingId?: string; facilityId?: string; variant?: 'card' | 'profile' | 'quick'; postCount?: number | null; photoCount?: number }) {
   const target = facilityId ? `/api/facility/${facilityId}/hearts` : listingId ? `/api/directory/${listingId}/hearts` : null
   const [summary, setSummary] = useState<{ total: string } | null>(null)
   const revision = useRef(0)
+  const readRevision = useRef(0)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -35,16 +36,17 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
   const [sent, setSent] = useState(false)
   const load = useCallback(async () => {
     const current = revision.current
+    const read = ++readRevision.current
     setLoading(true)
     try {
       if (!target) { setSummary(null); return }
       const { res, data } = await requestHeart(target, { cache: 'no-store' })
       if (!res.ok || typeof data?.total !== 'string' || !/^\d+$/.test(data.total)) throw new Error()
-      if (current !== revision.current) return
+      if (current !== revision.current || read !== readRevision.current) return
       setSummary(data)
       setError('')
-    } catch { if (current === revision.current) setError('ハートを読み込めませんでした。再読み込みできます。') }
-    finally { if (current === revision.current) setLoading(false) }
+    } catch { if (current === revision.current && read === readRevision.current) setError('ハートを読み込めませんでした。再読み込みできます。') }
+    finally { if (current === revision.current && read === readRevision.current) setLoading(false) }
   }, [target])
   useEffect(() => {
     revision.current += 1
@@ -58,9 +60,20 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
       const detail = (event as CustomEvent<{ facilityId: string }>).detail
       if (!facilityId || detail?.facilityId === facilityId) void load()
     }
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ facilityId?: string; listingId?: string; total: string }>).detail
+      const matches = facilityId ? detail?.facilityId === facilityId : detail?.listingId === listingId
+      if (!matches || typeof detail?.total !== 'string' || !/^\d+$/.test(detail.total)) return
+      readRevision.current += 1
+      setSummary({ total: detail.total }); setLoading(false)
+    }
     window.addEventListener('cares:post-like-changed', refresh)
-    return () => window.removeEventListener('cares:post-like-changed', refresh)
-  }, [facilityId, load])
+    window.addEventListener('cares:heart-sent', receive)
+    return () => {
+      window.removeEventListener('cares:post-like-changed', refresh)
+      window.removeEventListener('cares:heart-sent', receive)
+    }
+  }, [facilityId, listingId, load])
 
   async function sendHeart() {
     if (busy.current || !listingId) return
@@ -84,6 +97,7 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
       setSummary(data)
       pendingId.current = null
       setSent(true)
+      window.dispatchEvent(new CustomEvent('cares:heart-sent', { detail: { facilityId, listingId, total: data.total } }))
     } catch (e) {
       if (current !== revision.current) return
       setError(e instanceof Error && e.name !== 'AbortError' ? e.message : '送信結果を確認できませんでした。「送信結果を再確認」で確認できます。')
@@ -91,25 +105,33 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
   }
 
   const button = <button onClick={sendHeart} disabled={saving || loading || !summary} aria-busy={saving}
-    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-rose-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-rose-700 active:scale-95 disabled:opacity-50">
-    <Heart aria-hidden="true" className={`h-4 w-4 fill-current ${saving ? 'motion-safe:animate-pulse' : ''}`} />
+    className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-rose-600 px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-rose-700 active:scale-95 disabled:opacity-50 ${variant !== 'card' ? 'w-full' : ''}`}>
+    <Heart aria-hidden="true" className={`h-5 w-5 fill-current ${saving ? 'motion-safe:animate-pulse' : ''}`} />
     {loading ? '読み込み中…' : saving ? '応援を届けています…' : !summary ? '応援する' : pendingId.current ? '送信結果を再確認' : sent ? 'もう一度応援する' : 'いいね・応援する'}
   </button>
   const feedback = <>
-    {sent && <p role="status" className="mt-3 text-sm font-semibold text-rose-700">♡ 応援を届けました。ありがとうございます！</p>}
+    {sent && <p role="status" className="mt-3 text-sm font-semibold text-rose-700">♡ +1 応援を届けました。ありがとうございます！</p>}
     {error && <p role="alert" className="mt-2 text-sm text-red-700">{error} <button onClick={load} className="min-h-11 underline">再読み込み</button></p>}
   </>
+  if (variant === 'quick') return <section aria-label="事業所への応援" className="rounded-2xl border border-rose-100 bg-rose-50/80 p-3 sm:p-4">
+    {listingId ? <>
+      {button}
+      <p className="mt-2 text-center text-xs leading-5 text-slate-600">登録不要・何度でも。この事業所に応援を送れます。</p>
+    </> : <p className="text-sm text-slate-600">応援は事業所情報の連携後にご利用いただけます。</p>}
+    <p aria-live="polite" aria-label={`事業所の応援ハート ${formatHearts(summary?.total)}`} title={formatHearts(summary?.total)} className="mt-1 text-center text-xs text-rose-800">事業所の応援ハート <strong className="tabular-nums">{compactHearts(summary?.total)}</strong></p>
+    {feedback}
+  </section>
   if (variant === 'profile') return <section aria-label="事業所への応援" className="border-t border-slate-100 pt-4">
-    <div className="flex flex-wrap items-center justify-between gap-4">
+    {listingId && button}
+    {listingId ? <p className="mt-2 text-center text-xs text-slate-500">ログインなしで、何度でも応援できます。</p> : <p className="mt-2 text-xs text-slate-500">応援は事業所情報の連携後にご利用いただけます。</p>}
+    {feedback}
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-wrap items-center gap-5 text-sm">
         <div aria-live="polite" className="min-w-0" title={formatHearts(summary?.total)} aria-label={`応援ハート ${formatHearts(summary?.total)}`}><span className="text-xl font-extrabold tabular-nums text-rose-600">{compactHearts(summary?.total)}</span><span className="ml-1.5 text-xs text-slate-500">応援ハート</span></div>
         {postCount !== undefined && <p><b className="text-lg tabular-nums text-slate-900">{postCount === null ? '—' : postCount.toLocaleString('ja-JP')}</b><span className="ml-1.5 text-xs text-slate-500">投稿</span></p>}
         {photoCount !== undefined && <p><b className="text-lg tabular-nums text-slate-900">{photoCount.toLocaleString('ja-JP')}</b><span className="ml-1.5 text-xs text-slate-500">写真</span></p>}
       </div>
-      {listingId && button}
     </div>
-    {listingId ? <p className="mt-2 text-xs text-slate-500">ログインなしで、何度でも応援できます。</p> : <p className="mt-2 text-xs text-slate-500">応援は事業所情報の連携後にご利用いただけます。</p>}
-    {feedback}
   </section>
   return <section className="mt-6 rounded-2xl border border-rose-100 bg-rose-50/60 p-5">
     <h2 className="text-lg font-bold text-gray-900">この事業所に「いいね」を届ける</h2>
