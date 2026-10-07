@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Calculator, Clock3, X } from 'lucide-react'
+import { Calculator, X } from 'lucide-react'
 import FeeSimulator from './FeeSimulator'
 
 import type { Fee, Tariff } from '@/lib/fee-calculation'
@@ -79,28 +79,25 @@ export default function FloatingFeeSimulator({ fees, feePattern, tariffs = [], s
             className="!m-0 fixed inset-0 bg-black/30 z-50"
             onClick={() => setOpen(false)}
           />
-          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="料金シミュレーション" className="!m-0 fixed inset-0 md:inset-auto md:top-0 md:right-0 md:h-full md:w-full md:max-w-xl bg-white shadow-2xl z-50 overflow-y-auto animate-slide-in-right">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between z-10">
-              <div className="flex items-center gap-2">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="料金シミュレーション" className="!m-0 fixed inset-0 md:inset-auto md:top-0 md:right-0 md:h-full md:w-full md:max-w-xl flex flex-col bg-white shadow-2xl z-50 overflow-hidden animate-slide-in-right">
+            <div className="shrink-0 bg-white border-b border-gray-100 px-4 sm:px-5 py-3 sm:py-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-cares-600" />
                 <h2 className="text-base sm:text-lg font-bold text-gray-900">料金シミュレーション</h2>
+                </div>
+                {facilityName && <p className="mt-1.5 text-xs leading-5 text-gray-500">{facilityName}</p>}
               </div>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="料金シミュレーションを閉じる"
                 autoFocus
-                className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors -mr-1"
+                className="shrink-0 p-2.5 hover:bg-gray-100 rounded-lg transition-colors -mr-1"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <div className="p-4 sm:p-5 pb-20 md:pb-5">
-              <p className="text-sm text-gray-500 mb-4">
-                条件を変えると金額が更新されます。利用者への説明用に、条件と内訳をコピーできます。
-              </p>
-              {latestFeeUpdateLabel && <p className="mb-4 flex items-center gap-1.5 text-xs text-gray-500"><Clock3 className="h-3.5 w-3.5" />料金表の最終更新 {latestFeeUpdateLabel}</p>}
-              <FeeSimulator providerSettings={providerSettings} fees={fees} tariffs={tariffs} serviceType={serviceType} facilityName={facilityName} address={address} feesUnavailable={feesUnavailable} />
-            </div>
+            <FeeSimulator providerSettings={providerSettings} fees={fees} tariffs={tariffs} serviceType={serviceType} facilityName={facilityName} address={address} feesUnavailable={feesUnavailable} feeUpdatedAt={latestFeeUpdateLabel} />
           </div>
         </>
       )}
