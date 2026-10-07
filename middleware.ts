@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { safeAuthRedirect } from '@/lib/auth-redirect'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -13,7 +14,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
           supabaseResponse = NextResponse.next({ request })
@@ -31,18 +32,29 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const protectedPaths = ['/account', '/favorites', '/my-actions', '/notifications']
 
+  function redirectWithSession(url: URL) {
+    const response = NextResponse.redirect(url)
+    // A refresh may have replaced the cookie; redirects must retain it too.
+    supabaseResponse.cookies.getAll().forEach(cookie => response.cookies.set(cookie))
+    response.headers.set('Cache-Control', 'private, no-store')
+    return response
+  }
+
   // 認証必須ページへの未ログインアクセスをリダイレクト
   if (!user && protectedPaths.some(p => path.startsWith(p))) {
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', path)
-    return NextResponse.redirect(loginUrl)
+    loginUrl.searchParams.set('redirect', path + request.nextUrl.search)
+    return redirectWithSession(loginUrl)
   }
 
-  // ログイン済みユーザーが /login, /signup にアクセスしたらトップにリダイレクト
+  // ログイン済みなら指定されたサイト内の画面へ移動
   if (user && (path === '/login' || path === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url))
+    return redirectWithSession(new URL(safeAuthRedirect(request.nextUrl.searchParams.get('redirect')), request.url))
   }
 
+  if (supabaseResponse.cookies.getAll().length > 0) {
+    supabaseResponse.headers.set('Cache-Control', 'private, no-store')
+  }
   return supabaseResponse
 }
 

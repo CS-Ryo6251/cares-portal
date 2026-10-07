@@ -26,51 +26,92 @@ export default function AuthHeader() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState(false)
+  const [retry, setRetry] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const supabase = createAuthClient()
+    let active = true
+    let revision = 0
+    setLoading(true)
+    setAuthError(false)
+    const timeout = setTimeout(() => {
+      if (active) {
+        setLoading(false)
+        setAuthError(true)
+      }
+    }, 15_000)
 
     async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUser({ id: user.id, email: user.email })
-
-        const { data: profileData, error: profileError } = await supabase
-          .from('cares_user_profiles')
-          .select('display_name, profession')
-          .eq('user_id', user.id)
-          .maybeSingle()
-
-        if (profileData && !profileError) {
-          setProfile(profileData)
+      const currentRevision = revision
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (!active || revision !== currentRevision) return
+        if (error && error.name !== 'AuthSessionMissingError') throw error
+        setUser(user ? { id: user.id, email: user.email } : null)
+        setAuthError(false)
+      } catch {
+        if (active && revision === currentRevision) setAuthError(true)
+      } finally {
+        if (active && revision === currentRevision) {
+          clearTimeout(timeout)
+          setLoading(false)
         }
-
-        // 未読通知数
-        const { count } = await supabase
-          .from('cares_notifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('is_read', false)
-
-        setUnreadCount(count || 0)
       }
-      setLoading(false)
     }
 
     loadUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setProfile(null)
+      (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') {
+          revision += 1
+          clearTimeout(timeout)
+          const nextUser = session?.user
+          setUser(nextUser ? { id: nextUser.id, email: nextUser.email } : null)
+          setAuthError(false)
+          setLoading(false)
+          setMenuOpen(false)
         }
       }
     )
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      active = false
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
+  }, [retry])
+
+  // Profile/notification failures must not hide a successfully signed-in user.
+  const userId = user?.id
+  useEffect(() => {
+    setProfile(null)
+    setUnreadCount(0)
+    if (!userId) return
+    const supabase = createAuthClient()
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10_000)
+    let active = true
+    async function loadDetails() {
+      try {
+        const [profileResult, notificationResult] = await Promise.all([
+          supabase.from('cares_user_profiles').select('display_name, profession').eq('user_id', userId!).abortSignal(controller.signal).maybeSingle(),
+          supabase.from('cares_notifications').select('*', { count: 'exact', head: true }).eq('user_id', userId!).eq('is_read', false).abortSignal(controller.signal),
+        ])
+        if (!active) return
+        if (!profileResult.error) setProfile(profileResult.data)
+        if (!notificationResult.error) setUnreadCount(notificationResult.count || 0)
+      } catch {
+        // The account menu remains usable with the verified user's email.
+      } finally {
+        clearTimeout(timeout)
+      }
+    }
+    void loadDetails()
+    return () => { active = false; clearTimeout(timeout); controller.abort() }
+  }, [userId])
 
   // 外部クリックでメニュー閉じる
   useEffect(() => {
@@ -89,7 +130,11 @@ export default function AuthHeader() {
   }
 
   if (loading) {
-    return <div className="w-8 h-8 bg-gray-100 rounded-full animate-pulse" />
+    return <div role="status" aria-label="ログイン状態を確認中" className="w-8 h-8 bg-gray-100 rounded-full animate-pulse" />
+  }
+
+  if (authError) {
+    return <button onClick={() => setRetry(value => value + 1)} className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600">ログイン状態を再確認</button>
   }
 
   if (!user) {
@@ -130,6 +175,8 @@ export default function AuthHeader() {
       {/* User menu */}
       <div className="relative" ref={menuRef}>
         <button
+          aria-label="アカウントメニュー"
+          aria-expanded={menuOpen}
           onClick={() => setMenuOpen(!menuOpen)}
           className={`flex items-center gap-1.5 px-2 py-1 rounded-xl hover:bg-gray-50 transition-colors ${menuOpen ? 'bg-gray-50' : ''}`}
         >

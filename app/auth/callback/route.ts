@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { safeAuthRedirect } from '@/lib/auth-redirect'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = safeAuthRedirect(searchParams.get('redirect'))
 
   if (code) {
     const cookieStore = await cookies()
