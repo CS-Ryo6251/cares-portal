@@ -4,7 +4,7 @@ const fs = require('node:fs'), path = require('node:path'), ts = require('typesc
 const { PGlite } = require('@electric-sql/pglite')
 const { NextRequest } = require('next/server')
 const root = path.join(__dirname, '..')
-const migration = 'supabase/migrations/20261007131842_cares_my_support_history.sql'
+const migration = 'supabase/migrations/20261007133808_cares_my_support_history.sql'
 const u1 = '10000000-0000-4000-8000-000000000001', u2 = '10000000-0000-4000-8000-000000000002', u3 = '10000000-0000-4000-8000-000000000003'
 const l1 = '20000000-0000-4000-8000-000000000001', l2 = '20000000-0000-4000-8000-000000000002'
 const id = n => `30000000-0000-4000-8000-${String(n).padStart(12, '0')}`
