@@ -393,7 +393,7 @@ export default function ForBusinessPage() {
               <ArrowRight className="h-5 w-5" />
             </a>
             <a
-              href="/directory"
+              href="/"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-4 text-base font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
             >
               <Search className="h-5 w-5" />

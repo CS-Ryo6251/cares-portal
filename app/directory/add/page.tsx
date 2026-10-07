@@ -96,7 +96,7 @@ export default function DirectoryAddPage() {
               事業所ページを見る
             </Link>
             <Link
-              href="/directory"
+              href="/"
               className="text-sm text-gray-500 hover:text-cares-600 transition-colors"
             >
               検索に戻る
@@ -111,7 +111,7 @@ export default function DirectoryAddPage() {
     <div className="max-w-lg mx-auto px-4 py-6">
       {/* Back link */}
       <Link
-        href="/directory"
+        href="/"
         className="inline-flex items-center gap-1.5 text-base text-gray-500 hover:text-cares-600 mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />

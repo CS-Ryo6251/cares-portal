@@ -125,7 +125,7 @@ export default async function BlogPostPage({
             <p className="mt-2 text-sm leading-7 text-white/70">
               Caresでは、空き状況・料金・パンフレット・公式投稿など、電話前に確認したい情報をまとめて見られます。
             </p>
-            <Link href="/directory" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-rose-50">
+            <Link href="/" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-rose-50">
               事業所を探す
               <ArrowRight className="h-4 w-4" />
             </Link>

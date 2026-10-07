@@ -48,7 +48,7 @@ export default function BlogIndexPage() {
                 記事で判断軸をつかみ、Caresの事業所ページで公式情報・空き状況・料金・投稿を確認できます。
               </p>
               <Link
-                href="/directory"
+                href="/"
                 className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-rose-50"
               >
                 事業所を探す
