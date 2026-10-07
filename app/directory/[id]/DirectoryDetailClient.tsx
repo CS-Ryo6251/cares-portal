@@ -474,7 +474,7 @@ export default function DirectoryDetailClient({
         <div className="mt-6 rounded-2xl border border-cares-200 bg-cares-50 p-5">
           <p className="text-sm font-bold text-cares-800">このページはCareSpaceOSと連携済みです</p>
           <p className="mt-1 text-sm leading-6 text-cares-700">事業所の担当者は、CareSpace OSの「経営支援 → Cares掲載管理」で空き状況・写真・料金を更新できます。編集には該当事業所の管理権限が必要です。</p>
-          <a href="https://app.carespace.jp/analytics?tab=cares" className="mt-3 inline-flex items-center rounded-xl bg-cares-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-cares-700">
+          <a href="https://app.carespace.jp/cares-management" className="mt-3 inline-flex items-center rounded-xl bg-cares-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-cares-700">
             CareSpace OSで掲載管理を開く
           </a>
         </div>
