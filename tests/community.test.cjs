@@ -47,7 +47,7 @@ test('ハートAPI：ログイン不要・サーバー識別子・再送ID・外
   let call
   const service={getSupabaseServiceClient:()=>({rpc:async(name,args)=>{call={name,args};return {data:{total:'6'},error:null}}})}
   const visitor={'@/lib/heart-visitor':{heartVisitor:()=>({visitorHash:'a'.repeat(64),networkHash:'b'.repeat(64)}),setHeartVisitor:r=>r}}
-  const route=load('app/api/directory/[id]/hearts/route.ts',{'@/lib/supabase':service,'@/lib/hearts':{getHeartSummaries:async()=>null},...visitor})
+  const route=load('app/api/directory/[id]/hearts/route.ts',{'@/lib/supabase':service,'@/lib/hearts':{getHeartSummaries:async()=>({[listing]:{total:'6'}})},...visitor})
   assert.equal((await route.POST(post({request_id:'bad'}),context)).status,400)
   const res=await route.POST(post({request_id:requestId,user_id:'another-account',visitor_hash:'spoofed'}),context)
   assert.equal(res.status,200)
@@ -60,7 +60,7 @@ test('ハートAPI：ログイン不要・サーバー識別子・再送ID・外
   const foreign=post({request_id:requestId});foreign.headers.set('origin','https://another.example')
   assert.equal((await route.POST(foreign,context)).status,403)
   assert.equal(call,undefined)
-  assert.equal((await route.GET(post({}),context)).status,503)
+  assert.equal((await route.GET(post({}),context)).status,200)
 })
 
 test('匿名Cookieは署名を検証し、IPを公開せず、応答に安全なCookieを設定', () => {

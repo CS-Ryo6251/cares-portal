@@ -38,7 +38,7 @@ export default function FacilityProfileHeader(props: Props) {
       {props.overview && <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700 sm:text-base">{props.overview}</p>}
       {props.address && <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-slate-500"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />{props.address}</p>}
       <div className="mt-5">
-        <FacilityHearts listingId={props.listingIds[0]} listingIds={props.listingIds} variant="profile" postCount={props.postCount} photoCount={props.photoCount} />
+        <FacilityHearts listingId={props.listingIds[0]} facilityId={props.facilityId} variant="profile" postCount={props.postCount} photoCount={props.photoCount} />
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <InquiryButton facilityId={props.facilityId} facilityName={props.name} />

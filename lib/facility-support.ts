@@ -1,41 +1,26 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-
 export type FacilitySupport = {
-  status: 'ready' | 'unlinked' | 'unavailable'
-  total: string | null
-  recent: string | null
-  asOf: string
+  status: 'ready' | 'unlinked' | 'unavailable'; total: string | null; recent: string | null; asOf: string
+  direct?: string; posts?: string; recentDirect?: string; recentPosts?: string
+  topPosts?: { id: string; title: string; total: string; recent: string }[]
 }
-
-// Server only. The caller must authorize this facility before passing its ID.
-// No visitor identifiers or individual heart events are returned to the browser.
+// Server only: callers must authorize facility membership before calling this RPC.
 export async function getFacilitySupport(client: SupabaseClient, facilityId: string, now = new Date()): Promise<FacilitySupport> {
   const asOf = now.toISOString()
   try {
-    const listings = await client.from('cares_listings').select('id')
-      .eq('owner_facility_id', facilityId).eq('is_owner_verified', true)
-    if (listings.error) throw new Error('Listing lookup failed')
-    const ids = (listings.data || []).map(row => row.id as string)
-    if (!ids.length) return { status: 'unlinked', total: null, recent: null, asOf }
-    const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [totals, guests, members] = await Promise.all([
-      client.from('cares_listing_heart_summary').select('listing_id, total').in('listing_id', ids),
-      client.from('cares_guest_heart_requests').select('*', { count: 'exact', head: true })
-        .in('listing_id', ids).gte('created_at', since).lte('created_at', asOf),
-      client.from('cares_listing_heart_requests').select('*', { count: 'exact', head: true })
-        .in('listing_id', ids).gte('created_at', since).lte('created_at', asOf),
-    ])
-    if (totals.error || guests.error || members.error) throw new Error('Support lookup failed')
-    let total = BigInt(0)
-    for (const row of totals.data || []) {
-      // The summary view exposes numeric as text, preserving arbitrarily large totals.
-      if (typeof row.total !== 'string' || !/^\d+$/.test(row.total)) throw new Error('Invalid total')
-      total += BigInt(row.total)
+    const { data, error } = await client.rpc('cares_facility_support', { p_facility_id: facilityId, p_as_of: asOf })
+    if (error || !data) throw new Error()
+    if (data.status === 'unlinked') return { status: 'unlinked', total: null, recent: null, asOf }
+    const valid = (value: unknown): value is string => typeof value === 'string' && /^\d+$/.test(value)
+    if (data.status !== 'ready' || ![data.total, data.recent, data.direct, data.posts, data.recentDirect, data.recentPosts].every(valid)
+      || BigInt(data.total) !== BigInt(data.direct) + BigInt(data.posts)
+      || BigInt(data.recent) !== BigInt(data.recentDirect) + BigInt(data.recentPosts)
+      || !Array.isArray(data.topPosts) || data.topPosts.length > 3) throw new Error()
+    for (const post of data.topPosts) {
+      if (typeof post.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(post.id)
+        || typeof post.title !== 'string' || !valid(post.total) || !valid(post.recent)) throw new Error()
     }
-    if (!Number.isSafeInteger(guests.count) || !Number.isSafeInteger(members.count)
-      || guests.count! < 0 || members.count! < 0) throw new Error('Invalid recent count')
-    return { status: 'ready', total: total.toString(), recent: (BigInt(guests.count!) + BigInt(members.count!)).toString(), asOf }
-  } catch {
-    return { status: 'unavailable', total: null, recent: null, asOf }
-  }
+    return { status: 'ready', total: data.total, recent: data.recent, direct: data.direct, posts: data.posts,
+      recentDirect: data.recentDirect, recentPosts: data.recentPosts, topPosts: data.topPosts.map((post: {id: string; title: string; total: string; recent: string}) => ({ ...post, title: post.title.slice(0,120) })), asOf }
+  } catch { return { status: 'unavailable', total: null, recent: null, asOf } }
 }

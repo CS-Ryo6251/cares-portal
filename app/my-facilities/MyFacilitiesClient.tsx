@@ -45,7 +45,7 @@ export default function MyFacilitiesClient() {
         <p className="text-sm text-rose-700">{error}</p>
         <button onClick={() => setRetry(value => value + 1)} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold"><RefreshCw className="h-4 w-4" />再読み込み</button>
       </div>
-      : facilities.length ? <div className="space-y-5">{facilities.map(facility => <FacilityShareCard key={facility.id} facilityName={facility.name} serviceType={facility.serviceType} publicUrl={facility.publicUrl} managementUrl={facilityManagementUrl(facility.id)} feesUrl={facilityManagementUrl(facility.id, 'fees')} support={facility.support} onRefresh={() => setRetry(value => value + 1)} />)}</div>
+      : facilities.length ? <div className="space-y-5">{facilities.map(facility => <FacilityShareCard key={facility.id} facilityId={facility.id} facilityName={facility.name} serviceType={facility.serviceType} publicUrl={facility.publicUrl} managementUrl={facilityManagementUrl(facility.id)} feesUrl={facilityManagementUrl(facility.id, 'fees')} support={facility.support} onRefresh={() => setRetry(value => value + 1)} />)}</div>
       : <div className="rounded-2xl border border-gray-200 bg-white p-6">
         <h2 className="font-bold text-gray-900">このアカウントに紐づく事業所はありません</h2>
         <p className="mt-2 text-sm leading-relaxed text-gray-600">CareSpace OSで所属事業所が設定されると、ここに表示されます。事業所の担当者は法人の管理者に所属設定をご確認ください。</p>
