@@ -7,6 +7,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, Download, ExternalLink, MapPin, Phone } from 'lucide-react'
 import FacilityProfileHeader from '@/components/FacilityProfileHeader'
+import ProviderIntakeSection from '@/components/ProviderIntakeSection'
 import FacilityProfileTabs from '@/components/FacilityProfileTabs'
 import FacilityPostFeed, { FacilityPhotoGallery } from '@/components/FacilityPostFeed'
 import FloatingActions from './FloatingActions'
@@ -178,6 +179,7 @@ export default async function FacilityDetailPage({ params, searchParams }: {
         cover={publicWebUrl(facility.cover_image_url)} icon={publicWebUrl(facility.icon_url)} overview={facility.overview}
         statusLabel={acceptanceLabels[facility.acceptance_status] || '確認中'} statusColor={acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown}
         listingIds={facility.directoryListings.map((listing: { id: string }) => listing.id)} postCount={facility.postCount} photoCount={photos.length} />
+      <div className="px-4 sm:px-0">{facility.directoryListings.map((listing: { id: string }) => <ProviderIntakeSection key={listing.id} listingId={listing.id} />)}</div>
     <FloatingActions providerSettings={facility.simulation_settings} fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
       <FacilityProfileTabs
         posts={<FacilityPostFeed posts={facility.posts} facilityId={id} facilityName={f.name} listingId={facility.directoryListings[0]?.id} initialCategory={sp.category} unavailable={facility.postsUnavailable} totalCount={facility.postCount ?? undefined} />}

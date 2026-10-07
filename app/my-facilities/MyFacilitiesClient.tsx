@@ -37,6 +37,7 @@ export default function MyFacilitiesClient() {
       <Building2 className="mt-1 h-7 w-7 shrink-0 text-cares-600" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">自分の事業所</h1>
+        <a href="/manage" className="mt-3 inline-flex min-h-11 items-center rounded-full border border-rose-100 bg-white px-4 text-sm font-bold text-rose-700">空き情報・申込み受付を開く →</a>
         <p className="mt-2 text-sm leading-relaxed text-gray-600">ご家族やケアマネに、事業所の写真・空き状況・料金をその場でご案内できます。共有したページはログイン不要で見られます。</p>
       </div>
     </div>
