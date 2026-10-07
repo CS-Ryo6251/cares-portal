@@ -55,14 +55,18 @@ const allCategories = [
 ]
 
 const acceptanceLabels: Record<string, string> = {
+  has_vacancy: '空きあり',
+  no_vacancy: '空きなし',
   accepting: '受入可能',
   limited: '条件付き受入可',
   waitlist: '待機あり',
   not_accepting: '受入停止中',
-  unknown: '要問合せ',
+  unknown: '確認中',
 }
 
 const acceptanceColors: Record<string, string> = {
+  has_vacancy: 'bg-green-100 text-green-700 border-green-200',
+  no_vacancy: 'bg-red-100 text-red-700 border-red-200',
   accepting: 'bg-green-100 text-green-700 border-green-200',
   limited: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   waitlist: 'bg-orange-100 text-orange-700 border-orange-200',
