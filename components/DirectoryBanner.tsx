@@ -37,7 +37,7 @@ export default function DirectoryBanner() {
           <p className="text-sm font-semibold text-gray-900 mb-0.5">事業所を探していますか？</p>
           <p className="text-sm text-gray-600 mb-2">全国18万件の事業所データベースから検索できます</p>
           <a
-            href="/directory"
+            href="/"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
             施設を探す

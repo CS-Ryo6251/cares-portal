@@ -2,9 +2,10 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { MapPin, Building2, ChevronRight } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { prefectures, facilityTypeLabels, vacancyStatusMap } from '@/lib/constants'
-import ServiceTypeIcon from '@/components/ServiceTypeIcon'
-import CompletenessBar from '@/components/CompletenessBar'
+import { prefectures, facilityTypeLabels } from '@/lib/constants'
+import FacilityListCard from '@/components/FacilityListCard'
+import { getHeartSummaries } from '@/lib/hearts'
+import { getDirectoryProfiles, directoryProfile } from '@/lib/directory-profiles'
 import { notFound } from 'next/navigation'
 
 type Props = {
@@ -41,8 +42,8 @@ async function getAreaFacilities(prefecture: string, serviceType?: string, page 
   const to = from + PER_PAGE - 1
 
   let query = supabase
-    .from('cares_listings')
-    .select('id, facility_name, service_type, address, acceptance_status, is_owner_verified, completeness_score, completeness_tier', { count: 'exact' })
+    .from('cares_directory_listing')
+    .select('id, facility_name, service_type, address, current_acceptance_status, is_owner_verified, owner_facility_id, overview, completeness_score', { count: 'exact' })
     .eq('prefecture', prefecture)
     .order('completeness_score', { ascending: false, nullsFirst: false })
     .range(from, to)
@@ -58,7 +59,14 @@ async function getAreaFacilities(prefecture: string, serviceType?: string, page 
     return { facilities: [], total: 0 }
   }
 
-  return { facilities: data || [], total: count || 0 }
+  const rows = data || []
+  const [hearts, profiles] = await Promise.all([getHeartSummaries(rows.map(row => row.id)), getDirectoryProfiles(rows)])
+  return { facilities: rows.map(row => ({ ...row,
+    acceptance_status: row.current_acceptance_status,
+    heart_total: hearts === null ? null : (hearts[row.id]?.total || '0'),
+    cover_image_url: directoryProfile(row, profiles)?.cover_image_url || null,
+    overview: directoryProfile(row, profiles)?.overview || row.overview || null,
+  })), total: count || 0 }
 }
 
 async function getServiceTypeCounts(prefecture: string) {
@@ -189,45 +197,9 @@ export default async function AreaPage({ params, searchParams }: Props) {
 
           {/* Facility list */}
           <div className="space-y-3">
-            {facilities.map((item: any) => {
-              const status = vacancyStatusMap[item.acceptance_status]
-              return (
-                <Link
-                  key={item.id}
-                  href={`/directory/${item.id}`}
-                  className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="px-5 py-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <ServiceTypeIcon serviceType={item.service_type} size="sm" />
-                      <span className="text-base font-bold text-gray-900">{item.facility_name}</span>
-                      {item.is_owner_verified && (
-                        <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
-                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                          公式
-                        </span>
-                      )}
-                      {item.service_type && (
-                        <span className="shrink-0 px-2.5 py-0.5 rounded-md text-xs font-medium bg-cares-50 text-cares-700">
-                          {facilityTypeLabels[item.service_type] || item.service_type}
-                        </span>
-                      )}
-                      {status && (
-                        <span className={`shrink-0 px-2.5 py-0.5 rounded-md text-xs font-medium ${status.color}`}>
-                          {status.label}
-                        </span>
-                      )}
-                    </div>
-                    {item.address && (
-                      <p className="text-sm text-gray-500 mt-1.5">{item.address}</p>
-                    )}
-                    <div className="mt-1.5">
-                      <CompletenessBar score={item.completeness_score || 0} tier={item.completeness_tier || 'insufficient'} size="sm" />
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
+            {facilities.map((item: any) => (
+              <FacilityListCard key={item.id} id={item.id} name={item.facility_name} serviceType={item.service_type} address={item.address} coverImage={item.cover_image_url} overview={item.overview} total={item.heart_total} isOfficial={Boolean(item.is_owner_verified)} acceptanceStatus={item.acceptance_status} />
+            ))}
           </div>
 
           {/* Empty state */}

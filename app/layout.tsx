@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Search, HeartHandshake, BookOpen } from 'lucide-react'
 import Image from 'next/image'
 import './globals.css'
 import AuthHeader from '@/components/AuthHeader'
 
+
+const navigation = [{ href: '/', label: '事業所をさがす', Icon: Search }, { href: '/cases', label: '支援の相談', Icon: HeartHandshake }, { href: '/blog', label: 'コラム', Icon: BookOpen }]
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -64,39 +66,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Image src="/brand/cares-logo-b.png" alt="Cares" width={2172} height={724} sizes="128px" priority className="h-auto w-28 sm:w-32" />
                 <span className="block text-right text-[8px] font-bold uppercase tracking-[0.14em] text-cares-600">by CareSpace</span>
               </span>
-              <span className="hidden border-l border-slate-200 pl-3 text-xs font-semibold text-slate-500 lg:inline">
+              <span className="hidden border-l border-slate-200 pl-3 text-xs font-semibold text-slate-500 xl:inline">
                 介護事業所の「いま」が見つかる
               </span>
             </a>
-            <nav className="flex min-w-0 items-center gap-2 text-sm sm:gap-3">
-              <a
-                href="/directory"
-                className="hidden font-semibold text-slate-600 transition-colors hover:text-cares-600 sm:inline"
-              >
-                事業所を探す
-              </a>
-              <a
-                href="/cases"
-                className="hidden font-semibold text-slate-600 transition-colors hover:text-cares-600 md:inline"
-              >
-                支援案件
-              </a>
-              <a
-                href="/blog"
-                className="hidden font-semibold text-slate-600 transition-colors hover:text-cares-600 lg:inline"
-              >
-                記事
-              </a>
+            <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+              <nav aria-label="メインメニュー" className="hidden items-center gap-2 lg:flex xl:gap-4">
+                {navigation.map(({ href, label, Icon }) => <a key={href} href={href} className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl px-2 text-sm font-medium text-slate-600 transition-colors hover:bg-rose-50 hover:text-cares-700"><Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-rose-500" />{label}</a>)}
+              </nav>
               <a
                 href="/for-business"
-                className="hidden items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 font-bold text-white shadow-sm transition hover:bg-cares-700 lg:inline-flex"
+                className="hidden items-center gap-1.5 rounded-full bg-cares-600 px-3.5 py-2 font-bold text-white shadow-sm transition hover:bg-cares-700 xl:inline-flex"
               >
-                事業所の掲載管理
+                掲載・管理
                 <ArrowRight className="h-3.5 w-3.5" />
               </a>
               <AuthHeader />
-            </nav>
+            </div>
           </div>
+          <nav aria-label="メインメニュー" className="grid grid-cols-3 border-t border-rose-50 px-2 lg:hidden">
+            {navigation.map(({ href, label, Icon }) => <a key={href} href={href} className="inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1 text-xs font-medium text-slate-600 hover:bg-rose-50 hover:text-cares-700"><Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-rose-500" />{label}</a>)}
+          </nav>
         </header>
 
         <div className="flex">
@@ -110,9 +100,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="mb-2 flex items-center justify-center gap-2"><Image src="/brand/cares-logo-b.png" alt="Cares" width={2172} height={724} sizes="120px" className="h-auto w-[120px] brightness-0 invert" /><span className="text-xs font-bold text-white/45">by CareSpace</span></div>
             <p className="mb-5 text-xs text-white/45">介護事業所の「いま」を、必要な人へ。</p>
             <div className="mb-5 flex flex-wrap items-center justify-center gap-4 text-sm text-white/60">
-              <a href="/directory" className="transition-colors hover:text-white">事業所を探す</a>
-              <a href="/cases" className="transition-colors hover:text-white">地域の支援案件</a>
-              <a href="/blog" className="transition-colors hover:text-white">記事</a>
+              <a href="/" className="transition-colors hover:text-white">事業所をさがす</a>
+              <a href="/cases" className="transition-colors hover:text-white">支援の相談</a>
+              <a href="/ranking" className="transition-colors hover:text-white">応援ランキング</a>
+              <a href="/blog" className="transition-colors hover:text-white">コラム</a>
               <a href="/area" className="transition-colors hover:text-white">エリアから探す</a>
               <a href="/for-business" className="transition-colors hover:text-white">事業所の掲載管理・登録案内</a>
               <a href="https://app.carespace.jp" className="transition-colors hover:text-white">CareSpaceOS</a>

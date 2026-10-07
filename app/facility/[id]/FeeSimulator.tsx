@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { Calculator, Plus, Trash2, Copy, Info } from 'lucide-react'
 import { amountRange, billingLabels, careLimits, formatYen, frequencyCount, insuranceEstimate, providerFeeTotal, unitPrice } from '@/lib/fee-calculation'
 import type { Fee, Tariff } from '@/lib/fee-calculation'
+import { applicableProviderSettings, providerService, readProviderSettings, regionLabel } from '@/lib/provider-simulation-settings'
 
 const source = 'https://www.wam.go.jp/gyoseiShiryou/detail?ct=020050010&gno=22560'
 const regionSource = 'https://www.wam.go.jp/gyoseiShiryou-files/documents/2024/0327195924349/20240329_119.pdf'
@@ -18,7 +19,7 @@ function Quantity({ label, value, onChange, max = 999, step = 1 }: { label: stri
 }
 const options = (values: string[]) => values.map(value => ({ value, label: value }))
 type PlanRow = { key: number; group: string; duration: string; mode: string; count: number }
-export default function FeeSimulator({ fees, tariffs = [], serviceType = '', facilityName = '', address = '', feesUnavailable = false }: { fees: Fee[]; tariffs?: Tariff[]; serviceType?: string; facilityName?: string; address?: string; feesUnavailable?: boolean }) {
+export default function FeeSimulator({ fees, tariffs = [], serviceType = '', facilityName = '', address = '', feesUnavailable = false, providerSettings }: { fees: Fee[]; tariffs?: Tariff[]; serviceType?: string; facilityName?: string; address?: string; feesUnavailable?: boolean; providerSettings?: unknown }) {
   const bases = tariffs.filter(t => !t.addonGroup)
   const addonTariffs = tariffs.filter(t => t.addonGroup)
   const groups = Array.from(new Set(bases.map(t => t.group)))
@@ -27,10 +28,14 @@ export default function FeeSimulator({ fees, tariffs = [], serviceType = '', fac
   const dayService = ['15','16','78'].includes(prefix)
   const [care, setCare] = useState('要介護1')
   const [burden, setBurden] = useState(1)
-  const [area, setArea] = useState(/^山形県|^山形市/.test(address) ? 'other' : '')
   const [month, setMonth] = useState(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit' }).format(new Date()))
   const [plans, setPlans] = useState<PlanRow[]>([{ key: 1, group: groups.length === 1 ? groups[0] : '', duration: '', mode: 'weekly', count: 2 }])
-  const [addons, setAddons] = useState<Record<string, string>>({})
+  const service = providerService(serviceType)
+  const registered = readProviderSettings(providerSettings, serviceType)
+  const applicable = applicableProviderSettings(providerSettings, serviceType, month)
+  const area = applicable?.area || ''
+  const facilityGroup = applicable?.group || (service?.prefix === '78' ? '地域密着型' : '')
+  const [addons, setAddons] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(applicable?.addons || {}).filter(([key, value]) => key === '処遇改善' || value === 'none')))
   const [addonCounts, setAddonCounts] = useState<Record<string, number>>({})
   const [selected, setSelected] = useState<string[]>([])
   const [quantities, setQuantities] = useState<Record<string, number>>({})
@@ -46,8 +51,8 @@ export default function FeeSimulator({ fees, tariffs = [], serviceType = '', fac
   const visits = counts.reduce<number>((sum,c) => sum + (c ?? 0),0)
   const days = daysOverride ?? Math.min(daysInMonth,visits)
   const price = unitPrice(prefix,area)
-  const resolved = plans.map((p,i) => ({ tariff: bases.find(t => t.group === p.group && t.duration === p.duration && (t.care === 0 || t.care === careNumber)), count: counts[i] }))
-  const selectedAddons = Object.values(addons).map(code => addonTariffs.find(t => t.code === code)).filter((t): t is Tariff => Boolean(t))
+  const resolved = plans.map((p,i) => ({ tariff: bases.find(t => t.group === (service?.user_selects_service ? p.group : facilityGroup) && t.duration === p.duration && (t.care === 0 || t.care === careNumber)), count: counts[i] }))
+  const selectedAddons = Object.entries({ ...addons, ...(applicable?.addons['処遇改善'] ? { '処遇改善': applicable.addons['処遇改善'] } : {}) }).filter(([key, code]) => applicable?.addons[key] === code).map(([, code]) => addonTariffs.find(t => t.code === code)).filter((t): t is Tariff => Boolean(t))
   const addonLines = selectedAddons.map(tariff => ({ tariff, count: visits === 0 ? 0 : addonCounts[tariff.code] ?? (tariff.monthly ? 1 : visits) }))
   const issues: string[] = []
   if (![1,2,3].includes(burden)) issues.push('負担割合を選択してください。')
@@ -56,8 +61,10 @@ export default function FeeSimulator({ fees, tariffs = [], serviceType = '', fac
   if (official) {
     if (!monthValid) issues.push('この公定単価で試算できる対象月は2026年6月〜2027年3月です。')
     if (!careLimits[careNumber]) issues.push('要支援・事業対象者は自治体の総合事業や予防サービスの料金を確認してください。')
-    if (!price) issues.push('事業所所在地の地域区分を選択してください。')
-    if (resolved.some(p => !p.tariff)) issues.push('サービスの区分と利用時間を選択してください。')
+    if (!applicable) issues.push(registered ? '対象月は、事業所が登録した料金計算条件の適用期間外です。事業所にご確認ください。' : 'この事業所の料金計算条件はまだ登録されていません。事業所にご確認ください。')
+    if (!price) issues.push('事業所所在地の地域区分が未確認です。')
+    if (!service?.user_selects_service && !facilityGroup) issues.push('事業所の規模・提供体制が未確認です。')
+    if (resolved.some(p => !p.tariff)) issues.push('利用時間・サービス内容を選択してください。')
     if (dayService && (visits > daysInMonth || days > visits)) issues.push('通所の利用回数・日数を対象月の日数以内で確認してください。')
     if (addonLines.some(x => !Number.isInteger(x.count) || x.count < 0 || x.count > (x.tariff.monthly ? 1 : visits))) issues.push('加算の回数は、月額なら1回、日・回単位なら利用回数以内で指定してください。')
     if (selectedAddons.some(t => t.addonGroup === '個別機能訓練Ⅱ') && !selectedAddons.some(t => t.addonGroup === '個別機能訓練Ⅰ')) issues.push('個別機能訓練加算Ⅱは、加算Ⅰの選択も確認してください。')
@@ -75,12 +82,14 @@ export default function FeeSimulator({ fees, tariffs = [], serviceType = '', fac
   const ready = issues.length === 0 && provider.unknown.length === 0 && !feesUnavailable && hasInsurance && !legacyNeedsCare
   const selectedCareFees = activeFees.filter(f => !f.care_level || f.care_level === care).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0))
   const careLevels = Array.from(new Set(['要介護1','要介護2','要介護3','要介護4','要介護5','要支援1','要支援2','事業対象者', ...fees.map(f => f.care_level).filter((v): v is string => Boolean(v))]))
-  const unconfirmedAddons = official && !addons['処遇改善']
+  const unconfirmedAddons = official && !applicable?.addons['処遇改善']
+  const missingAddonGroups = Array.from(new Set(addonTariffs.map(t => t.addonGroup))).filter(key => !applicable?.addons[key])
   function updatePlan(key: number, patch: Partial<PlanRow>) { setPlans(p => p.map(row => row.key === key ? {...row,...patch} : row)) }
   function feeQuantity(id: string, value: number | null) { setQuantities(prev => { const next = {...prev}; if (value === null) delete next[id]; else next[id] = value; return next }) }
   async function copyEstimate() {
     const text = [facilityName, `${serviceType} / ${month} / ${care} / ${burden}割負担`,
-      ...plans.map(p => `${p.group} ${p.duration} ${p.mode === 'weekly' ? '週' : '月'}${p.count}回（月${frequencyCount(p.mode,p.count)}回換算）`),
+      `事業所条件：${facilityGroup || serviceType} / 地域区分 ${regionLabel(area)}${applicable ? ` / 適用 ${applicable.effective_from}〜${applicable.effective_to}` : ' / 未確認'}`,
+      ...plans.map(p => `${service?.user_selects_service ? p.group : facilityGroup} ${p.duration} ${p.mode === 'weekly' ? '週' : '月'}${p.count}回（月${frequencyCount(p.mode,p.count)}回換算）`),
       ...(insurance ? [`地域単価 ${price}円 / 保険単位 ${insurance.units} / 保険自己負担 ${insurance.selfPay.toLocaleString()}円`, ...insurance.lines.map(x => `${x.tariff.name} ${x.tariff.units}単位 × ${x.count} = ${x.totalUnits}単位`)] : []),
       ...provider.rows.map(r => `${r.fee.item_name}：${formatYen(amountRange(r.fee))}/${billingLabels[r.fee.billing_unit || 'monthly']} × ${r.quantity} = ${formatYen(r.range)}${r.initial ? '（初期費用・月額外）' : ''}`),
       `${ready ? activeFees.length === 0 ? '介護保険分のみの月額目安' : unconfirmedAddons ? '加算未確認の月額小計' : '入力条件での月額目安' : '計算できた範囲の小計'}：${formatYen(total)}`,
@@ -92,16 +101,28 @@ export default function FeeSimulator({ fees, tariffs = [], serviceType = '', fac
   return <div className="space-y-5 text-sm">
     <div className="rounded-2xl bg-slate-950 p-5 text-white"><p className="text-xs text-rose-200">{facilityName || 'この事業所'} · {serviceType}</p><h3 className="mt-2 flex items-center gap-2 text-lg font-bold"><Calculator className="h-5 w-5" />利用条件から料金を試算</h3><p className="mt-2 text-xs leading-6 text-slate-300">{official ? '公定単価による介護保険の自己負担と、事業所が公開した食費などの自費を合算します。' : '事業所が公開した料金と、入力した回数・日数から試算します。このサービスの公定単価による自動計算は準備中です。'}</p></div>
 
+    {official && <section aria-label="この事業所の料金計算条件" className="rounded-2xl border border-slate-200 bg-white p-4">
+      <h3 className="font-bold text-slate-900">この事業所の料金計算条件</h3>
+      <dl className="mt-3 space-y-2 text-xs leading-5">
+        <div className="flex justify-between gap-3"><dt className="text-slate-500">サービス</dt><dd className="text-right font-semibold">{serviceType}</dd></div>
+        {!service?.user_selects_service && <div className="flex justify-between gap-3"><dt className="shrink-0 text-slate-500">規模・提供体制</dt><dd className="text-right font-semibold">{facilityGroup || '未登録・事業所に確認'}</dd></div>}
+        <div className="flex justify-between gap-3"><dt className="text-slate-500">地域区分</dt><dd className="text-right font-semibold">{regionLabel(area)}{price ? `（1単位 ${price}円）` : ''}</dd></div>
+        {applicable && <div className="flex justify-between gap-3"><dt className="text-slate-500">適用期間</dt><dd>{applicable.effective_from}〜{applicable.effective_to}</dd></div>}
+      </dl>
+      {address && <p className="mt-3 text-xs text-slate-500">所在地：{address}</p>}
+      <p className="mt-3 text-xs leading-5 text-slate-500">{applicable ? '事業所が登録した条件を自動で使用しています。' : '事業所の確認・登録後に自動で反映されます。未確認の条件では介護保険の自己負担額を計算しません。'} <a href={regionSource} target="_blank" rel="noreferrer" className="underline">地域区分について</a></p>
+    </section>}
+
     <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-bold text-slate-900">1. 利用する方の条件</h3>
       <label className="block text-xs font-bold text-slate-600">対象月<input aria-label="対象月" type="month" min="2026-06" max="2027-03" value={month} onChange={e => setMonth(e.target.value)} className={inputClass} /></label>
       <div className="grid grid-cols-2 gap-3"><Select label="介護度" value={care} onChange={setCare} choices={options(careLevels)} /><Select label="負担割合" value={String(burden)} onChange={v => setBurden(Number(v))} choices={[1,2,3].map(v => ({value:String(v),label:`${v}割負担`}))} /></div>
-      {official && <><Select label="事業所所在地の地域区分" value={area} onChange={setArea} choices={[...Array.from({length:7},(_,i) => ({value:String(i+1),label:`${i+1}級地（1単位 ${unitPrice(prefix,String(i+1))}円）`})),{value:'other',label:'その他（1単位 10円）'}]} /><p className="text-xs leading-5 text-slate-500">{address && <span className="block">所在地：{address}</span>}地域区分・事業所の算定体制は、事業所の説明や<a href={regionSource} target="_blank" rel="noreferrer" className="underline">公表資料</a>とあわせて確認してください。</p></>}
+
     </section>
 
     <section className="space-y-3"><h3 className="font-bold text-slate-900">2. 利用時間・回数</h3>{plans.map((p,i) => {
-      const durations = Array.from(new Set(bases.filter(t => t.group === p.group && (t.care === 0 || t.care === careNumber)).map(t => t.duration)))
+      const durations = Array.from(new Set(bases.filter(t => t.group === (service?.user_selects_service ? p.group : facilityGroup) && (t.care === 0 || t.care === careNumber)).map(t => t.duration)))
       return <div key={p.key} className="space-y-3 rounded-2xl border border-slate-200 p-4"><div className="flex items-center justify-between"><p className="text-xs font-bold text-slate-500">利用パターン {i+1}</p>{plans.length > 1 && <button type="button" aria-label={`利用パターン${i+1}を削除`} onClick={() => setPlans(rows => rows.filter(r => r.key !== p.key))} className="p-2 text-slate-500"><Trash2 className="h-4 w-4" /></button>}</div>
-        {official && <><Select label={dayService ? '事業所の規模・区分' : 'サービス内容・提供体制'} value={p.group} choices={options(groups)} onChange={v => updatePlan(p.key,{group:v,duration:''})} /><Select label="1回の利用時間・区分" value={p.duration} choices={options(durations)} onChange={v => updatePlan(p.key,{duration:v})} /></>}
+        {official && <>{service?.user_selects_service && <Select label="利用するサービス内容" value={p.group} choices={options(groups)} onChange={v => updatePlan(p.key,{group:v,duration:''})} />}<Select label="1回の利用時間・区分" value={p.duration} choices={options(durations)} onChange={v => updatePlan(p.key,{duration:v})} /></>}
         <div className="grid grid-cols-2 gap-3"><Select label="回数の指定方法" value={p.mode} choices={[{value:'weekly',label:'週あたり'},{value:'monthly',label:'月あたり'}]} onChange={v => updatePlan(p.key,{mode:v})} /><Quantity label={p.mode === 'weekly' ? '週の利用回数' : '月の利用回数'} value={p.count} max={p.mode === 'weekly' ? 21 : dayService ? daysInMonth : 999} onChange={v => updatePlan(p.key,{count:v})} /></div>
         <p className="text-xs text-slate-500">{p.mode === 'weekly' ? `週${p.count || 0}回 × 4.3週 ≒ 月${counts[i] ?? '—'}回。正確な回数は「月あたり」で指定できます。` : `月${counts[i] ?? '—'}回として計算します。`}</p>
         {resolved[i].tariff && <p className="rounded-xl bg-rose-50 p-3 text-xs leading-5 text-rose-800">基本報酬：{resolved[i].tariff?.units}単位／回（コード {resolved[i].tariff?.code}）</p>}
@@ -110,10 +131,13 @@ export default function FeeSimulator({ fees, tariffs = [], serviceType = '', fac
     {official && <button type="button" className="flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700" onClick={() => setPlans(p => [...p,{key:Math.max(...p.map(r=>r.key))+1,group:groups.length===1?groups[0]:'',duration:'',mode:'monthly',count:1}])}><Plus className="h-4 w-4" />別の時間・利用パターンを追加</button>}
     </section>
 
-    {official && <details className="rounded-2xl border border-slate-200 p-4"><summary className="cursor-pointer font-bold text-slate-900">加算・他サービスの利用を設定</summary><p className="mt-3 text-xs leading-5 text-slate-500">事業所が算定する加算を選んでください。未選択の加算・減算は含みません。選べる主な加算以外は事業所に確認してください。</p><div className="mt-4 space-y-4">{Array.from(new Set(addonTariffs.map(t => t.addonGroup))).map(group => {
-      const chosen = addonTariffs.find(t => t.code === addons[group])
-      return <div key={group}><Select label={group === '処遇改善' ? '介護職員等処遇改善加算' : group} value={addons[group] || ''} placeholder="未確認・合計に含めない" choices={[{value:'none',label:'算定なし'},...addonTariffs.filter(t => t.addonGroup===group).map(t => ({value:t.code,label:`${t.name}（${t.rate !== null ? `${Number((t.rate*100).toFixed(2))}%` : `${t.units}単位／${t.monthly ? '月' : '回'}`}）`}))]} onChange={v=>setAddons(a=>({...a,[group]:v}))} />{chosen && !chosen.monthly && chosen.rate === null && <div className="mt-2"><Quantity label={`${group}の月の算定回数`} max={visits} value={addonCounts[chosen.code] ?? visits} onChange={v=>setAddonCounts(a=>({...a,[chosen.code]:v}))} /></div>}</div>
-    })}<Quantity label="他サービスで使う支給限度額対象単位（月）" value={otherUnits} max={99999} onChange={setOtherUnits} /><p className="text-xs text-slate-500">要介護{careNumber || '—'}の基準は月{careLimits[careNumber]?.toLocaleString() || '—'}単位。超過する場合は全額自己負担の確認が必要です。</p></div></details>}
+    {official && <details className="rounded-2xl border border-slate-200 p-4"><summary className="cursor-pointer font-bold text-slate-900">利用する加算・他サービスの利用</summary><p className="mt-3 text-xs leading-5 text-slate-500">登録済みの届出加算を表示しています。処遇改善は自動で含めます。その他の加算は、ご本人が対象となるものと回数を選んでください。</p><div className="mt-4 space-y-4">{Array.from(new Set(addonTariffs.map(t => t.addonGroup))).filter(group => applicable?.addons[group]).map(group => {
+      const registeredCode = applicable!.addons[group]
+      const chosen = addonTariffs.find(t => t.code === addons[group] && t.code === registeredCode)
+      const registeredAddon = addonTariffs.find(t => t.code === registeredCode)
+      if (group === '処遇改善' || registeredCode === 'none') return <p key={group} className="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-700">{group}：{registeredCode === 'none' ? '算定なし' : registeredAddon?.name}{registeredAddon?.rate != null ? `（${Number((registeredAddon.rate * 100).toFixed(2))}%・自動計算）` : ''}</p>
+      return <div key={group}><Select label={group === '処遇改善' ? '介護職員等処遇改善加算' : group} value={addons[group] || ''} placeholder="利用しない・合計に含めない" choices={addonTariffs.filter(t => t.addonGroup===group && t.code === registeredCode).map(t => ({value:t.code,label:`${t.name}（${t.rate !== null ? `${Number((t.rate*100).toFixed(2))}%` : `${t.units}単位／${t.monthly ? '月' : '回'}`}）`}))} onChange={v=>setAddons(a=>({...a,[group]:v}))} />{chosen && !chosen.monthly && chosen.rate === null && <div className="mt-2"><Quantity label={`${group}の月の算定回数`} max={visits} value={addonCounts[chosen.code] ?? visits} onChange={v=>setAddonCounts(a=>({...a,[chosen.code]:v}))} /></div>}</div>
+    })}{missingAddonGroups.length > 0 && <p className="text-xs leading-5 text-amber-800">届出未確認・計算対象外：{missingAddonGroups.join('、')}。適用の有無は事業所にご確認ください。</p>}<Quantity label="他サービスで使う支給限度額対象単位（月）" value={otherUnits} max={99999} onChange={setOtherUnits} /><p className="text-xs text-slate-500">要介護{careNumber || '—'}の基準は月{careLimits[careNumber]?.toLocaleString() || '—'}単位。超過する場合は全額自己負担の確認が必要です。</p></div></details>}
 
     <section className="space-y-4"><h3 className="font-bold text-slate-900">3. 事業所が設定した料金</h3><p className="text-xs leading-5 text-slate-500">CareSpace OSのCaresタブで公開された料金です。食数・日数・回数を調整できます。月額固定料金は回数で変わりません。</p>
       {feesUnavailable ? <p role="alert" className="rounded-xl bg-amber-50 p-3 text-amber-900">料金表を取得できませんでした。再読み込みしてください。自費を含めた合計は表示していません。</p> : activeFees.length === 0 ? <p className="rounded-xl bg-slate-50 p-3 text-slate-600">自費料金はまだ公開されていません。必要な実費は事業所にご確認ください。</p> : <>
