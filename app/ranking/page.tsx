@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
-import { ArrowLeft, ArrowRight, Heart, MapPin } from 'lucide-react'
-import RankingCover from '@/components/RankingCover'
-import { compactHearts, formatHearts } from '@/lib/community'
+import { ArrowLeft, ArrowRight, Heart } from 'lucide-react'
+import FacilityListCard from '@/components/FacilityListCard'
 import { prefectures, facilityTypeLabels } from '@/lib/constants'
 import { rankingFilters, rankingUrl } from '@/lib/support-ranking'
 import { getSupportRanking } from '@/lib/support-ranking-server'
@@ -46,11 +45,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       {!ranking ? <div role="status" className="rounded-2xl border border-rose-100 bg-white p-7 text-center"><p className="font-semibold text-slate-700">ランキングを読み込めませんでした</p><a href={rankingUrl(filters)} className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-rose-700 underline underline-offset-4">もう一度読み込む</a></div>
         : ranking.items.length === 0 ? <div className="rounded-3xl border border-dashed border-rose-200 bg-white px-5 py-12 text-center"><Heart className="mx-auto h-8 w-8 text-rose-300" /><h3 className="mt-4 font-bold text-slate-800">{label}の応援を待っています</h3><p className="mt-3 text-sm leading-7 text-slate-500">この条件に合う事業所には、まだ応援がありません。<br />気になる事業所を見つけたら、ハートで気持ちを届けてみませんか。</p><a href={`/?${new URLSearchParams({ ...(filters.prefecture ? {area:filters.prefecture} : {}), ...(filters.service ? {service_type:filters.service} : {}) })}`} className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-rose-700">事業所をさがす<ArrowRight className="h-4 w-4" /></a></div>
         : <ol className="space-y-3">{ranking.items.map(item => <li key={item.id}>
-          <a href={`/directory/${item.id}`} className="group grid grid-cols-[76px_minmax(0,1fr)] gap-4 rounded-2xl border border-[#eee6e2] bg-white p-4 transition hover:border-rose-200 hover:shadow-sm sm:grid-cols-[140px_minmax(0,1fr)_auto] sm:items-center sm:gap-6 sm:p-5">
-            <div className="relative h-24 overflow-hidden rounded-xl bg-rose-50 sm:h-28"><RankingCover src={item.coverImage} /><span className="absolute left-0 top-0 flex h-9 min-w-9 items-center justify-center rounded-br-xl bg-white/95 px-2 text-lg font-bold tabular-nums text-rose-700" aria-label={`${item.rank}位`}>{item.rank}</span></div>
-            <div className="min-w-0"><p className="text-[11px] text-slate-500">{facilityTypeLabels[item.serviceType] || item.serviceType}</p><h3 className="mt-1.5 break-words text-base font-bold leading-6 text-slate-900 group-hover:text-rose-700 sm:text-lg">{item.name}</h3>{item.address && <p className="mt-2 flex items-start gap-1 text-xs leading-5 text-slate-500"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />{item.address}</p>}{item.overview && <p className="mt-2 hidden line-clamp-2 text-xs leading-6 text-slate-500 sm:block">{item.overview}</p>}</div>
-            <div className="col-start-2 sm:col-start-auto sm:text-right"><p className="text-[10px] text-slate-500">{label}の応援ハート</p><p className="mt-1 flex items-center gap-2 font-bold text-rose-600 sm:justify-end" title={`${formatHearts(item.total)} ハート`} aria-label={`${formatHearts(item.total)} ハート`}><Heart aria-hidden="true" className="h-5 w-5 shrink-0 fill-current" /><span aria-hidden="true" className="text-2xl tabular-nums">{compactHearts(item.total)}</span></p><span className="mt-2 hidden items-center gap-1 text-xs font-semibold text-slate-500 sm:inline-flex">ページを見る<ArrowRight className="h-3.5 w-3.5" /></span></div>
-          </a>
+          <FacilityListCard id={item.id} name={item.name} serviceType={item.serviceType} address={item.address} coverImage={item.coverImage} overview={item.overview} total={item.total} rank={item.rank} supportLabel={`${label}の応援ハート`} />
         </li>)}</ol>}
 
       <div className="mt-8 border-t border-[#eee6e2] pt-5 text-xs leading-6 text-slate-500">
