@@ -1,13 +1,7 @@
+import { formatHearts } from '@/lib/community'
 import Link from 'next/link'
-import { MapPin, Phone } from 'lucide-react'
+import { MapPin, Phone, Heart } from 'lucide-react'
 import { facilityTypeLabels, acceptanceStatusMap } from '@/lib/constants'
-
-type VacancySummary = {
-  has_vacancy: number
-  no_vacancy: number
-  unknown: number
-  latest_report_at: string | null
-}
 
 type FacilityDirectoryCardProps = {
   facility: {
@@ -19,7 +13,9 @@ type FacilityDirectoryCardProps = {
     jigyosho_number: string | null
     acceptance_status: string | null
     source: string | null
-    vacancy_summary: VacancySummary
+    heart_total?: string | null
+    heart_supporters?: string | null
+    current_vacancy?: { confirmed_on: string; valid_until: string } | null
   }
 }
 
@@ -29,9 +25,7 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
     : null
   const status = acceptanceStatusMap[facility.acceptance_status || 'unknown'] || acceptanceStatusMap.unknown
   const isOfficial = facility.source === 'owner_verified'
-  const hasVacancyReports =
-    facility.vacancy_summary.has_vacancy > 0 ||
-    facility.vacancy_summary.no_vacancy > 0
+
 
   return (
     <Link
@@ -67,14 +61,11 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${status.color}`}>
             {status.label}
           </span>
-          {hasVacancyReports && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              空き情報あり
-            </span>
-          )}
+
         </div>
 
+        <div className="mt-3 flex items-center gap-2 text-sm text-rose-700"><Heart className="h-4 w-4 fill-current" />{formatHearts(facility.heart_total)}<span className="text-xs text-gray-500">{facility.heart_supporters == null ? '応援数を取得できません' : `${formatHearts(facility.heart_supporters)}人の応援`}</span></div>
+        {facility.current_vacancy && <p className="mt-2 text-xs text-gray-500">{facility.current_vacancy.confirmed_on} 確認・{facility.current_vacancy.valid_until} まで</p>}
         {/* Address */}
         {facility.address && (
           <div className="flex items-center gap-1.5 mt-2.5 text-sm text-gray-500">

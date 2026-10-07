@@ -34,12 +34,13 @@ export default function ProfessionalNoteModal({
 }: ProfessionalNoteModalProps) {
   const [reporterType, setReporterType] = useState('')
   const [content, setContent] = useState('')
+  const [confirmed, setConfirmed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit() {
-    if (!reporterType || !content.trim()) return
+    if (!reporterType || !content.trim() || !confirmed) return
     setSubmitting(true)
     setError('')
 
@@ -50,6 +51,7 @@ export default function ProfessionalNoteModal({
         body: JSON.stringify({
           reporter_type: reporterType,
           content: content.trim(),
+          good_point_confirmed: confirmed,
         }),
       })
 
@@ -75,17 +77,18 @@ export default function ProfessionalNoteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 p-6 animate-slide-in-right">
+      <div role="dialog" aria-modal="true" aria-labelledby="good-point-title" className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 p-6 max-h-[90dvh] overflow-y-auto animate-slide-in-right">
         <button
           onClick={onClose}
+          aria-label="閉じる"
           className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="text-lg font-bold text-gray-900 mb-2">投稿する</h3>
+        <h3 id="good-point-title" className="text-lg font-bold text-gray-900 mb-2">良かったところを届ける</h3>
         <p className="text-sm text-gray-500 mb-4">
-          所属事業所は表示せず、立場だけを添えて公開します。
+          うれしかった対応や、助かった体験を教えてください。投稿者の立場を添えて公開します。
         </p>
 
         {success ? (
@@ -101,10 +104,11 @@ export default function ProfessionalNoteModal({
           <>
             {/* Reporter type selection */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="good-point-reporter" className="block text-sm font-medium text-gray-700 mb-2">
                 投稿者の立場 <span className="text-red-500">*</span>
               </label>
               <select
+                id="good-point-reporter"
                 value={reporterType}
                 onChange={(e) => setReporterType(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none bg-white"
@@ -135,11 +139,11 @@ export default function ProfessionalNoteModal({
               <div className="flex items-start gap-2">
                 {isProfessional ? <Stethoscope className="mt-0.5 h-4 w-4" /> : <MessageSquareText className="mt-0.5 h-4 w-4" />}
                 <div>
-                  <p className="text-sm font-bold">{isProfessional ? '専門職メモとして表示' : '口コミとして表示'}</p>
+                  <p className="text-sm font-bold">{isProfessional ? '専門職からの良いところとして表示' : '良かった体験として表示'}</p>
                   <p className="mt-1 text-xs leading-5 opacity-80">
                     {isProfessional
-                      ? 'ケアマネや医療・介護職が見た、受け入れ相談や連携時の実務的な情報です。'
-                      : 'ご家族や地域の方が感じた、雰囲気や対応のわかりやすい感想です。'}
+                      ? '相談や連携で助かったこと、その事業所ならではの良さを具体的に。'
+                      : '見学・利用時にうれしかったことや、感謝を伝えたい場面を具体的に。'}
                   </p>
                 </div>
               </div>
@@ -147,10 +151,11 @@ export default function ProfessionalNoteModal({
 
             {/* Content */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {isProfessional ? '専門職メモ' : '口コミ'} <span className="text-red-500">*</span>
+              <label htmlFor="good-point-content" className="block text-sm font-medium text-gray-700 mb-2">
+                {isProfessional ? '連携で助かったこと' : '良かったところ'} <span className="text-red-500">*</span>
               </label>
               <textarea
+                id="good-point-content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={isProfessional
@@ -165,20 +170,22 @@ export default function ProfessionalNoteModal({
               </p>
             </div>
 
+            <label className="mb-4 flex items-start gap-2 text-sm text-gray-700"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="mt-1" />実際に感じた良いところを書き、個人情報を含めていないことを確認しました。</label>
+
             {error && (
               <p className="text-sm text-red-600 mb-3">{error}</p>
             )}
 
             <button
               onClick={handleSubmit}
-              disabled={!reporterType || !content.trim() || submitting}
+              disabled={!reporterType || !content.trim() || !confirmed || submitting}
               className="w-full px-4 py-3 bg-cares-600 text-white rounded-xl text-base font-semibold hover:bg-cares-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {submitting ? '送信中...' : '投稿する'}
             </button>
 
             <p className="text-xs text-gray-400 mt-3 text-center">
-              匿名で公開されます。施設選びや連携判断に役立つ具体的な情報の共有にご協力ください。
+              実際の体験を書いてください。利用者・職員の氏名や病歴など、個人が分かる情報は記載しないでください。心配事は事業所の相談窓口や担当ケアマネへご相談ください。
             </p>
           </>
         )}

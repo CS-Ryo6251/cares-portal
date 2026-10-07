@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     default: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
     template: '%s — Cares by CareSpace',
   },
-  description: '介護事業所の公式情報、現在の空き状況、料金、写真、現場の評価をひとつのページで確認できます。',
+  description: '介護事業所の公式情報、現在の空き状況、料金、写真、良かった体験と応援の声をひとつのページで確認できます。',
   icons: {
     icon: '/favicon.png',
   },
@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     siteName: 'Cares by CareSpace',
     title: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
-    description: '空き状況、料金、写真、現場の評価から、地域の介護事業所を探せます。',
+    description: '空き状況、料金、写真、良かった体験と応援の声から、地域の介護事業所を探せます。',
     url: 'https://cares.carespace.jp',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Cares by CareSpace — 介護事業所の「いま」が見つかる',
-    description: '空き状況、料金、写真、現場の評価から、地域の介護事業所を探せます。',
+    description: '空き状況、料金、写真、良かった体験と応援の声から、地域の介護事業所を探せます。',
   },
   alternates: {
     canonical: 'https://cares.carespace.jp',

@@ -1,3 +1,5 @@
+import { getHeartSummaries } from '@/lib/hearts'
+import { getCurrentVacancies } from '@/lib/vacancies'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseClient()
 
     let query = supabase
-      .from('cares_listings')
+      .from('cares_directory_listing')
       .select('*', { count: 'estimated' })
 
     if (q) {
@@ -32,7 +34,8 @@ export async function GET(request: NextRequest) {
       query = query.eq('service_type', service_type)
     }
     if (acceptance_status) {
-      query = query.eq('acceptance_status', acceptance_status)
+      const normalizedStatus = ({ accepting: 'has_vacancy', not_accepting: 'no_vacancy', limited: 'unknown', waitlist: 'unknown' } as Record<string, string>)[acceptance_status] || acceptance_status
+      query = query.eq('current_acceptance_status', normalizedStatus)
     }
 
     query = query.order('facility_name', { ascending: true })
@@ -45,38 +48,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '検索に失敗しました' }, { status: 500 })
     }
 
-    // Aggregate vacancy summaries for each facility
     const facilityIds = (facilities || []).map(f => f.id)
-    let vacancySummaries: Record<string, { has_vacancy: number; no_vacancy: number; unknown: number; latest_report_at: string | null }> = {}
-
-    if (facilityIds.length > 0) {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-      const { data: reports } = await supabase
-        .from('cares_vacancy_reports')
-        .select('listing_id, vacancy_type, reported_at')
-        .in('listing_id', facilityIds)
-        .gte('reported_at', thirtyDaysAgo.toISOString())
-
-      for (const report of reports || []) {
-        if (!vacancySummaries[report.listing_id]) {
-          vacancySummaries[report.listing_id] = { has_vacancy: 0, no_vacancy: 0, unknown: 0, latest_report_at: null }
-        }
-        const summary = vacancySummaries[report.listing_id]
-        if (report.vacancy_type === 'has_vacancy') summary.has_vacancy++
-        else if (report.vacancy_type === 'no_vacancy') summary.no_vacancy++
-        else summary.unknown++
-
-        if (!summary.latest_report_at || report.reported_at > summary.latest_report_at) {
-          summary.latest_report_at = report.reported_at
-        }
-      }
-    }
-
+    const [hearts, vacancies] = await Promise.all([getHeartSummaries(facilityIds), getCurrentVacancies(facilityIds)])
     const facilitiesWithVacancy = (facilities || []).map(f => ({
       ...f,
-      vacancy_summary: vacancySummaries[f.id] || { has_vacancy: 0, no_vacancy: 0, unknown: 0, latest_report_at: null },
+      acceptance_status: f.current_acceptance_status,
+      current_vacancy: vacancies?.[f.id] || null,
+      heart_total: hearts === null ? null : (hearts[f.id]?.total || '0'),
+      heart_supporters: hearts === null ? null : (hearts[f.id]?.supporters || '0'),
     }))
 
     const total = count || 0
@@ -88,7 +67,7 @@ export async function GET(request: NextRequest) {
       page,
       totalPages,
     })
-    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
+    response.headers.set('Cache-Control', 'no-store')
     return response
   } catch (error) {
     console.error('Directory API error:', error)

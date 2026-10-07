@@ -1,5 +1,7 @@
+import { getHeartSummaries } from '@/lib/hearts'
+import { formatHearts } from '@/lib/community'
 import { getSupabaseClient } from '@/lib/supabase'
-import { ArrowRight, BadgeCheck, HeartHandshake, Search, Sparkles, Star } from 'lucide-react'
+import { ArrowRight, BadgeCheck, HeartHandshake, Search, Sparkles, Heart } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import GeolocationBanner from '@/components/GeolocationBanner'
@@ -302,7 +304,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   const hasUserLocation = userLatitude !== null && userLongitude !== null
 
   let query = supabase
-    .from('cares_listings')
+    .from('cares_directory_listing')
     .select('*', { count: 'estimated' })
     .order('is_owner_verified', { ascending: false })
     .order('completeness_score', { ascending: false, nullsFirst: false })
@@ -331,7 +333,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
       unknown: ['unknown', 'limited', 'waitlist'],
     }
     const values = statusMap[searchParams.status] || [searchParams.status]
-    query = query.in('acceptance_status', values)
+    query = query.in('current_acceptance_status', values)
   }
 
   // サービス種別フィルター
@@ -359,7 +361,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   if (error) {
     console.error('施設取得エラー:', error)
     const fallback = await supabase
-      .from('cares_listings')
+      .from('cares_directory_listing')
       .select('*')
       .limit(FACILITIES_PER_PAGE)
 
@@ -396,27 +398,9 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   const totalPages = Math.ceil(totalCount / FACILITIES_PER_PAGE)
 
   const listingIds = rawData.map((item: any) => item.id)
-  const ratingStats: Record<string, { sum: number; count: number }> = {}
-
-  if (listingIds.length > 0) {
-    const { data: ratings, error: ratingError } = await supabase
-      .from('cares_user_ratings')
-      .select('listing_id, rating')
-      .in('listing_id', listingIds)
-
-    if (!ratingError) {
-      for (const rating of ratings || []) {
-        const listingId = (rating as any).listing_id
-        if (!ratingStats[listingId]) ratingStats[listingId] = { sum: 0, count: 0 }
-        ratingStats[listingId].sum += Number((rating as any).rating || 0)
-        ratingStats[listingId].count += 1
-      }
-    }
-  }
+  const heartSummaries = await getHeartSummaries(listingIds)
 
   const facilities = rawData.map((item: any) => {
-    const stats = ratingStats[item.id]
-    const ratingAverage = stats?.count ? Math.round((stats.sum / stats.count) * 10) / 10 : null
 
     return {
       id: item.id,
@@ -425,13 +409,13 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
       address: item.address,
       latitude: item.latitude ?? null,
       longitude: item.longitude ?? null,
-      acceptance_status: item.acceptance_status,
+      acceptance_status: item.current_acceptance_status,
       is_owner_verified: item.is_owner_verified,
       source: item.source,
       completeness_score: item.completeness_score || 0,
       completeness_tier: item.completeness_tier || 'insufficient',
-      rating_average: ratingAverage,
-      rating_count: stats?.count || 0,
+      heart_total: heartSummaries === null ? null : (heartSummaries[item.id]?.total || '0'),
+      heart_supporters: heartSummaries === null ? null : (heartSummaries[item.id]?.supporters || '0'),
       distance_km: item.distance_km ?? null,
     }
   })
@@ -635,7 +619,7 @@ export default async function FeedPage({
                 <br />ひと目で見つかる。
               </h1>
               <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-                公表データと事業所公式情報に、利用者の口コミや専門職コメントを整理して掲載。空き状況、料金、パンフレットまで、電話する前に確認できます。
+                公表データと事業所公式情報に、良かった体験や専門職からの応援の声を整理して掲載。空き状況、料金、パンフレットまで、電話する前に確認できます。
               </p>
             </div>
             <a
@@ -650,7 +634,7 @@ export default async function FeedPage({
             {[
               ['公表DB＋新設事業所', 'OSから新しいページも公開'],
               ['事業所公式情報', '空き・料金・資料を直接更新'],
-              ['口コミと専門職コメント', '役割を分けて見やすく表示'],
+              ['良いところと応援のハート', 'あたたかな声を事業所選びの手がかりに'],
             ].map(([title, body]) => (
               <div key={title} className="rounded-2xl bg-white px-3 py-3.5 ring-1 ring-slate-100">
                 <p className="flex items-center gap-1.5 text-sm font-bold text-slate-800"><BadgeCheck className="h-4 w-4 text-cares-500" />{title}</p>
@@ -897,11 +881,11 @@ export default async function FeedPage({
                       </span>
                     )}
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
-                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                      {item.rating_average ? item.rating_average.toFixed(1) : '-'}
+                      <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
+                      {formatHearts(item.heart_total)}
                     </span>
                     <span className="text-xs font-medium text-slate-400">
-                      {item.rating_count > 0 ? `${item.rating_count}件の評価` : '評価なし'}
+                      {item.heart_supporters === null ? '応援数を取得できません' : `${formatHearts(item.heart_supporters)}人の応援`}
                     </span>
                   </div>
                   <div className="mt-2">
