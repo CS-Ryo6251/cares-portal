@@ -105,6 +105,8 @@ test('PostgreSQL: migration・集計・再送・レート制限・公開権限�
     insert into cares_user_ratings values('${user}','${listing}',5);`)
   await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007022927_cares_warm_directory.sql'),'utf8'))
   await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007024047_cares_community_privacy.sql'),'utf8'))
+  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007031500_cares_directory_name_order.sql'),'utf8'))
+  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007032000_cares_confirmed_directory_search.sql'),'utf8'))
   const send=async (u=user,r=requestId)=> (await db.query('select public.cares_send_listing_heart($1,$2,$3) as result',[listing,u,r])).rows[0].result
   await db.exec('set role service_role')
   await t.test('初回・同じ送信の再実行・別人の応援',async()=>{
@@ -142,9 +144,11 @@ test('PostgreSQL: migration・集計・再送・レート制限・公開権限�
       ('${listing}','no_vacancy',(now() at time zone 'Asia/Tokyo')::date-1,(now() at time zone 'Asia/Tokyo')::date-1); set role anon;`)
     assert.equal((await db.query('select current_acceptance_status from cares_directory_listing')).rows[0].current_acceptance_status,'unknown')
     assert.equal((await db.query("select * from cares_directory_listing where current_acceptance_status='has_vacancy'")).rows.length,0)
+    assert.equal((await db.query('select * from cares_confirmed_directory_listing')).rows.length,0)
     await db.exec('set role service_role')
     await db.exec(`insert into cares_vacancy_reports(listing_id,vacancy_type,confirmed_on,valid_until) values('${listing}','has_vacancy',(now() at time zone 'Asia/Tokyo')::date,(now() at time zone 'Asia/Tokyo')::date); set role anon;`)
     assert.equal((await db.query('select current_acceptance_status from cares_directory_listing')).rows[0].current_acceptance_status,'has_vacancy')
+    assert.equal((await db.query('select current_acceptance_status from cares_confirmed_directory_listing')).rows[0].current_acceptance_status,'has_vacancy')
   })
   await db.close()
 })

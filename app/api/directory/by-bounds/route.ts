@@ -35,8 +35,11 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient()
+    const status = params.get('status')
+    const source = status === 'has_vacancy' || status === 'no_vacancy'
+      ? 'cares_confirmed_directory_listing' : 'cares_directory_listing'
     let query = supabase
-      .from('cares_directory_listing')
+      .from(source)
       .select('*')
       .not('latitude', 'is', null)
       .not('longitude', 'is', null)
@@ -48,7 +51,6 @@ export async function GET(request: NextRequest) {
       .order('completeness_score', { ascending: false, nullsFirst: false })
       .limit(MAX_RESULTS)
 
-    const status = params.get('status')
     if (status) {
       const values = STATUS_MAP[status] || [status]
       query = query.in('current_acceptance_status', values)

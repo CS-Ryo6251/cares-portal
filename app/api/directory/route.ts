@@ -16,9 +16,12 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     const supabase = getSupabaseClient()
+    const normalizedStatus = ({ accepting: 'has_vacancy', not_accepting: 'no_vacancy', limited: 'unknown', waitlist: 'unknown' } as Record<string, string>)[acceptance_status || ''] || acceptance_status
+    const source = normalizedStatus === 'has_vacancy' || normalizedStatus === 'no_vacancy'
+      ? 'cares_confirmed_directory_listing' : 'cares_directory_listing'
 
     let query = supabase
-      .from('cares_directory_listing')
+      .from(source)
       .select('*', { count: 'estimated' })
 
     if (q) {
@@ -34,7 +37,6 @@ export async function GET(request: NextRequest) {
       query = query.eq('service_type', service_type)
     }
     if (acceptance_status) {
-      const normalizedStatus = ({ accepting: 'has_vacancy', not_accepting: 'no_vacancy', limited: 'unknown', waitlist: 'unknown' } as Record<string, string>)[acceptance_status] || acceptance_status
       query = query.eq('current_acceptance_status', normalizedStatus)
     }
 
