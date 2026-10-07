@@ -17,7 +17,6 @@ type Facility = {
   acceptance_status: string | null
   source: string | null
   heart_total: string | null
-  heart_supporters: string | null
   current_vacancy: { confirmed_on: string; valid_until: string } | null
 }
 

@@ -8,7 +8,7 @@ const { NextRequest } = require('next/server')
 function load(file, mocks = {}) {
   const mod = { exports: {} }
   const code = ts.transpileModule(fs.readFileSync(path.join(__dirname,'..',file),'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText
-  const req = name => mocks[name] || (name === '@/lib/community' ? load('lib/community.ts') : require(name))
+  const req = name => mocks[name] || (name === '@/lib/community' || name === './community' ? load('lib/community.ts') : require(name))
   new Function('require','module','exports',code)(req,mod,mod.exports)
   return mod.exports
 }
@@ -41,21 +41,48 @@ const user='20000000-0000-4000-8000-000000000001'
 const requestId='30000000-0000-4000-8000-000000000001'
 const auth = u => ({createAuthServerClient:async()=>({auth:{getUser:async()=>({data:{user:u},error:null})}})})
 const context={params:Promise.resolve({id:listing})}
-function post(payload) {return new NextRequest('http://localhost/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)})}
+function post(payload) {return new NextRequest('http://localhost/api',{method:'POST',headers:{'content-type':'application/json',origin:'http://localhost'},body:JSON.stringify(payload)})}
 
-test('ハートAPI：未認証拒否・本人IDの採用・再送ID維持・失敗の扱い', async () => {
+test('ハートAPI：ログイン不要・サーバー識別子・再送ID・外部サイトからの送信拒否', async () => {
   let call
-  const service={getSupabaseServiceClient:()=>({rpc:async(name,args)=>{call={name,args};return {data:{total:'6',supporters:'2'},error:null}}})}
-  const mocks={'@/lib/supabase':service,'@/lib/hearts':{getHeartSummaries:async()=>null}}
-  let route=load('app/api/directory/[id]/hearts/route.ts',{...mocks,'@/lib/supabase-server-auth':auth(null)})
-  assert.equal((await route.POST(post({request_id:requestId}),context)).status,401)
-  assert.equal(call,undefined)
-  route=load('app/api/directory/[id]/hearts/route.ts',{...mocks,'@/lib/supabase-server-auth':auth({id:user})})
+  const service={getSupabaseServiceClient:()=>({rpc:async(name,args)=>{call={name,args};return {data:{total:'6'},error:null}}})}
+  const visitor={'@/lib/heart-visitor':{heartVisitor:()=>({visitorHash:'a'.repeat(64),networkHash:'b'.repeat(64)}),setHeartVisitor:r=>r}}
+  const route=load('app/api/directory/[id]/hearts/route.ts',{'@/lib/supabase':service,'@/lib/hearts':{getHeartSummaries:async()=>null},...visitor})
   assert.equal((await route.POST(post({request_id:'bad'}),context)).status,400)
-  assert.equal((await route.POST(post({request_id:requestId,user_id:'another-account'}),context)).status,200)
-  assert.equal(call.args.p_user_id,user)
+  const res=await route.POST(post({request_id:requestId,user_id:'another-account',visitor_hash:'spoofed'}),context)
+  assert.equal(res.status,200)
+  assert.deepEqual(await res.json(),{total:'6'})
+  assert.equal(call.name,'cares_send_guest_heart')
+  assert.equal(call.args.p_visitor_hash,'a'.repeat(64))
+  assert.equal(Object.hasOwn(call.args,'p_user_id'),false)
   assert.equal(call.args.p_request_id,requestId)
+  call=undefined
+  const foreign=post({request_id:requestId});foreign.headers.set('origin','https://another.example')
+  assert.equal((await route.POST(foreign,context)).status,403)
+  assert.equal(call,undefined)
   assert.equal((await route.GET(post({}),context)).status,503)
+})
+
+test('匿名Cookieは署名を検証し、IPを公開せず、応答に安全なCookieを設定', () => {
+  const old=process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY='synthetic-test-key-not-a-real-credential'
+  try {
+    const {heartVisitor,setHeartVisitor}=load('lib/heart-visitor.ts')
+    const req=new NextRequest('https://cares.example/api',{headers:{'x-forwarded-for':'192.0.2.10'}})
+    const first=heartVisitor(req)
+    assert.match(first.visitorHash,/^[a-f0-9]{64}$/)
+    assert.match(first.networkHash,/^[a-f0-9]{64}$/)
+    assert.ok(!JSON.stringify(first).includes('192.0.2.10'))
+    const again=new NextRequest(req.url,{headers:{cookie:`cares-heart-visitor=${first.cookieValue}`,'x-forwarded-for':'192.0.2.10'}})
+    assert.equal(heartVisitor(again).visitorHash,first.visitorHash)
+    assert.equal(heartVisitor(again).cookieValue,null)
+    const fake=new NextRequest(req.url,{headers:{cookie:`cares-heart-visitor=${first.cookieValue.slice(0,-1)}x`}})
+    assert.notEqual(heartVisitor(fake).visitorHash,first.visitorHash)
+    const {NextResponse}=require('next/server')
+    const res=setHeartVisitor(NextResponse.json({total:'1'}),first)
+    assert.match(res.headers.get('set-cookie'),/HttpOnly/)
+    assert.match(res.headers.get('set-cookie'),/SameSite=lax/i)
+  } finally {if(old===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=old}
 })
 test('空き情報API：ログインと公開確認なしでは書き込まない', async () => {
   let writes=0
@@ -107,6 +134,7 @@ test('PostgreSQL: migration・集計・再送・レート制限・公開権限�
   await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007024047_cares_community_privacy.sql'),'utf8'))
   await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007031500_cares_directory_name_order.sql'),'utf8'))
   await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007032000_cares_confirmed_directory_search.sql'),'utf8'))
+  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261007041342_cares_guest_hearts.sql'),'utf8'))
   const send=async (u=user,r=requestId)=> (await db.query('select public.cares_send_listing_heart($1,$2,$3) as result',[listing,u,r])).rows[0].result
   await db.exec('set role service_role')
   await t.test('初回・同じ送信の再実行・別人の応援',async()=>{
@@ -149,6 +177,27 @@ test('PostgreSQL: migration・集計・再送・レート制限・公開権限�
     await db.exec(`insert into cares_vacancy_reports(listing_id,vacancy_type,confirmed_on,valid_until) values('${listing}','has_vacancy',(now() at time zone 'Asia/Tokyo')::date,(now() at time zone 'Asia/Tokyo')::date); set role anon;`)
     assert.equal((await db.query('select current_acceptance_status from cares_directory_listing')).rows[0].current_acceptance_status,'has_vacancy')
     assert.equal((await db.query('select current_acceptance_status from cares_confirmed_directory_listing')).rows[0].current_acceptance_status,'has_vacancy')
+  })
+  await t.test('匿名ハート：初回Cookieなし・応答紛失後の再送・繰返し・連打・権限',async()=>{
+    await db.exec('set role service_role')
+    const before=BigInt((await db.query('select total::text as total from cares_listing_heart_totals')).rows[0].total)
+    const guest=(request=requestId,visitor='a'.repeat(64),network='b'.repeat(64),id=listing)=>db.query('select cares_send_guest_heart($1,$2,$3,$4) as result',[id,request,visitor,network]).then(r=>r.rows[0].result)
+    assert.deepEqual(await guest(),{total:String(before+1n)})
+    // Lost Set-Cookie response must not increment again, even with a new cookie/network.
+    assert.deepEqual(await guest(requestId,'c'.repeat(64),'d'.repeat(64)),{total:String(before+1n)})
+    await assert.rejects(guest('30000000-0000-4000-8000-000000000012'),/HEART_TOO_FAST/)
+    await db.exec("update cares_guest_heart_requests set created_at=clock_timestamp()-interval '2 seconds'")
+    assert.deepEqual(await guest('30000000-0000-4000-8000-000000000012'),{total:String(before+2n)})
+    await assert.rejects(guest(requestId,'a'.repeat(64),'b'.repeat(64),'10000000-0000-4000-8000-000000000099'),/REQUEST_CONFLICT/)
+    await assert.rejects(guest('30000000-0000-4000-8000-000000000014','a'.repeat(64),'b'.repeat(64),'10000000-0000-4000-8000-000000000099'),/LISTING_NOT_FOUND/)
+    await db.exec(`insert into cares_guest_heart_requests(request_id,listing_id,visitor_hash,network_hash) select gen_random_uuid(),'${listing}',repeat('e',64),repeat('f',64) from generate_series(1,120)`)
+    await assert.rejects(guest('30000000-0000-4000-8000-000000000013','9'.repeat(64),'f'.repeat(64)),/HEART_TOO_FAST/)
+    await db.exec('set role anon')
+    await assert.rejects(db.query('select * from cares_guest_heart_requests'),/permission denied/)
+    await assert.rejects(guest(),/permission denied/)
+    await db.exec('set role authenticated')
+    await assert.rejects(db.query('select * from cares_guest_heart_requests'),/permission denied/)
+    await assert.rejects(guest(),/permission denied/)
   })
   await db.close()
 })

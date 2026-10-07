@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
       acceptance_status: f.current_acceptance_status,
       current_vacancy: vacancies?.[f.id] || null,
       heart_total: hearts === null ? null : (hearts[f.id]?.total || '0'),
-      heart_supporters: hearts === null ? null : (hearts[f.id]?.supporters || '0'),
     }))
 
     const total = count || 0
