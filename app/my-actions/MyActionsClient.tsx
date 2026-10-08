@@ -28,6 +28,7 @@ function MyActionsContent() {
   const currentTab: TabKey = TABS.some(tab => tab.key === requested) ? requested as TabKey : 'support'
 
   function handleTabChange(tab: TabKey) {
+    if (tab === currentTab) return
     if (!window.dispatchEvent(new Event('cares:my-actions-navigate', { cancelable: true }))) return
     router.push(`/my-actions?tab=${tab}`, { scroll: false })
   }

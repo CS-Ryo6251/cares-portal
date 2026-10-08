@@ -142,10 +142,11 @@ test('おすすめは非公開を維持し、選択した事業所のみ別の�
   const h = harness(); await create(h, 100, 'recommendations')
   await patch(h, { action: 'save', version: 1, title: 'おすすめ', entries: [entry(2), entry(1)] })
   assert.equal((await patch(h, { action: 'share', version: 2, title: '公開', intro: '' })).status, 400)
-  assert.equal((await h.all.POST(request('POST', { id: id(101), kind: 'candidates', title: '別の利用者', source_id: id(100), selected_ids: [id(1)] }))).status, 201)
+  assert.equal((await h.all.POST(request('POST', { id: id(101), kind: 'candidates', title: '別の利用者', source_id: id(100), source_version: 2, selected_ids: [id(1)] }))).status, 201)
   assert.deepEqual(h.rows.get(id(101)).entries, [{ ...entry(1), public_note: '' }])
   assert.equal(h.rows.get(id(101)).share_token, null)
   assert.equal(h.rows.get(id(100)).entries.length, 2)
+  assert.equal((await h.all.POST(request('POST', { id: id(102), kind: 'candidates', title: '古い内容からコピー', source_id: id(100), source_version: 1, selected_ids: [id(1)] }))).status, 409)
 })
 test('取得障害は空のリストと扱わず503にし、30件超・不正事業所を保存しない', async () => {
   const h = harness(); await create(h)

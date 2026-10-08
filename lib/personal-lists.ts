@@ -1,5 +1,5 @@
 export const LIST_MAX_ITEMS = 30
-export const LIST_KINDS = { candidates: '利用者ごとの候補', recommendations: '自分のおすすめ' } as const
+export const LIST_KINDS = { candidates: '利用者ごとの候補', recommendations: '自分のおすすめランキング' } as const
 export type ListKind = keyof typeof LIST_KINDS
 export type ListEntry = { listing_id: string; private_note: string; public_note: string }
 export type ListSnapshot = { title: string; intro: string; entries: { listing_id: string; comment: string }[] }

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { LIST_ID, LIST_KINDS, copiedEntries, listSummary, listText, type ListEntry, type ListKind, type PersonalList } from '@/lib/personal-lists'
-import { LIST_COLUMNS, listBody, listInput, listUser, ownedList, validateNewEntries } from '@/lib/personal-lists-server'
+import { LIST_COLUMNS, listBody, listInput, listUser, listVersion, ownedList, validateNewEntries } from '@/lib/personal-lists-server'
 import { IntakeError, intakeFailure, intakeResponse, sameOrigin, takeLimit } from '@/lib/intake-server'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const kind = body.kind as ListKind
     const db = getSupabaseServiceClient()
     // Retry identity uses the original request, not changing source-list content.
-    const hash = createHash('sha256').update(JSON.stringify({ title, kind, listing_id: body.listing_id || null, source_id: body.source_id || null, selected_ids: body.selected_ids || null })).digest('hex')
+    const hash = createHash('sha256').update(JSON.stringify({ title, kind, listing_id: body.listing_id || null, source_id: body.source_id || null, selected_ids: body.selected_ids || null, source_version: body.source_version || null })).digest('hex')
     const existing = await db.from('cares_personal_lists').select('id,request_hash').eq('id', body.id).eq('user_id', user).maybeSingle()
     if (existing.error) throw new Error('list lookup failed')
     if (existing.data) {
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     if (body.source_id) {
       if (typeof body.source_id !== 'string' || kind !== 'candidates' || body.listing_id) throw new IntakeError('コピー先は候補リストを選んでください。')
       const source = await ownedList(user, body.source_id)
+      listVersion(body.source_version, source.version)
       entries = listInput(() => copiedEntries(source.entries, body.selected_ids))
     } else if (body.listing_id) {
       if (typeof body.listing_id !== 'string' || !LIST_ID.test(body.listing_id)) throw new IntakeError('事業所を選び直してください。')
