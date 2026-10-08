@@ -1,5 +1,6 @@
 import { ArrowRight, BadgeCheck, Heart, MapPin } from 'lucide-react'
 import FacilityListCover from './FacilityListCover'
+import AddToListButton from './AddToListButton'
 import { compactHearts, formatHearts } from '@/lib/community'
 import { facilityTypeLabels, vacancyStatusMap } from '@/lib/constants'
 
@@ -15,7 +16,7 @@ export default function FacilityListCard({ id, name, serviceType, address, cover
   const exact = formatHearts(total)
   const countLabel = exact === '—' ? '応援数を取得できません' : `${exact} ハート`
 
-  return <a href={`/directory/${id}`} data-facility-card={id} className="group grid grid-cols-[76px_minmax(0,1fr)] gap-4 rounded-2xl border border-[#eee6e2] bg-white p-4 transition hover:border-rose-200 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-500 sm:grid-cols-[140px_minmax(0,1fr)_auto] sm:items-center sm:gap-6 sm:p-5">
+  return <article className="overflow-hidden rounded-2xl border border-[#eee6e2] bg-white"><a href={`/directory/${id}`} data-facility-card={id} className="group grid grid-cols-[76px_minmax(0,1fr)] gap-4 bg-white p-4 transition hover:border-rose-200 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-500 sm:grid-cols-[140px_minmax(0,1fr)_auto] sm:items-center sm:gap-6 sm:p-5">
     <div className="relative h-24 overflow-hidden rounded-xl bg-rose-50 sm:h-28">
       <FacilityListCover src={coverImage} />
       {rank !== undefined && <span className="absolute left-0 top-0 flex h-9 min-w-9 items-center justify-center rounded-br-xl bg-white/95 px-2 text-lg font-bold tabular-nums text-rose-700" aria-label={`${rank}位`}>{rank}</span>}
@@ -39,5 +40,5 @@ export default function FacilityListCard({ id, name, serviceType, address, cover
       <p className="mt-1 flex items-center gap-2 font-bold text-rose-600 sm:justify-end" title={countLabel} aria-label={countLabel}><Heart aria-hidden="true" className="h-5 w-5 shrink-0 fill-current" /><span aria-hidden="true" className="text-2xl tabular-nums">{compactHearts(total)}</span></p>
       <span className="mt-2 hidden items-center gap-1 text-xs font-semibold text-slate-500 sm:inline-flex">ページを見る<ArrowRight aria-hidden="true" className="h-3.5 w-3.5" /></span>
     </div>
-  </a>
+  </a><div className="flex justify-end border-t border-slate-100 px-4 py-2"><AddToListButton listingId={id} name={name} /></div></article>
 }

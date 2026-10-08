@@ -1,5 +1,6 @@
 import { BadgeCheck, Building2, MapPin, Phone } from 'lucide-react'
 import FacilityHearts from './FacilityHearts'
+import AddToListButton from './AddToListButton'
 import FacilityOwnerTools from './FacilityOwnerTools'
 import FacilityProfileShare from './FacilityProfileShare'
 import InquiryButton from '@/app/facility/[id]/InquiryButton'
@@ -41,6 +42,7 @@ export default function FacilityProfileHeader(props: Props) {
       {props.overview && <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700 sm:text-base">{props.overview}</p>}
       {props.address && <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-slate-500"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />{props.address}</p>}
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        {props.listingIds[0] && <AddToListButton listingId={props.listingIds[0]} name={props.name} />}
         {publicFacilityId && <InquiryButton facilityId={publicFacilityId} facilityName={props.name} />}
         {props.phone && <a href={`tel:${props.phone}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700"><Phone className="h-4 w-4" />電話する</a>}
       </div>

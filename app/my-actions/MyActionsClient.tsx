@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
 import { Heart, Star, FileText, Bookmark } from 'lucide-react'
 import FavoritesTab from './FavoritesTab'
+import PersonalListsTab from './PersonalListsTab'
 import RatingsTab from './RatingsTab'
 import NotesTab from './NotesTab'
 import SupportTab from './SupportTab'
@@ -11,6 +12,7 @@ import BrochureCollection from '@/components/BrochureCollection'
 
 const TABS = [
   { key: 'support', label: '応援の記録', icon: Heart },
+  { key: 'lists', label: 'マイリスト', icon: Bookmark },
   { key: 'brochures', label: '資料', icon: FileText },
   { key: 'favorites', label: 'お気に入り', icon: Bookmark },
   { key: 'ratings', label: '以前のマイ評価', icon: Star },
@@ -26,6 +28,7 @@ function MyActionsContent() {
   const currentTab: TabKey = TABS.some(tab => tab.key === requested) ? requested as TabKey : 'support'
 
   function handleTabChange(tab: TabKey) {
+    if (!window.dispatchEvent(new Event('cares:my-actions-navigate', { cancelable: true }))) return
     router.push(`/my-actions?tab=${tab}`, { scroll: false })
   }
 
@@ -53,6 +56,7 @@ function MyActionsContent() {
       </div>
 
       {/* Tab content */}
+      {currentTab === 'lists' && <PersonalListsTab />}
       {currentTab === 'support' && <SupportTab />}
       {currentTab === 'brochures' && <BrochureCollection mine />}
       {currentTab === 'favorites' && <FavoritesTab />}
