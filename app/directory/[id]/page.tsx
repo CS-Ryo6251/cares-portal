@@ -1,4 +1,5 @@
 import FacilityProfileHeader from '@/components/FacilityProfileHeader'
+import FacilityAddressLink from '@/components/FacilityAddressLink'
 import ProviderIntakeSection from '@/components/ProviderIntakeSection'
 import FacilityPostFeed from '@/components/FacilityPostFeed'
 import { profilePhotos, publicWebUrl } from '@/lib/profile-media'
@@ -12,7 +13,6 @@ import type { Metadata } from 'next'
 import {
   ArrowRight,
   ArrowLeft,
-  MapPin,
   Phone,
   Globe,
   Building2,
@@ -292,9 +292,8 @@ export default async function DirectoryDetailPage({
           {/* Details */}
           <div className="space-y-2">
             {f.address && (
-              <div className="flex items-center gap-2 text-base text-gray-600">
-                <MapPin className="w-4 h-4 shrink-0 text-gray-400" />
-                <span>{f.address}</span>
+              <div className="text-base">
+                <FacilityAddressLink name={f.facility_name} address={f.address} />
               </div>
             )}
             {f.phone && (

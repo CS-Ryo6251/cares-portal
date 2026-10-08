@@ -1,6 +1,7 @@
 import HeartCount from '@/components/HeartCount'
 import Link from 'next/link'
-import { MapPin, Phone } from 'lucide-react'
+import { Phone } from 'lucide-react'
+import FacilityAddressLink from './FacilityAddressLink'
 import { facilityTypeLabels, acceptanceStatusMap } from '@/lib/constants'
 
 type FacilityDirectoryCardProps = {
@@ -27,15 +28,14 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
 
 
   return (
-    <Link
-      href={`/directory/${facility.id}`}
-      className="group block rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cares-200 hover:shadow-xl hover:shadow-slate-200/70"
+    <article
+      className="group relative block rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cares-200 hover:shadow-xl hover:shadow-slate-200/70"
     >
       <div className="px-4 py-4 sm:px-5 sm:py-5">
         {/* Header row */}
         <div className="flex items-start gap-2 flex-wrap">
           <span className="text-base sm:text-lg font-bold text-slate-950 leading-snug group-hover:text-cares-800">
-            {facility.facility_name}
+            <Link href={`/directory/${facility.id}`} className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-slate-500">{facility.facility_name}</Link>
           </span>
           {isOfficial && (
             <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
@@ -67,9 +67,8 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
         {facility.current_vacancy && <p className="mt-2 text-xs text-gray-500">{facility.current_vacancy.confirmed_on} 確認・{facility.current_vacancy.valid_until} まで</p>}
         {/* Address */}
         {facility.address && (
-          <div className="flex items-center gap-1.5 mt-2.5 text-sm text-gray-500">
-            <MapPin className="w-3.5 h-3.5 shrink-0 text-gray-400" />
-            <span className="truncate">{facility.address}</span>
+          <div className="mt-2.5 text-sm">
+            <FacilityAddressLink name={facility.facility_name} address={facility.address} />
           </div>
         )}
 
@@ -106,6 +105,6 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
           )}
         </div>
       </div>
-    </Link>
+    </article>
   )
 }
