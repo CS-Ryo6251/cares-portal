@@ -257,14 +257,20 @@ export default async function DirectoryDetailPage({
           戻る
         </Link>
 
+        <div className="-mx-4 sm:mx-0">
+          <FacilityProfileHeader
+            facilityId={isOwnerVerified ? f.owner_facility_id || undefined : undefined}
+            isOfficial={Boolean(isOwnerVerified)} hasPublicProfile={Boolean(portalProfile)}
+            name={f.facility_name} serviceType={f.service_type} address={f.address}
+            cover={publicWebUrl(portalProfile?.cover_image_url)} icon={publicWebUrl(portalProfile?.icon_url)} overview={portalProfile?.overview}
+            phone={portalProfile?.phone || f.phone} statusLabel={statusLabel} statusColor={statusColor}
+            listingIds={[f.id]} postCount={portalData ? portalData.postCount : undefined}
+            photoCount={portalData ? profilePhotos(portalProfile.photos, portalPosts).length : undefined} />
+        </div>
+        {portalProfileUnavailable && <p role="status" className="mt-3 text-sm text-slate-500">写真・プロフィールを読み込めませんでした。時間をおいて再読み込みしてください。</p>}
+        <ProviderIntakeSection listingId={f.id} />
+
         {isOwnerVerified && portalProfile && <>
-          <div className="-mx-4 sm:mx-0">
-            <FacilityProfileHeader facilityId={f.owner_facility_id} name={f.facility_name} serviceType={f.service_type} address={f.address}
-              cover={publicWebUrl(portalProfile.cover_image_url)} icon={publicWebUrl(portalProfile.icon_url)} overview={portalProfile.overview}
-              phone={portalProfile.phone || f.phone} statusLabel={statusLabel} statusColor={statusColor}
-              listingIds={[f.id]} postCount={portalData?.postCount ?? null} photoCount={profilePhotos(portalProfile.photos, portalPosts).length} />
-          </div>
-          <ProviderIntakeSection listingId={f.id} />
           <section className="-mx-4 mt-7 mb-7 sm:mx-0">
             <FacilityPostFeed posts={portalPosts} facilityId={f.owner_facility_id} facilityName={f.facility_name} listingId={f.id}
               initialCategory={selectedPostCategory} unavailable={portalData?.postsUnavailable} totalCount={portalData?.postCount ?? undefined} />
@@ -272,56 +278,19 @@ export default async function DirectoryDetailPage({
           </section>
         </>}
 
-        {!(isOwnerVerified && portalProfile) && <ProviderIntakeSection listingId={f.id} />}
-
         <details open={!(isOwnerVerified && portalProfile)} className="mb-6 rounded-2xl border border-gray-100 bg-white">
           <summary className="cursor-pointer px-5 py-4 text-sm font-bold text-slate-700">事業所の基本情報・お問い合わせ先</summary>
           <div className="px-5 pb-3"><DirectoryDisclaimer isOwnerVerified={isOwnerVerified} /></div>
         {/* ===== MAIN INFO CARD ===== */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 mb-6 shadow-sm">
-          {/* Name + badges (only show if no hero) */}
-          {!(isOwnerVerified && portalProfile) && (
-            <>
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                    {f.facility_name}
-                  </h1>
-                  {isOwnerVerified && (
-                    <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                      公式
-                    </span>
-                  )}
-                </div>
-                <span className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold ${statusColor}`}>
-                  {statusLabel}
-                </span>
-              </div>
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
-                {f.service_type && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-cares-50 text-cares-700">
-                    {f.service_type}
-                  </span>
-                )}
-                {f.jigyosho_number && (
-                  <span className="text-sm text-gray-500 font-mono">
-                    事業所番号: {f.jigyosho_number}
-                  </span>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Jigyosho number for hero version */}
-          {isOwnerVerified && portalProfile && f.jigyosho_number && (
+          {f.jigyosho_number && (
             <p className="text-sm text-gray-500 font-mono mb-3">
               事業所番号: {f.jigyosho_number}
             </p>
           )}
 
           {/* Details */}
-          <div className={`space-y-2 ${!(isOwnerVerified && portalProfile) ? 'mt-4' : ''}`}>
+          <div className="space-y-2">
             {f.address && (
               <div className="flex items-center gap-2 text-base text-gray-600">
                 <MapPin className="w-4 h-4 shrink-0 text-gray-400" />
@@ -493,7 +462,7 @@ export default async function DirectoryDetailPage({
             facilityName={f.facility_name}
             isOwnerVerified={isOwnerVerified}
             jigyoshoNumber={f.jigyosho_number}
-            showHearts={!(isOwnerVerified && portalProfile)}
+            showHearts={false}
           />
 
           {/* Vacancy disclaimer */}
