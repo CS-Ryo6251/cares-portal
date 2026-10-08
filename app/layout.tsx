@@ -49,10 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ja">
       {gaId && (
         <head>
-          <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
           <script
             dangerouslySetInnerHTML={{
-              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`,
+              __html: `if(!/^\\/(shortlists|my-actions)(\\/|$)/.test(location.pathname)){var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=${gaId}';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}',{page_referrer:document.referrer.includes('/shortlists/')?'':document.referrer});}`,
             }}
           />
         </head>

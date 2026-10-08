@@ -55,6 +55,11 @@ export async function middleware(request: NextRequest) {
   if (supabaseResponse.cookies.getAll().length > 0) {
     supabaseResponse.headers.set('Cache-Control', 'private, no-store')
   }
+  if (/^\/(shortlists|api\/shared-lists|api\/my-lists|my-actions)(\/|$)/.test(path)) {
+    supabaseResponse.headers.set('Cache-Control', 'private, no-store')
+    supabaseResponse.headers.set('Referrer-Policy', 'no-referrer')
+    supabaseResponse.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  }
   return supabaseResponse
 }
 

@@ -32,6 +32,7 @@ async function renderDirectory({ verified = true, profile = null, profileError =
   const empty = () => null
   const header = load('components/FacilityProfileHeader.tsx', {
     './FacilityHearts': props => element('div', { 'data-heart-listing': props.listingId, 'data-heart-facility': props.facilityId }),
+    './AddToListButton': () => null,
     './FacilityOwnerTools': props => element('div', { 'data-owner-tools': props.facilityId }),
     './FacilityProfileShare': props => element('a', { href: props.publicUrl }, '共有'),
     '@/app/facility/[id]/InquiryButton': props => element('button', { 'data-inquiry': props.facilityId }, 'お問い合わせ'),
