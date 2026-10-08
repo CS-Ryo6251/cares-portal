@@ -5,7 +5,11 @@ import { Camera, LayoutGrid, MapPin, ReceiptText } from 'lucide-react'
 export default function FacilityProfileTabs({ posts, photos, information, fees }: { posts: ReactNode; photos: ReactNode; information: ReactNode; fees: ReactNode }) {
   const [active, setActive] = useState('posts')
   useEffect(() => {
-    const openLinkedPost = () => { if (/^#(?:post|comments)-/.test(window.location.hash)) setActive('posts') }
+    const openLinkedPost = () => {
+      if (/^#(?:post|comments)-/.test(window.location.hash)) setActive('posts')
+      if (window.location.hash === '#brochures') setActive('fees')
+    }
+    openLinkedPost()
     window.addEventListener('hashchange', openLinkedPost)
     return () => window.removeEventListener('hashchange', openLinkedPost)
   }, [])
