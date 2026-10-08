@@ -45,6 +45,7 @@ test('実PostgreSQL: 応援ランキングの週境界・重複・公開条件�
  await db.exec(fs.readFileSync(path.join('supabase/migrations',migration),'utf8'))
  const lookup=fs.readdirSync('supabase/migrations').find(file=>file.endsWith('_cares_support_ranking_lookup.sql'))
  await db.exec(fs.readFileSync(path.join('supabase/migrations',lookup),'utf8'))
+ await db.exec(fs.readFileSync(path.join('supabase/migrations',fs.readdirSync('supabase/migrations').find(file=>file.endsWith('_cares_ranking_service_types.sql'))),'utf8'))
  const query=async(period='week',prefecture='',service='')=>(await db.query('select cares_support_ranking($1,$2,$3,$4) as result',[period,prefecture,service,asOf])).rows[0].result
  await t.test('日本時間月曜0時から・未来を除外・投稿合算は1回・同数同順位',async()=>{
   const result=await query();assert.equal(Date.parse(result.periodStart),Date.parse('2026-10-04T15:00:00Z'))
@@ -58,6 +59,18 @@ test('実PostgreSQL: 応援ランキングの週境界・重複・公開条件�
   assert.deepEqual((await query('week','山形県','訪問介護')).items.map(i=>[i.id,i.total]),[[id(2),'3']])
   assert.deepEqual((await query('week','沖縄県')).items,[])
   await assert.rejects(query('bad'),/Invalid ranking period/)
+ })
+ await t.test('種別の配列フィルターでも集計・順位・同一事業所の重複排除を保つ',async()=>{
+  const queryTypes=async types=>(await db.query('select cares_support_ranking_for_services($1,$2,$3,$4) as result',['all','',types,asOf])).rows[0].result
+  assert.deepEqual(await queryTypes([]),await query('all'))
+  assert.deepEqual(await queryTypes(['通所介護']),await query('all','','通所介護'))
+  assert.deepEqual((await queryTypes(['通所介護','訪問介護'])).items.map(i=>[i.id,i.total,i.rank]),[[id(1),'17',1],[id(3),'3',2],[id(4),'1',3]])
+  await db.exec(`insert into cares_listings(id,facility_name,service_type) values('${id(6)}','旧称デイ','デイサービス'),('${id(7)}','地域密着','地域密着型通所介護');insert into cares_listing_heart_totals values('${id(6)}',8),('${id(7)}',99);`)
+  const result=await queryTypes(['通所介護','デイサービス'])
+  assert.deepEqual(result.items.map(i=>[i.id,i.total,i.rank]),[[id(1),'17',1],[id(6),'8',2],[id(3),'3',3]])
+  assert.deepEqual((await queryTypes(['地域包括支援センター'])).items,[])
+  await db.exec(`delete from cares_listing_heart_totals where listing_id in ('${id(6)}','${id(7)}');delete from cares_listings where id in ('${id(6)}','${id(7)}');`)
+  for(const role of ['anon','authenticated']){await db.exec('set role '+role);await assert.rejects(queryTypes([]),/permission denied/);await db.exec('reset role')}
  })
  await t.test('取消・投稿非公開・事業所非公開でいいねと非公開情報を除外',async()=>{
   await db.exec(`delete from cares_likes where post_id='${id(12)}' and created_at>='2026-10-04T15:00:00Z';update facility_portal_posts set like_count=1 where id='${id(12)}';`)

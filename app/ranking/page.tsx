@@ -1,8 +1,9 @@
+import ServiceTypeOptions from '@/components/ServiceTypeOptions'
 import type { Metadata } from 'next'
 import { ArrowLeft, ArrowRight, Heart } from 'lucide-react'
 import FacilityListCard from '@/components/FacilityListCard'
 import PrefectureRankingMap from '@/components/PrefectureRankingMap'
-import { prefectures, facilityTypeLabels } from '@/lib/constants'
+import { prefectures } from '@/lib/constants'
 import { rankingFilters, rankingUrl } from '@/lib/support-ranking'
 import { getSupportRanking } from '@/lib/support-ranking-server'
 
@@ -35,7 +36,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       <form action="/ranking" className="grid gap-3 rounded-2xl border border-[#eee6e2] bg-white p-4 sm:grid-cols-[1fr_1.4fr_auto] sm:items-end sm:p-5">
         <input type="hidden" name="period" value={filters.period} />
         <label className="min-w-0 text-xs font-semibold text-slate-600">エリア<select aria-label="エリア" name="prefecture" defaultValue={filters.prefecture} className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800"><option value="">全国</option>{prefectures.map(value => <option key={value}>{value}</option>)}</select></label>
-        <label className="min-w-0 text-xs font-semibold text-slate-600">サービス<select aria-label="サービス" name="service_type" defaultValue={filters.service} className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800"><option value="">すべてのサービス</option>{Object.keys(facilityTypeLabels).map(value => <option key={value}>{value}</option>)}</select></label>
+        <label className="min-w-0 text-xs font-semibold text-slate-600">サービス<select aria-label="サービス" name="service_type" defaultValue={filters.service} className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800"><option value="">すべてのサービス</option><ServiceTypeOptions currentValue={filters.service} /></select></label>
         <button className="min-h-11 rounded-xl bg-slate-800 px-6 text-sm font-bold text-white hover:bg-slate-700">表示する</button>
       </form>
 

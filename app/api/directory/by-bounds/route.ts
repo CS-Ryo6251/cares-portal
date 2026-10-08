@@ -1,3 +1,4 @@
+import { serviceTypeValues } from '@/lib/service-types'
 import { getHeartSummaries } from '@/lib/hearts'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     const serviceType = params.get('service_type')
     if (serviceType) {
-      query = query.eq('service_type', serviceType)
+      query = query.in('service_type', serviceTypeValues(serviceType))
     }
 
     const q = params.get('q')

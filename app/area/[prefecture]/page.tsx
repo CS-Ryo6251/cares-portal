@@ -1,3 +1,4 @@
+import { serviceTypeValues } from '@/lib/service-types'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { MapPin, Building2, ChevronRight } from 'lucide-react'
@@ -49,7 +50,7 @@ async function getAreaFacilities(prefecture: string, serviceType?: string, page 
     .range(from, to)
 
   if (serviceType) {
-    query = query.eq('service_type', serviceType)
+    query = query.in('service_type', serviceTypeValues(serviceType))
   }
 
   const { data, count, error } = await query
@@ -81,7 +82,8 @@ async function getServiceTypeCounts(prefecture: string) {
   const counts: Record<string, number> = {}
   for (const row of data) {
     if (row.service_type) {
-      counts[row.service_type] = (counts[row.service_type] || 0) + 1
+      const type = serviceTypeValues(row.service_type)[0]
+      counts[type] = (counts[type] || 0) + 1
     }
   }
 

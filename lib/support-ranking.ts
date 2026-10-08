@@ -1,4 +1,5 @@
-import { prefectures, facilityTypeLabels } from './constants'
+import { prefectures } from './constants'
+import { isKnownServiceType } from './service-types'
 
 export type RankingFilters = { period: 'week' | 'all'; prefecture: string; service: string }
 export type RankingItem = {
@@ -13,7 +14,7 @@ export function rankingFilters(params: Record<string, string | string[] | undefi
   return {
     period: first('period') === 'all' ? 'all' : 'week',
     prefecture: prefectures.some(value => value === area) ? area : '',
-    service: Object.hasOwn(facilityTypeLabels, service) ? service : '',
+    service: isKnownServiceType(service) ? service : '',
   }
 }
 

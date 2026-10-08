@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
-import { serviceTypes, prefectures } from '@/lib/constants'
+import { prefectures } from '@/lib/constants'
+import ServiceTypeOptions from '@/components/ServiceTypeOptions'
 
 type Duplicate = {
   id: string
@@ -158,9 +159,7 @@ export default function DirectoryAddPage() {
             className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none appearance-none cursor-pointer bg-white"
           >
             <option value="">選択してください</option>
-            {serviceTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
+            <ServiceTypeOptions />
           </select>
         </div>
 

@@ -1,3 +1,4 @@
+import { serviceTypeValues } from '@/lib/service-types'
 import { getHeartSummaries } from '@/lib/hearts'
 import { getCurrentVacancies } from '@/lib/vacancies'
 import { NextRequest, NextResponse } from 'next/server'
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('city', city)
     }
     if (service_type) {
-      query = query.eq('service_type', service_type)
+      query = query.in('service_type', serviceTypeValues(service_type))
     }
     if (acceptance_status) {
       query = query.eq('current_acceptance_status', normalizedStatus)

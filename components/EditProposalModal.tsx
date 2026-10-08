@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import ServiceTypeOptions from './ServiceTypeOptions'
 
 const editableFields = [
   { value: 'facility_name', label: '事業所名' },
@@ -130,13 +131,16 @@ export default function EditProposalModal({ listingId, currentValues, onClose }:
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     正しい値 *
                   </label>
-                  <input
+                  {fieldName === 'service_type' ? <select aria-label="正しいサービス種別" value={newValue} onChange={event => setNewValue(event.target.value)} className="w-full min-w-0 rounded-xl border border-gray-200 bg-white px-4 py-3 text-base">
+                    <option value="">選択してください</option>
+                    <ServiceTypeOptions />
+                  </select> : <input
                     type="text"
                     value={newValue}
                     onChange={(e) => setNewValue(e.target.value)}
                     placeholder={`正しい${selectedField?.label || '値'}を入力`}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none"
-                  />
+                  />}
                 </div>
               )}
 
