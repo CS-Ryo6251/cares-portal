@@ -1,3 +1,4 @@
+import { registrationServiceType } from '@/lib/service-types'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient, getSupabaseServiceClient } from '@/lib/supabase'
 import crypto from 'crypto'
@@ -15,13 +16,14 @@ export async function POST(request: NextRequest) {
     const force = searchParams.get('force') === 'true'
 
     const body = await request.json()
-    const { facility_name, service_type, prefecture, city, address, phone } = body
+    const { facility_name, prefecture, city, address, phone } = body
+    const service_type = registrationServiceType(body.service_type)
 
     if (!facility_name) {
       return NextResponse.json({ error: '事業所名は必須です' }, { status: 400 })
     }
     if (!service_type) {
-      return NextResponse.json({ error: 'サービス種別は必須です' }, { status: 400 })
+      return NextResponse.json({ error: '一覧からサービス種別を選択してください' }, { status: 400 })
     }
     if (!prefecture) {
       return NextResponse.json({ error: '都道府県は必須です' }, { status: 400 })

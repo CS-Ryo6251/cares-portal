@@ -1,3 +1,4 @@
+import ServiceTypeOptions from '@/components/ServiceTypeOptions'
 import type { Metadata } from 'next'
 import {
   ArrowRight,
@@ -20,13 +21,6 @@ export const metadata: Metadata = {
   description: '地域の介護事業所が募集している支援案件を、依頼元を伏せた安心設計で確認できます。仲介手数料・成約手数料はかかりません。',
   alternates: { canonical: '/cases' },
 }
-
-const SERVICE_TYPES = [
-  '居宅介護支援', '訪問介護', '訪問看護', '訪問入浴介護',
-  '通所介護', '地域密着型通所介護', '通所リハビリテーション',
-  '短期入所生活介護', '介護老人福祉施設', '介護老人保健施設',
-  '認知症対応型共同生活介護', '小規模多機能型居宅介護',
-]
 
 const CASE_TYPE_LABELS = {
   searchUsers: '受入先を探しています',
@@ -91,7 +85,7 @@ export default async function CasesPage({
             <span className="sr-only">サービス種別</span>
             <select name="service_type" defaultValue={params.service_type || ''} className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-cares-400 focus:ring-2 focus:ring-rose-100">
               <option value="">すべてのサービス</option>
-              {SERVICE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+              <ServiceTypeOptions currentValue={params.service_type} />
             </select>
           </label>
           <button className="h-12 rounded-xl bg-cares-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-cares-700">検索する</button>

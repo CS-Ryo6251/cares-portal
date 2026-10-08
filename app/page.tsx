@@ -1,3 +1,5 @@
+import ServiceTypeFilter from '@/components/ServiceTypeFilter'
+import { serviceTypeValues } from '@/lib/service-types'
 import { applyDirectoryArea } from '@/lib/directory-area'
 import { getHeartSummaries } from '@/lib/hearts'
 import FacilityListCard from '@/components/FacilityListCard'
@@ -162,6 +164,10 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
     .order('created_at', { ascending: false })
     .limit(30)
 
+  if (searchParams.service_type) {
+    query = query.in('facility_portal_profiles.facilities.service_type', serviceTypeValues(searchParams.service_type))
+  }
+
   if (searchParams.category) {
     if (searchParams.category === 'event') {
       query = query.in('category', ['event', 'training'])
@@ -324,7 +330,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
 
   // サービス種別フィルター
   if (searchParams.service_type) {
-    query = query.eq('service_type', searchParams.service_type)
+    query = query.in('service_type', serviceTypeValues(searchParams.service_type))
   }
 
   // フリーワード検索（サーバー側フィルタ）
@@ -622,6 +628,8 @@ export default async function FeedPage({
           </div>
         <a href="/ranking" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-semibold text-[#526b58] hover:bg-[#f1f4ee] lg:hidden"><Trophy aria-hidden="true" className="h-4 w-4" />応援ランキング</a>
         </div>
+
+        <ServiceTypeFilter />
 
         {/* Service type pills — facilities tab */}
         {currentView === 'facilities' && (

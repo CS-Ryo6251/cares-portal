@@ -1,3 +1,4 @@
+import { registrationServiceType } from '@/lib/service-types'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import crypto from 'crypto'
@@ -28,7 +29,8 @@ export async function POST(
   try {
     const { id } = await params
     const body = await request.json()
-    const { field_name, old_value, new_value, reason } = body
+    const { field_name, old_value, reason } = body
+    const new_value = field_name === 'service_type' ? registrationServiceType(body.new_value) : body.new_value
 
     if (!field_name || !ALLOWED_FIELDS.includes(field_name)) {
       return NextResponse.json({ error: '編集可能なフィールドではありません' }, { status: 400 })
