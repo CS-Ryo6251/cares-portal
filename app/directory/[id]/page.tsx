@@ -386,7 +386,7 @@ export default async function DirectoryDetailPage({
                   <a href={portalDocuments[0].file_url} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors">
                     <Download className="w-4 h-4" />
-                    パンフレット
+                    事業所公式パンフレット
                   </a>
                 )}
                 <InquiryButton facilityId={f.owner_facility_id} facilityName={f.facility_name} />
@@ -433,6 +433,8 @@ export default async function DirectoryDetailPage({
         </div>
 
         </details>
+
+        <div className="mb-6"><BrochureCollection key={f.id} listingId={f.id} /></div>
 
         {!isOwnerVerified && (
           <div className="mb-6 overflow-hidden rounded-2xl border border-cares-200 bg-gradient-to-br from-cares-50 via-white to-rose-50 shadow-sm">
@@ -529,3 +531,4 @@ export default async function DirectoryDetailPage({
     </>
   )
 }
+import BrochureCollection from '@/components/BrochureCollection'

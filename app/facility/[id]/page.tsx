@@ -169,7 +169,8 @@ export default async function FacilityDetailPage({ params, searchParams }: {
   const fees = <div className="space-y-5 px-4 pb-20 sm:px-0">
     {facility.fee_pattern === 'no_charge' && <p className="rounded-2xl bg-emerald-50 p-6 text-sm text-emerald-900">この事業所は、利用者の費用負担なしとして料金情報を登録しています。詳しくは事業所へお問い合わせください。</p>}
     {!facility.fees.length && !simulationTariffs(f.service_type).length && facility.fee_pattern !== 'no_charge' && <p className="rounded-2xl bg-white p-6 text-sm text-slate-500">料金は事業所にお問い合わせください。</p>}
-    <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">パンフレット・資料</h2>{facility.documents.length ? <div className="mt-4 space-y-2">{facility.documents.map((document: { id: string; title: string; file_url: string }) => publicWebUrl(document.file_url) && <a key={document.id} href={publicWebUrl(document.file_url)} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"><Download className="h-4 w-4 shrink-0" />{document.title || 'パンフレット'}</a>)}</div> : <p className="mt-3 text-sm text-slate-500">公開中の資料はありません。</p>}</section>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">事業所公式のパンフレット・資料</h2>{facility.documents.length ? <div className="mt-4 space-y-2">{facility.documents.map((document: { id: string; title: string; file_url: string }) => publicWebUrl(document.file_url) && <a key={document.id} href={publicWebUrl(document.file_url)} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"><Download className="h-4 w-4 shrink-0" />{document.title || 'パンフレット'}</a>)}</div> : <p className="mt-3 text-sm text-slate-500">公開中の公式資料はありません。</p>}</section>
+    {facility.directoryListings[0] && <BrochureCollection listingId={facility.directoryListings[0].id} />}
   </div>
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
@@ -189,3 +190,4 @@ export default async function FacilityDetailPage({ params, searchParams }: {
     </div>
   </>
 }
+import BrochureCollection from '@/components/BrochureCollection'

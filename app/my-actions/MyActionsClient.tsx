@@ -7,9 +7,11 @@ import FavoritesTab from './FavoritesTab'
 import RatingsTab from './RatingsTab'
 import NotesTab from './NotesTab'
 import SupportTab from './SupportTab'
+import BrochureCollection from '@/components/BrochureCollection'
 
 const TABS = [
   { key: 'support', label: '応援の記録', icon: Heart },
+  { key: 'brochures', label: '資料', icon: FileText },
   { key: 'favorites', label: 'お気に入り', icon: Bookmark },
   { key: 'ratings', label: '以前のマイ評価', icon: Star },
   { key: 'notes', label: 'マイメモ', icon: FileText },
@@ -52,6 +54,7 @@ function MyActionsContent() {
 
       {/* Tab content */}
       {currentTab === 'support' && <SupportTab />}
+      {currentTab === 'brochures' && <BrochureCollection mine />}
       {currentTab === 'favorites' && <FavoritesTab />}
       {currentTab === 'ratings' && <RatingsTab />}
       {currentTab === 'notes' && <NotesTab />}
