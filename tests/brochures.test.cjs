@@ -23,14 +23,16 @@ test('DB: 公開・本人管理・保存・役立ち・報告・ページング�
  try{
   await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
   grant usage on schema public,auth,storage to anon,authenticated,service_role;
-  create table auth.users(id uuid primary key);create table cares_listings(id uuid primary key,facility_name text);
+  create table auth.users(id uuid primary key);create table cares_listings(id uuid primary key,facility_name text,owner_facility_id uuid,is_owner_verified boolean default false);
   create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
   create table storage.objects(id uuid default gen_random_uuid(),bucket_id text);alter table storage.objects enable row level security;
   create policy legacy_open on storage.objects for all to anon,authenticated using(true) with check(true);
   grant all on all tables in schema public,auth,storage to service_role;grant all on storage.objects to anon,authenticated;`)
   const file=fs.readdirSync(path.join(__dirname,'../supabase/migrations')).find(name=>name.endsWith('_cares_community_brochures.sql'))
   await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations',file),'utf8'))
-  await db.query('insert into cares_listings values($1,$2),($3,$4)',[id(1),'合成事業所A',id(2),'合成事業所B'])
+  const scope=fs.readdirSync(path.join(__dirname,'../supabase/migrations')).find(name=>name.endsWith('_cares_brochure_verified_scope.sql'))
+  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations',scope),'utf8'))
+  await db.query('insert into cares_listings(id,facility_name) values($1,$2),($3,$4)',[id(1),'合成事業所A',id(2),'合成事業所B'])
   for(let n=10;n<=14;n++)await db.query('insert into auth.users values($1)',[id(n)])
   async function add(n,listing=1,author=10,status='published'){
    await db.query('insert into cares_brochures(id,listing_id,user_id,title,files,request_hash,status) values($1,$2,$3,$4,$5,$6,$7)',[id(n),id(listing),id(author),'合成資料'+n,JSON.stringify([{path:id(n)+'/0.pdf',mime:'application/pdf',size:100}]),'hash',status])
@@ -53,6 +55,18 @@ test('DB: 公開・本人管理・保存・役立ち・報告・ページング�
    assert.deepEqual(rows.map(row=>row.id).sort(),[id(100),id(102)])
    assert.equal(JSON.stringify(rows).includes('path'),false);assert.equal(JSON.stringify(rows).includes(id(10)),false)
    assert.equal(rows[0].mine,false)
+  })
+  await t.test('公式ページに紐付けた後も旧掲載への資料が残り、未確認・別事業所は混ぜない',async()=>{
+   await db.query('update cares_listings set owner_facility_id=$1 where id in ($2,$3)',[id(99),id(1),id(2)])
+   assert.equal((await list()).items.length,2)
+   await db.query('update cares_listings set is_owner_verified=true where id=$1',[id(1)])
+   assert.equal((await list()).items.length,2)
+   await db.query('update cares_listings set is_owner_verified=true where id=$1',[id(2)])
+   assert.equal((await list()).items.length,3)
+   assert.equal((await list('public',null,id(2))).items.length,3)
+   await db.query('update cares_listings set owner_facility_id=$1 where id=$2',[id(98),id(2)])
+   assert.equal((await list()).items.length,2)
+   await db.exec('update cares_listings set owner_facility_id=null,is_owner_verified=false')
   })
   await t.test('二重送信しても役に立ったは1人1票、自分には投票できない',async()=>{
    await Promise.all([action(100,11),action(100,11)])
