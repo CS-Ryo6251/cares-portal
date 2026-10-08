@@ -30,7 +30,9 @@ async function renderDirectory({ verified = true, profile = null, profileError =
   } }
   const element = React.createElement
   const empty = () => null
+  const addressLink = load('components/FacilityAddressLink.tsx', {}).default
   const header = load('components/FacilityProfileHeader.tsx', {
+    './FacilityAddressLink': addressLink,
     './FacilityHearts': props => element('div', { 'data-heart-listing': props.listingId, 'data-heart-facility': props.facilityId }),
     './AddToListButton': () => null,
     './FacilityOwnerTools': props => element('div', { 'data-owner-tools': props.facilityId }),
@@ -38,6 +40,7 @@ async function renderDirectory({ verified = true, profile = null, profileError =
     '@/app/facility/[id]/InquiryButton': props => element('button', { 'data-inquiry': props.facilityId }, 'お問い合わせ'),
   }).default
   const page = load('app/directory/[id]/page.tsx', {
+    '@/components/FacilityAddressLink': addressLink,
     '@/components/FacilityProfileHeader': header,
     '@/components/ProviderIntakeSection': () => element('section', { id: 'apply' }, '空き状況・ご利用の相談'),
     '@/components/FacilityPostFeed': empty,

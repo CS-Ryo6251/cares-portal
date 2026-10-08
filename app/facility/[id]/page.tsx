@@ -5,7 +5,8 @@ import { facilityManagementUrl } from '@/lib/cares-navigation'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowLeft, Download, ExternalLink, MapPin, Phone } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, Phone } from 'lucide-react'
+import FacilityAddressLink from '@/components/FacilityAddressLink'
 import FacilityProfileHeader from '@/components/FacilityProfileHeader'
 import ProviderIntakeSection from '@/components/ProviderIntakeSection'
 import FacilityProfileTabs from '@/components/FacilityProfileTabs'
@@ -156,7 +157,7 @@ export default async function FacilityDetailPage({ params, searchParams }: {
       <h2 className="text-lg font-bold">事業所について</h2>
       <dl className="mt-5 space-y-4 text-sm">
         <div><dt className="text-xs text-slate-400">サービス</dt><dd className="mt-1 font-medium">{f.service_type}</dd></div>
-        <div><dt className="text-xs text-slate-400">住所</dt><dd className="mt-1 flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />{f.address || '事業所にお問い合わせください'}</dd></div>
+        <div><dt className="text-xs text-slate-400">住所</dt><dd className="mt-1">{f.address?.trim() ? <FacilityAddressLink name={f.name} address={f.address} /> : '事業所にお問い合わせください'}</dd></div>
         {phone && <div><dt className="text-xs text-slate-400">電話</dt><dd><a href={`tel:${phone}`} className="inline-flex min-h-11 items-center gap-2 font-semibold text-rose-700"><Phone className="h-4 w-4" />{phone}</a></dd></div>}
         {facility.fax && <div><dt className="text-xs text-slate-400">FAX</dt><dd className="mt-1">{facility.fax}</dd></div>}
         {facility.email && <div><dt className="text-xs text-slate-400">メール</dt><dd><a href={`mailto:${facility.email}`} className="inline-flex min-h-11 break-all items-center text-rose-700">{facility.email}</a></dd></div>}
