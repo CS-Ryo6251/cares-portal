@@ -313,7 +313,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
 
   let query = supabase
     .from('cares_directory_listing')
-    .select('*', { count: 'exact' })
+    .select('*', { count: 'estimated' })
     .order('is_owner_verified', { ascending: false })
     .order('completeness_score', { ascending: false, nullsFirst: false })
     .order('facility_name', { ascending: true })
@@ -798,7 +798,7 @@ export default async function FeedPage({
           {facilities.length > 0 && (
             <div className="py-8 space-y-4">
               <div className="text-center text-sm text-gray-400">
-                {totalCount.toLocaleString()}件中 {((currentPage - 1) * FACILITIES_PER_PAGE + 1).toLocaleString()}〜{Math.min(currentPage * FACILITIES_PER_PAGE, totalCount).toLocaleString()}件を表示
+                約{totalCount.toLocaleString()}件中 {((currentPage - 1) * FACILITIES_PER_PAGE + 1).toLocaleString()}〜{((currentPage - 1) * FACILITIES_PER_PAGE + facilities.length).toLocaleString()}件を表示
               </div>
               {totalPages > 1 && (
                 <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">

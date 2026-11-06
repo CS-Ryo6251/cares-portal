@@ -23,3 +23,9 @@ Cares検索に載る実データは `cares_listings` に登録済みのものだ
 共通カレンダーとDBテスト用SQLの生成コピーは `node scripts/sync-availability-contract.cjs /path/to/os` で更新し、`--check` で一致を検証する。DB契約fixtureは本番適用用migrationではない。サービスカタログは `node scripts/sync-service-types.cjs /path/to/os HEAD --working-tree` で同期する。通常は確定したrefを指定し `--working-tree` を省く。
 
 `npm test`、`npm run typecheck`、`npm run lint`。`tests/provider-availability.test.cjs` は実際の共通SQLとCares SQLをPGliteへ適用し、列順・条件付き・期限・非公開・他組織・Cares専用所有者・版競合・再送を確認する。
+
+### 大量データ公開時の検索性能
+
+7本の連携・バックフィルmigrationに続き、`20261106153402_cares_directory_search_order_index.sql` を適用する。公開検索の既定順（確認済み事業所、情報充実度、事業所名）と一致する複合索引で、最初の50件を得るための全件並べ替えを防ぐ。ロック待ちは2秒で失敗させ、データ・公開範囲・権限は変更しない。
+
+全国検索の件数は `estimated` を使い、画面では「約」、APIでは `totalIsEstimate: true` として扱う。大量データでの厳密集計はDBの時間制限を超えるため、件数監査には管理用SQLを使う。公開後は全国と障害福祉の両検索を確認し、HTTP 200だけでなくNext.jsのエラーダイジェストがないことも確認する。
