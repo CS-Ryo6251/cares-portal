@@ -31,7 +31,7 @@ test('座標なし・一部欠落・無効座標のWAM事業所も有限の位�
   }
 })
 
-test('ディレクトリAPIは実件数でページ数を返し、制度フィルターを維持する', async () => {
+test('ディレクトリAPIは大量データの全件集計を避け、概数を明示し制度フィルターを維持する', async () => {
   let countMode, filter
   const query = { select: (_, options) => { countMode = options.count; return query }, or: value => { filter = value; return query }, order: () => query, range: async () => ({ data: [], error: null, count: countMode === 'exact' ? 216638 : 226147 }) }
   const route = load('app/api/directory/route.ts', {
@@ -43,6 +43,6 @@ test('ディレクトリAPIは実件数でページ数を返し、制度フィ�
   const response = await route.GET(new Request('https://cares.test/api/directory?scheme=welfare&limit=50'))
   assert.equal(response.status, 200)
   const body = await response.json()
-  assert.equal(body.total, 216638); assert.equal(body.totalPages, 4333)
+  assert.equal(body.total, 226147); assert.equal(body.totalPages, 4523); assert.equal(body.totalIsEstimate, true)
   assert.match(filter, /source_kind.eq.welfare/)
 })

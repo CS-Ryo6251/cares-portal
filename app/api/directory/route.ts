@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from(source)
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'estimated' })
 
     query = applyDirectoryScheme(query, searchParams.get('scheme'))
     if (q) {
@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.json({
       facilities: facilitiesWithVacancy,
       total,
+      totalIsEstimate: true,
       page,
       totalPages,
     })
