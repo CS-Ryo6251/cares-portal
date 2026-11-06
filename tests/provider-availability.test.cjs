@@ -79,7 +79,7 @@ test('PostgreSQL: OS正本とCaresビュー・受付RPCの統合、所有権、�
       create table user_facility_assignments(user_id uuid,facility_id uuid);
       create table facility_portal_profiles(facility_id uuid,acceptance_status text,updated_at timestamptz);
       create table service_posts(id uuid primary key default gen_random_uuid(),type text,facility_id uuid,status text,service_details jsonb,updated_at timestamptz,organization_id uuid,user_id uuid,category text,title text,content text,service_types text[],target_area text);
-      create table welfare_directory_snapshots(id uuid primary key,state text,version text default '2026-09');
+      create table welfare_directory_snapshots(id uuid primary key,state text,version text default '2026-09',source text default 'wam_disability');
       create table welfare_directory_entries(id uuid,snapshot_id uuid,searchable boolean,name text,service_type text,address text,prefecture text,city text,phone text,fax text,corporation_name text,number text);
       create table facility_directory_links(directory_entry_id uuid,facility_id uuid,verification_status text,retired_at timestamptz);
       create table facility_master_data(id uuid,jigyosho_number text,facility_name text,service_type text,address text,prefecture text,city text,phone_number text,fax_number text,data_version text);
@@ -96,6 +96,7 @@ test('PostgreSQL: OS正本とCaresビュー・受付RPCの統合、所有権、�
     await db.exec(read('tests/fixtures/service-availability-state.sql'))
     await db.exec(read('supabase/migrations/20261106132035_cares_shared_availability.sql'))
     await db.exec(read('supabase/migrations/20261106132057_cares_intake_shared_availability.sql'))
+    await db.exec(read('supabase/migrations/20261106145712_cares_welfare_availability_backfill_batch.sql'))
     assert.deepEqual((await columns()).slice(0,oldColumns.length),oldColumns)
     assert.ok((await columns()).includes('public_provider_number'))
     await db.exec(`insert into cares_listings(id,facility_name,service_type,is_owner_verified,owner_facility_id,acceptance_status) values
@@ -133,6 +134,24 @@ test('PostgreSQL: OS正本とCaresビュー・受付RPCの統合、所有権、�
       await db.query("update facility_directory_links set retired_at=now() where directory_entry_id=$1",[id(85)])
       await db.exec('set role anon')
       assert.equal((await db.query("select id from cares_directory_listing where source_kind='welfare'")).rows.length,0)
+      await db.exec('reset role')
+    })
+    await t.test('WAM一括登録はsource別の公開基本情報だけを作り、再送・旧版・anonを制御',async()=>{
+      await db.exec(`insert into welfare_directory_entries(id,snapshot_id,searchable,name,service_type,number,fax) values
+        ('${id(86)}','${id(84)}',true,'合成同住所','生活介護','9999999999','0000000000'),
+        ('${id(87)}','${id(84)}',true,'合成同住所','短期入所（障害福祉）','9999999999','0000000000');`)
+      const batch=async(version='2026-10')=>(await db.query('select cares_backfill_welfare_availability($1,$2,$3,2) result',[id(84),version,id(85)])).rows[0].result
+      await assert.rejects(batch('old'),/snapshot changed/)
+      await db.exec('set role anon');await assert.rejects(batch(),/permission denied/);await db.exec('reset role')
+      assert.deepEqual(await batch(),{processed:2,cursor:id(87)})
+      const rows=(await db.query("select id,is_owner_verified,acceptance_status,jigyosho_number from cares_listings where source_kind='welfare' and source_entry_id=any($1)",[[id(86),id(87)]])).rows
+      assert.equal(rows.length,2)
+      for(const row of rows){assert.equal(row.is_owner_verified,false);assert.equal(row.jigyosho_number,null)}
+      assert.deepEqual(await batch(),{processed:2,cursor:id(87)})
+      assert.equal((await db.query('select count(*)::int n from service_availability_current')).rows[0].n,0)
+      assert.equal((await db.query('select count(*)::int n from service_posts')).rows[0].n,0)
+      await db.exec('set role anon')
+      assert.equal((await db.query("select id from cares_directory_listing where source_kind='welfare'")).rows.length,2)
       await db.exec('reset role')
     })
     await t.test('確認済みOS管理者・Cares単独オーナーだけが保存できる',async()=>{

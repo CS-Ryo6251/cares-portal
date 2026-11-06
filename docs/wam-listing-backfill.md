@@ -1,6 +1,6 @@
 # WAM 全件掲載の準備・再開手順
 
-本番未実行。事前に OS の正本 migration、Cares の検索・受付 migration を適用し、同一 DB を参照することを確認する。このスクリプトは公開基本情報と空き情報の同定行を作成する。受入可能情報・募集・所有認証を自動で付与せず、FAX や通知も送らない。
+事前に OS の正本 migration、Cares の検索・受付 migration を適用し、同一 DB を参照することを確認する。このスクリプトは公開基本情報と空き情報の同定行を作成する。受入可能情報・募集・所有認証を自動で付与せず、FAX や通知も送らない。
 
 `scripts/backfill-wam-listings.cjs` は試行が既定。認証は実行環境の `SUPABASE_URL`（または `NEXT_PUBLIC_SUPABASE_URL`）と `SUPABASE_SERVICE_ROLE_KEY` から取得し、`.env` を読まない。値をコマンド引数・ログ・成果物に保存しない。
 
@@ -10,13 +10,13 @@
    node scripts/backfill-wam-listings.cjs --limit 1000 --page-size 100
    ```
 
-2. 全件を事前確認する場合は `--limit` を件数に合わせて指定する（上限 100000）。件数が上限を超える場合、適用を進める前に別途運用判断する。dry-run では RPC・checkpoint 書込みなし。新規候補数は処理した範囲の source ID 未掲載件数で、全件の見積りではない。検証済みの新版 alias が既存 URL を引き継ぐ場合も候補に含まれるため、実際の新規ページ数とは一致しない。
+2. 1回の処理上限は100000件。全件がこれを超える場合は同じcheckpointで複数回再開する。大量データでは追加migration `20261106145712_cares_welfare_availability_backfill_batch.sql` を適用し、`--batch --page-size 1000` を使う。各batchは同じ同定ロックとactive snapshotの下で基本情報・aliasのみをトランザクション保存し、処理結果とsourceページを照合後にcheckpointを進める。dry-run では RPC・checkpoint 書込みなし。新規候補数は処理した範囲の source ID 未掲載件数で、全件の見積りではない。検証済みの新版 alias が既存 URL を引き継ぐ場合も候補に含まれるため、実際の新規ページ数とは一致しない。
 
 3. snapshot、サービス、件数、サンプルを確認した後、明示した snapshot と新しい checkpoint で小さい上限から適用する。以下の UUID と保存先は確認した値に置き換える。
 
    ```sh
    node scripts/backfill-wam-listings.cjs --apply --snapshot REVIEWED_UUID --checkpoint /absolute/path/wam-checkpoint.json --limit 100 --page-size 50
-   node scripts/backfill-wam-listings.cjs --apply --resume --snapshot REVIEWED_UUID --checkpoint /absolute/path/wam-checkpoint.json --limit 1000 --page-size 100
+   node scripts/backfill-wam-listings.cjs --apply --resume --batch --snapshot REVIEWED_UUID --checkpoint /absolute/path/wam-checkpoint.json --limit 100000 --page-size 1000
    ```
 
 4. `completed: true` になるまで同じ snapshot・checkpoint で再開する。UUID 昇順の keyset で巡回し、検証済み行ごとに checkpoint を原子的に保存する。初回 RPC より前にもゼロ件 checkpoint を保存する。結果不明・保存失敗時には最後の行を再処理し得るが、正本 RPC の `source_kind=welfare` + `source_entry_id` 制約で重複を防ぐ。同じ処理中の並列実行は `.lock` で拒否する。異常終了した lock は実行プロセスが終了したことを確認してから手動で扱い、実行中に削除しない。
@@ -28,3 +28,5 @@
 snapshot ID・版・件数の変更や既存マッピング不一致で停止する。別 snapshot に古い checkpoint を流用しない。新 snapshot は再度試行・件数確認し、新 checkpoint で扱う。旧掲載の削除・名称や番号による統合は行わない。Cares の検索 view は最新 active source または現役の検証済み alias を持つ掲載だけを表示する。旧レコードは削除しないが、現役 alias のない旧 URL は検索 view を使う詳細画面でも掲載対象外になる。適用前に旧 snapshot の検索除外と verified alias による URL 継続を検証する。途中成功済みの行を削除する rollback は行わない。
 
 ローカル検証: `node --test tests/wam-backfill.test.cjs`。合成データでページング・再開・応答紛失・同定不一致・snapshot 切替停止を確認する。本番の件数・成功を表すものではない。
+
+一括RPCはservice_role専用。権限確認済みの既存事業所は共通ensure処理を使用し、それ以外はsource UUID・サービス一致のみで登録する。空き状況、所有認証、通知、FAXは作成しない。

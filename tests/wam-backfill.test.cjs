@@ -61,3 +61,18 @@ test('新版source aliasのcanonical URL引継ぎを受理し、別target/サー
  aliasTarget=id(11);await assert.rejects(repo.ensure(entry),/source\/service verification/)
  aliasTarget=id(10);listingService='通所介護';await assert.rejects(repo.ensure(entry),/canonical listing verification/)
 })
+
+test('batch checkpointはRPCとsourceページの一致後のみ進み、結果不明でも再開可能',async()=>{
+ const f=fixture(3);let fail=true
+ f.repo.batch=async(snapshot,cursor,size)=>{
+  const page=await f.repo.page(snapshot.id,cursor,size)
+  for(const entry of page)await f.repo.ensure({...entry,source_version:snapshot.version})
+  if(fail){fail=false;throw new Error('lost batch response')}
+  return{processed:page.length,cursor:page.at(-1).id}
+ }
+ const options=f.options(['--batch','--page-size','2'])
+ await assert.rejects(runBackfill(f.repo,options,f.store),/lost batch/)
+ assert.equal(f.saved.lastEntryId,null)
+ const result=await runBackfill(f.repo,{...options,resume:true},f.store)
+ assert.equal(result.completed,true);assert.equal(f.saved.processed,3);assert.equal(f.listings.length,3)
+})

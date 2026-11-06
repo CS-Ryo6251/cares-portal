@@ -4,11 +4,12 @@ const fs = require('node:fs/promises'), path = require('node:path')
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function parseOptions(args) {
-  const options = { apply: false, resume: false, limit: 1000, pageSize: 100, snapshot: null, checkpoint: null }
+  const options = { apply: false, resume: false, batch: false, limit: 1000, pageSize: 100, snapshot: null, checkpoint: null }
   const values = { '--limit': 'limit', '--page-size': 'pageSize', '--snapshot': 'snapshot', '--checkpoint': 'checkpoint' }
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
-    if (arg === '--apply') options.apply = true
+    if (arg === '--batch') options.batch = true
+    else if (arg === '--apply') options.apply = true
     else if (arg === '--resume') options.resume = true
     else if (arg === '--help') options.help = true
     else if (values[arg]) {
@@ -18,7 +19,7 @@ function parseOptions(args) {
     } else throw new Error(`Unknown option: ${arg}`)
   }
   if (!Number.isInteger(options.limit) || options.limit < 1 || options.limit > 100000) throw new Error('--limit must be 1..100000; default 1000')
-  if (!Number.isInteger(options.pageSize) || options.pageSize < 1 || options.pageSize > 200) throw new Error('--page-size must be 1..200; default 100')
+  if (!Number.isInteger(options.pageSize) || options.pageSize < 1 || options.pageSize > (options.batch ? 1000 : 200)) throw new Error('--page-size must be 1..200 (batch: 1000); default 100')
   if (options.snapshot && !UUID.test(options.snapshot)) throw new Error('--snapshot must be a UUID')
   if (options.apply && (!options.snapshot || !options.checkpoint)) throw new Error('--apply requires the reviewed --snapshot UUID and --checkpoint path')
   if (options.resume && (!options.apply || !options.checkpoint)) throw new Error('--resume requires --apply and --checkpoint')
@@ -43,6 +44,9 @@ function repository(client) {
     },
     async listings(ids) {
       return check(await client.from('cares_listings').select('id,source_entry_id,source_version,service_type').eq('source_kind','welfare').in('source_entry_id',ids), 'Listing lookup').data || []
+    },
+    async batch(snapshot, cursor, size) {
+      return check(await client.rpc('cares_backfill_welfare_availability',{p_snapshot:snapshot.id,p_version:snapshot.version,p_after:cursor,p_limit:size}), 'Batch RPC').data
     },
     async ensure(entry) {
       // The server validates the active source and exact service. A WAM number is never a join key.
@@ -103,7 +107,7 @@ async function runBackfill(repo, options, store) {
     // can be retried via the same checkpoint and idempotent source identity.
     if (!existing) await store.write(checkpoint)
   }
-  const summary = { mode:options.apply?'apply':'dry-run',snapshotId:snapshot.id,snapshotVersion:snapshot.version,sourceCount:total,processedThisRun:0,existingListings:0,newListingCandidates:0,completed:checkpoint.complete,cursor:checkpoint.lastEntryId }
+  const summary = { mode:options.apply?'apply':'dry-run',batch:options.batch,snapshotId:snapshot.id,snapshotVersion:snapshot.version,sourceCount:total,processedThisRun:0,existingListings:0,newListingCandidates:0,completed:checkpoint.complete,cursor:checkpoint.lastEntryId }
   const confirmSnapshot = async () => {
     const active = await repo.activeSnapshot()
     if (active.id !== snapshot.id || active.version !== snapshot.version) throw new Error('Active WAM snapshot changed; stopped without advancing the checkpoint')
@@ -114,6 +118,18 @@ async function runBackfill(repo, options, store) {
     const size = Math.min(options.pageSize,options.limit-summary.processedThisRun)
     const entries = await repo.page(snapshot.id,checkpoint.lastEntryId,size)
     if (!entries.length) { checkpoint.complete = true; break }
+    if (options.apply && options.batch) {
+      const result = await repo.batch(snapshot,checkpoint.lastEntryId,size)
+      if (result?.processed !== entries.length || result.cursor !== entries.at(-1).id) throw new Error('Batch result mismatch; checkpoint not advanced')
+      await confirmSnapshot()
+      checkpoint.processed += result.processed
+      checkpoint.lastEntryId = result.cursor
+      summary.processedThisRun += result.processed
+      summary.cursor = result.cursor
+      await store.write(checkpoint)
+      if (entries.length < size) { checkpoint.complete = true; break }
+      continue
+    }
     const listed = await repo.listings(entries.map(entry=>entry.id))
     for (const entry of entries) {
       if (!UUID.test(entry.id) || typeof entry.service_type !== 'string' || !entry.service_type.trim() || (checkpoint.lastEntryId && entry.id <= checkpoint.lastEntryId)) throw new Error('Invalid or non-monotonic source row; stopped')
@@ -145,7 +161,7 @@ async function runBackfill(repo, options, store) {
 
 async function main() {
   const options = parseOptions(process.argv.slice(2))
-  if (options.help) { console.log('Dry run (default): node scripts/backfill-wam-listings.cjs [--limit 1000] [--page-size 100]\nApply: add --apply --snapshot UUID --checkpoint PATH; add --resume for the same snapshot.\nUses SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY from the process environment. No .env files are read.'); return }
+  if (options.help) { console.log('Dry run (default): node scripts/backfill-wam-listings.cjs [--limit 1000] [--page-size 100]\nApply: add --apply --snapshot UUID --checkpoint PATH; --batch uses the bounded transactional RPC; add --resume for the same snapshot.\nUses SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY from the process environment. No .env files are read.'); return }
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) throw new Error('Supabase URL and service-role key must be supplied in the process environment')
