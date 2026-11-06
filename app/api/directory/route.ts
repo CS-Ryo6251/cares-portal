@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from(source)
-      .select('*', { count: 'estimated' })
+      .select('*', { count: 'exact' })
 
     query = applyDirectoryScheme(query, searchParams.get('scheme'))
     if (q) {
