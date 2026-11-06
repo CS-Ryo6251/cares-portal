@@ -313,7 +313,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
 
   let query = supabase
     .from('cares_directory_listing')
-    .select('*', { count: 'estimated' })
+    .select('*', { count: 'exact' })
     .order('is_owner_verified', { ascending: false })
     .order('completeness_score', { ascending: false, nullsFirst: false })
     .order('facility_name', { ascending: true })

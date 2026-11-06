@@ -342,8 +342,8 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
 
   const mapItems = useMemo(() => {
     const points = visibleFacilities.map((facility) => {
-      const latitude = parseCoordinate(facility.latitude) ?? geocodedCoordinates[facility.id]?.lat
-      const longitude = parseCoordinate(facility.longitude) ?? geocodedCoordinates[facility.id]?.lng
+      const latitude = parseCoordinate(facility.latitude) ?? parseCoordinate(geocodedCoordinates[facility.id]?.lat)
+      const longitude = parseCoordinate(facility.longitude) ?? parseCoordinate(geocodedCoordinates[facility.id]?.lng)
       const hasExactCoordinate = latitude !== null && longitude !== null
       const base = getPrefecture(facility.address) || getPrefecture(area || '') || prefectureCoordinates[12]
       const jitterX = hasExactCoordinate ? 0 : (hashToUnit(`${facility.id}:x`) - 0.5) * 1.4
