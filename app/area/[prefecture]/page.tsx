@@ -1,3 +1,6 @@
+// Availability expires on the JST date boundary; do not prerender stale positive states.
+export const dynamic = 'force-dynamic'
+import { getListingAvailability } from '@/lib/provider-availability'
 import { serviceTypeValues } from '@/lib/service-types'
 import { Metadata } from 'next'
 import Link from 'next/link'
@@ -23,14 +26,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${decoded}の介護事業所一覧`,
-    description: `${decoded}の介護事業所を検索。デイサービス、特養、老健、訪問介護、居宅介護支援など、空き状況・料金・専門職メモを確認できます。`,
+    title: `${decoded}の介護・福祉事業所一覧`,
+    description: `${decoded}の介護・福祉事業所を検索。デイサービス、特養、老健、訪問介護、居宅介護支援など、空き状況・料金・専門職メモを確認できます。`,
     alternates: {
       canonical: `https://cares.carespace.jp/area/${encodeURIComponent(decoded)}`,
     },
     openGraph: {
-      title: `${decoded}の介護事業所一覧 — Cares`,
-      description: `${decoded}の介護事業所を検索。空き状況・料金・専門職メモをみんなで共有。`,
+      title: `${decoded}の介護・福祉事業所一覧 — Cares`,
+      description: `${decoded}の介護・福祉事業所を検索。空き状況・料金・専門職メモをみんなで共有。`,
     },
   }
 }
@@ -44,7 +47,7 @@ async function getAreaFacilities(prefecture: string, serviceType?: string, page 
 
   let query = supabase
     .from('cares_directory_listing')
-    .select('id, facility_name, service_type, address, current_acceptance_status, is_owner_verified, owner_facility_id, overview, completeness_score', { count: 'exact' })
+    .select('id, facility_name, service_type, address, current_acceptance_status, is_owner_verified, owner_facility_id, source_kind, overview, completeness_score', { count: 'exact' })
     .eq('prefecture', prefecture)
     .order('completeness_score', { ascending: false, nullsFirst: false })
     .range(from, to)
@@ -61,9 +64,10 @@ async function getAreaFacilities(prefecture: string, serviceType?: string, page 
   }
 
   const rows = data || []
-  const [hearts, profiles] = await Promise.all([getHeartSummaries(rows.map(row => row.id)), getDirectoryProfiles(rows)])
+  const [hearts, profiles, availability] = await Promise.all([getHeartSummaries(rows.map(row => row.id)), getDirectoryProfiles(rows), getListingAvailability(rows.map(row => row.id))])
   return { facilities: rows.map(row => ({ ...row,
-    acceptance_status: row.current_acceptance_status,
+    acceptance_status: availability[row.id]?.status || row.current_acceptance_status,
+    availability: availability[row.id],
     heart_total: hearts === null ? null : (hearts[row.id]?.total || '0'),
     cover_image_url: directoryProfile(row, profiles)?.cover_image_url || null,
     overview: directoryProfile(row, profiles)?.overview || row.overview || null,
@@ -152,7 +156,7 @@ export default async function AreaPage({ params, searchParams }: Props) {
             <MapPin className="w-5 h-5 text-cares-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {decoded}の介護事業所
+            {decoded}の介護・福祉事業所
             {serviceType && (
               <span className="text-lg font-normal text-gray-500 ml-2">
                 / {facilityTypeLabels[serviceType] || serviceType}
@@ -200,7 +204,7 @@ export default async function AreaPage({ params, searchParams }: Props) {
           {/* Facility list */}
           <div className="space-y-3">
             {facilities.map((item: any) => (
-              <FacilityListCard key={item.id} id={item.id} name={item.facility_name} serviceType={item.service_type} address={item.address} coverImage={item.cover_image_url} overview={item.overview} total={item.heart_total} isOfficial={Boolean(item.is_owner_verified)} acceptanceStatus={item.acceptance_status} />
+              <FacilityListCard key={item.id} id={item.id} name={item.facility_name} serviceType={item.service_type} address={item.address} coverImage={item.cover_image_url} overview={item.overview} total={item.heart_total} isOfficial={Boolean(item.is_owner_verified)} acceptanceStatus={item.acceptance_status} availability={item.availability} sourceKind={item.source_kind} />
             ))}
           </div>
 
@@ -286,8 +290,8 @@ export default async function AreaPage({ params, searchParams }: Props) {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'CollectionPage',
-            name: `${decoded}の介護事業所一覧`,
-            description: `${decoded}の介護事業所${total}件を掲載。空き状況・料金・専門職メモを確認できます。`,
+            name: `${decoded}の介護・福祉事業所一覧`,
+            description: `${decoded}の介護・福祉事業所${total}件を掲載。空き状況・料金・専門職メモを確認できます。`,
             url: `https://cares.carespace.jp/area/${encodeURIComponent(decoded)}`,
             isPartOf: {
               '@type': 'WebSite',

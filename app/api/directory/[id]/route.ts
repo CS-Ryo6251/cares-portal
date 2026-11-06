@@ -1,3 +1,4 @@
+import { getListingAvailability } from '@/lib/provider-availability'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -39,8 +40,10 @@ export async function GET(
       .eq('listing_id', id)
       .eq('status', 'approved')
 
+    const availability = (await getListingAvailability([id]))[id]
     const response = NextResponse.json({
-      facility: { ...facility, acceptance_status: facility.current_acceptance_status },
+      availability,
+      facility: { ...facility, acceptance_status: availability?.status || facility.current_acceptance_status },
       vacancy_reports: vacancy_reports || [],
       edit_count: edit_count || 0,
     })

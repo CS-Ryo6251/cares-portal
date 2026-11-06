@@ -8,3 +8,7 @@ test('旧一覧のブックマークは検索条件を保持してホームの�
  assert.equal(url.pathname,'/');assert.equal(url.searchParams.get('q'),'笑顔 & 庭');assert.equal(url.searchParams.get('area'),'山形県');assert.equal(url.searchParams.get('service_type'),'通所介護');assert.equal(url.searchParams.get('page'),'2');assert.equal(url.searchParams.has('view'),false);assert.equal(url.searchParams.has('redirect'),false)
  assert.equal(new URL(unifiedSearchUrl({q:['一つ目','二つ目'],area:'東京都:新宿区',prefecture:'山形県'}),'https://cares.example').searchParams.get('area'),'東京都:新宿区')
 })
+
+test('制度を選んだ旧directory URLは同じ制度の統合検索へ移る',()=>{
+ assert.equal(new URL(unifiedSearchUrl({scheme:'welfare',service_type:'生活介護'}),'https://cares.example').searchParams.get('scheme'),'welfare')
+})

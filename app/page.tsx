@@ -1,5 +1,9 @@
+// Availability expires on the JST date boundary; do not prerender stale positive states.
+export const dynamic = 'force-dynamic'
+import { applyDirectoryScheme, disabilityServiceTypes } from '@/lib/directory-scheme'
+import { getFacilityAvailability, getListingAvailability, facilityAvailability, displayAvailabilityStatus } from '@/lib/provider-availability'
 import ServiceTypeFilter from '@/components/ServiceTypeFilter'
-import { serviceTypeValues } from '@/lib/service-types'
+import { serviceTypeValues, serviceTypes } from '@/lib/service-types'
 import { applyDirectoryArea } from '@/lib/directory-area'
 import { getHeartSummaries } from '@/lib/hearts'
 import FacilityListCard from '@/components/FacilityListCard'
@@ -66,6 +70,9 @@ function calculateScore(post: any, userArea: string | undefined): number {
   // 受入状況スコア (10%)
   const acceptanceStatus = post.facility_portal_profiles?.acceptance_status || 'unknown'
   const acceptanceScores: Record<string, number> = {
+    has_vacancy: 100,
+    conditional: 70,
+    no_vacancy: 10,
     accepting: 100,
     limited: 70,
     waitlist: 40,
@@ -164,6 +171,8 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
     .order('created_at', { ascending: false })
     .limit(30)
 
+  if (searchParams.scheme === 'welfare') query = query.in('facility_portal_profiles.facilities.service_type', disabilityServiceTypes)
+  if (searchParams.scheme === 'care') query = query.in('facility_portal_profiles.facilities.service_type', serviceTypes.filter(type => !(disabilityServiceTypes as readonly string[]).includes(type)))
   if (searchParams.service_type) {
     query = query.in('facility_portal_profiles.facilities.service_type', serviceTypeValues(searchParams.service_type))
   }
@@ -194,16 +203,6 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
     }
   }
 
-  if (searchParams.status) {
-    const statusMap: Record<string, string[]> = {
-      has_vacancy: ['has_vacancy', 'accepting'],
-      no_vacancy: ['no_vacancy', 'not_accepting'],
-      unknown: ['unknown', 'limited', 'waitlist'],
-    }
-    const values = statusMap[searchParams.status] || [searchParams.status]
-    query = query.in('facility_portal_profiles.acceptance_status', values)
-  }
-
   const { data, error } = await query
 
   if (error) {
@@ -212,6 +211,9 @@ async function getFeedPosts(searchParams: { [key: string]: string | undefined })
   }
 
   let posts = (data || []) as any[]
+  const availability = await getFacilityAvailability(posts.map(post => post.facility_id))
+  posts = posts.map(post => ({ ...post, facility_portal_profiles: { ...post.facility_portal_profiles, acceptance_status: facilityAvailability(availability, post.facility_id, post.facility_portal_profiles?.facilities?.service_type, post.facility_portal_profiles?.acceptance_status) } }))
+  if (searchParams.status) posts = posts.filter(post => post.facility_portal_profiles.acceptance_status === displayAvailabilityStatus(searchParams.status))
 
   // フリーワード検索（クライアント側フィルタ）
   if (searchParams.q) {
@@ -316,13 +318,15 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
     .order('completeness_score', { ascending: false, nullsFirst: false })
     .order('facility_name', { ascending: true })
 
+  query = applyDirectoryScheme(query, searchParams.scheme)
   query = applyDirectoryArea(query, searchParams.area)
 
   if (searchParams.status) {
     const statusMap: Record<string, string[]> = {
       has_vacancy: ['has_vacancy', 'accepting'],
       no_vacancy: ['no_vacancy', 'not_accepting'],
-      unknown: ['unknown', 'limited', 'waitlist'],
+      conditional: ['conditional', 'limited', 'waitlist'],
+      unknown: ['unknown'],
     }
     const values = statusMap[searchParams.status] || [searchParams.status]
     query = query.in('current_acceptance_status', values)
@@ -346,24 +350,13 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   }
 
   const queryResult = await query
-  let data = queryResult.data
+  const data = queryResult.data
   const error = queryResult.error
-  let count = queryResult.count
+  const count = queryResult.count
 
   if (error) {
     console.error('施設取得エラー:', error)
-    const fallback = await supabase
-      .from('cares_directory_listing')
-      .select('*')
-      .limit(FACILITIES_PER_PAGE)
-
-    if (fallback.error) {
-      console.error('施設フォールバック取得エラー:', fallback.error)
-      return { facilities: [], totalCount: 0, page, totalPages: 0 }
-    }
-
-    data = fallback.data
-    count = fallback.data?.length || 0
+    throw new Error('事業所の検索結果を取得できませんでした。時間をおいて再度お試しください。')
   }
 
   let rawData = data || []
@@ -390,7 +383,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
   const totalPages = Math.ceil(totalCount / FACILITIES_PER_PAGE)
 
   const listingIds = rawData.map((item: any) => item.id)
-  const [heartSummaries, profiles] = await Promise.all([getHeartSummaries(listingIds), getDirectoryProfiles(rawData)])
+  const [heartSummaries, profiles, availability] = await Promise.all([getHeartSummaries(listingIds), getDirectoryProfiles(rawData), getListingAvailability(listingIds)])
 
   const facilities = rawData.map((item: any) => {
 
@@ -403,7 +396,9 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
       address: item.address,
       latitude: item.latitude ?? null,
       longitude: item.longitude ?? null,
-      acceptance_status: item.current_acceptance_status,
+      acceptance_status: availability[item.id]?.status || item.current_acceptance_status,
+      availability: availability[item.id],
+      source_kind: item.source_kind,
       is_owner_verified: item.is_owner_verified,
       source: item.source,
       completeness_score: item.completeness_score || 0,
@@ -418,6 +413,7 @@ async function getFacilities(searchParams: { [key: string]: string | undefined }
 
 function buildCategoryUrl(currentParams: { [key: string]: string | undefined }, category: string) {
   const params = new URLSearchParams()
+  if (currentParams.scheme) params.set('scheme', currentParams.scheme)
   if (currentParams.view) params.set('view', currentParams.view)
   if (currentParams.area) params.set('area', currentParams.area)
   if (currentParams.lat) params.set('lat', currentParams.lat)
@@ -432,6 +428,7 @@ function buildCategoryUrl(currentParams: { [key: string]: string | undefined }, 
 
 function buildServiceTypeUrl(currentParams: { [key: string]: string | undefined }, serviceType: string) {
   const params = new URLSearchParams()
+  if (currentParams.scheme) params.set('scheme', currentParams.scheme)
   if (currentParams.view) params.set('view', currentParams.view)
   if (currentParams.area) params.set('area', currentParams.area)
   if (currentParams.lat) params.set('lat', currentParams.lat)
@@ -533,6 +530,7 @@ function buildTabUrl(currentParams: { [key: string]: string | undefined }, view:
 
 function buildPageUrl(currentParams: { [key: string]: string | undefined }, page: number) {
   const params = new URLSearchParams()
+  if (currentParams.scheme) params.set('scheme', currentParams.scheme)
   if (currentParams.view) params.set('view', currentParams.view)
   if (currentParams.area) params.set('area', currentParams.area)
   if (currentParams.lat) params.set('lat', currentParams.lat)
@@ -595,7 +593,7 @@ export default async function FeedPage({
 
         <section aria-labelledby="home-title" className="mb-5 px-1 py-2 sm:mb-6">
           <h1 id="home-title" className="text-2xl font-bold leading-snug tracking-tight text-slate-900 sm:text-3xl">
-            介護事業所の<span className="whitespace-nowrap">「いま」が見つかる。</span>
+            介護・福祉事業所の<span className="whitespace-nowrap">「いま」が見つかる。</span>
           </h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">空き状況や日々のようすから、気になる事業所へ。</p>
         </section>
@@ -771,7 +769,7 @@ export default async function FeedPage({
 
           <div className="space-y-4">
             {facilities.map((item: any) => (
-              <FacilityListCard key={item.id} id={item.id} name={item.facility_name} serviceType={item.service_type} address={item.address} coverImage={item.cover_image_url} overview={item.overview} total={item.heart_total} isOfficial={Boolean(item.is_owner_verified)} acceptanceStatus={item.acceptance_status} distanceKm={item.distance_km} />
+              <FacilityListCard key={item.id} id={item.id} name={item.facility_name} serviceType={item.service_type} address={item.address} coverImage={item.cover_image_url} overview={item.overview} total={item.heart_total} isOfficial={Boolean(item.is_owner_verified)} acceptanceStatus={item.acceptance_status} distanceKm={item.distance_km} availability={item.availability} sourceKind={item.source_kind} />
             ))}
           </div>
 

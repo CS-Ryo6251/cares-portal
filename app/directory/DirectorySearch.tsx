@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import FacilityDirectoryCard from '@/components/FacilityDirectoryCard'
 import DirectoryPagination from '@/components/DirectoryPagination'
-import { serviceTypes, prefectures } from '@/lib/constants'
+import ServiceTypeOptions from '@/components/ServiceTypeOptions'
+import { prefectures } from '@/lib/constants'
 
 type Facility = {
   id: string
@@ -34,15 +35,20 @@ export default function DirectorySearch() {
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [prefecture, setPrefecture] = useState(searchParams.get('prefecture') || '')
   const [serviceType, setServiceType] = useState(searchParams.get('service_type') || '')
+  const [scheme, setScheme] = useState(searchParams.get('scheme') || '')
+  const [error, setError] = useState('')
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1'))
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
 
+  const requestSequence = useRef(0)
   const fetchData = useCallback(async (q: string, pref: string, sType: string, p: number) => {
-    setLoading(true)
+    const sequence = ++requestSequence.current
+    setLoading(true); setError('')
     try {
       const params = new URLSearchParams()
+      if (scheme) params.set('scheme', scheme)
       if (q) params.set('q', q)
       if (pref) params.set('prefecture', pref)
       if (sType) params.set('service_type', sType)
@@ -52,25 +58,26 @@ export default function DirectorySearch() {
       const res = await fetch(`/api/directory?${params.toString()}`)
       if (res.ok) {
         const json = await res.json()
-        setData(json)
-      }
+        if (sequence === requestSequence.current) setData(json)
+      } else if (sequence === requestSequence.current) { setData(null); setError('検索できませんでした。時間をおいて再度お試しください。') }
     } catch {
-      // Silent fail
+      if (sequence === requestSequence.current) { setData(null); setError('検索できませんでした。時間をおいて再度お試しください。') }
     } finally {
-      setLoading(false)
+      if (sequence === requestSequence.current) setLoading(false)
     }
-  }, [])
+  }, [scheme])
 
   // Update URL params
   const updateUrl = useCallback((q: string, pref: string, sType: string, p: number) => {
     const params = new URLSearchParams()
+    if (scheme) params.set('scheme', scheme)
     if (q) params.set('q', q)
     if (pref) params.set('prefecture', pref)
     if (sType) params.set('service_type', sType)
     if (p > 1) params.set('page', String(p))
     const qs = params.toString()
     router.replace(qs ? `/directory?${qs}` : '/directory', { scroll: false })
-  }, [router])
+  }, [router, scheme])
 
   // Initial fetch
   useEffect(() => {
@@ -87,7 +94,7 @@ export default function DirectorySearch() {
     }, 400)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, prefecture, serviceType])
+  }, [query, prefecture, serviceType, scheme])
 
   function handlePageChange(newPage: number) {
     setPage(newPage)
@@ -96,10 +103,12 @@ export default function DirectorySearch() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const hasActiveFilters = prefecture || serviceType
+  const hasActiveFilters = prefecture || serviceType || scheme
 
   return (
     <div>
+      {error && <p role="alert" className="mb-4 rounded-xl bg-amber-50 p-4 text-sm">{error}<button className="ml-3 underline" onClick={() => void fetchData(query,prefecture,serviceType,page)}>再試行</button></p>}
+      <label className="mb-3 block text-sm">制度<select className="ml-3 min-h-11 rounded-xl border bg-white px-3" value={scheme} onChange={event => { setScheme(event.target.value); setServiceType('') }}><option value="">すべて</option><option value="care">介護</option><option value="welfare">障害福祉・障害児</option></select></label>
       {/* Search bar */}
       <div className="relative mb-4">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -142,14 +151,13 @@ export default function DirectorySearch() {
             className="flex-1 min-w-[140px] px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-cares-500 focus:border-cares-500 outline-none appearance-none cursor-pointer"
           >
             <option value="">サービス種別</option>
-            {serviceTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
+            <ServiceTypeOptions currentValue={serviceType} />
           </select>
 
           {hasActiveFilters && (
             <button
               onClick={() => {
+                setScheme('')
                 setPrefecture('')
                 setServiceType('')
               }}

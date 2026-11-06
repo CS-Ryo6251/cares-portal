@@ -9,6 +9,9 @@ export { facilityTypeLabels, serviceTypes } from './service-types'
 // ---------- 受入状況 ----------
 
 export const acceptanceStatusMap: Record<string, { label: string; color: string }> = {
+  has_vacancy: { label: '空きあり', color: 'bg-green-100 text-green-700' },
+  no_vacancy: { label: '空きなし', color: 'bg-red-100 text-red-700' },
+  conditional: { label: '条件付きで相談可能', color: 'bg-yellow-100 text-yellow-700' },
   accepting: { label: '受入可能', color: 'bg-green-100 text-green-700' },
   limited: { label: '条件付き', color: 'bg-yellow-100 text-yellow-700' },
   waitlist: { label: '待機あり', color: 'bg-orange-100 text-orange-700' },

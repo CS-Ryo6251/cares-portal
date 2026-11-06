@@ -1,6 +1,6 @@
 export const REQUEST_TYPES = { visit: '見学', trial: '体験利用', use: '利用の相談' } as const
 export const INTAKE_STATUSES = { new: '未確認', reviewing: '確認中', contacted: '連絡済み', scheduled: '日程調整済み', closed: '対応完了' } as const
-export const VACANCY_LABELS: Record<string, string> = { has_vacancy: '空きあり', accepting: '空きあり', no_vacancy: '空きなし', not_accepting: '空きなし', limited: '条件付きで受付', waitlist: '待機相談受付', unknown: '空き状況はご相談ください' }
+export const VACANCY_LABELS: Record<string, string> = { conditional: '条件付きで相談可能', has_vacancy: '空きあり', accepting: '空きあり', no_vacancy: '空きなし', not_accepting: '空きなし', limited: '条件付きで受付', waitlist: '待機相談受付', unknown: '空き状況はご相談ください' }
 export const CARE_LEVELS = ['', '未申請・不明', '申請中', '事業対象者', '要支援1', '要支援2', '要介護1', '要介護2', '要介護3', '要介護4', '要介護5']
 export const FIELD_LABELS = {
   request_type: 'ご希望', applicant_name: '申込者のお名前', relationship: 'ご本人との関係',

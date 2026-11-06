@@ -2,7 +2,7 @@
 export function unifiedSearchUrl(input: Record<string, string | string[] | undefined>) {
   const first = (key: string) => Array.isArray(input[key]) ? input[key][0] : input[key]
   const params = new URLSearchParams()
-  for (const key of ['q', 'service_type', 'status', 'lat', 'lng', 'page']) {
+  for (const key of ['q', 'scheme', 'service_type', 'status', 'lat', 'lng', 'page']) {
     const value = first(key)
     if (value) params.set(key, value)
   }

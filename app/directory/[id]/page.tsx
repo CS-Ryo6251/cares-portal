@@ -1,3 +1,7 @@
+// Availability expires on the JST date boundary; do not prerender stale positive states.
+export const dynamic = 'force-dynamic'
+import ProviderAvailability from '@/components/ProviderAvailability'
+import { getListingAvailability } from '@/lib/provider-availability'
 import FacilityProfileHeader from '@/components/FacilityProfileHeader'
 import FacilityAddressLink from '@/components/FacilityAddressLink'
 import ProviderIntakeSection from '@/components/ProviderIntakeSection'
@@ -30,6 +34,7 @@ import InquiryButton from '@/app/facility/[id]/InquiryButton'
 import ShareButtons from '@/app/facility/[id]/ShareButtons'
 
 const acceptanceLabels: Record<string, string> = {
+  conditional: '条件付きで相談可能',
   has_vacancy: '空きあり',
   no_vacancy: '空きなし',
   unknown: '要確認',
@@ -40,6 +45,7 @@ const acceptanceLabels: Record<string, string> = {
 }
 
 const acceptanceColors: Record<string, string> = {
+  conditional: 'bg-yellow-100 text-yellow-700',
   has_vacancy: 'bg-green-100 text-green-700',
   no_vacancy: 'bg-red-100 text-red-700',
   unknown: 'bg-gray-100 text-gray-600',
@@ -67,7 +73,7 @@ async function getListing(id: string) {
   const supabase = getSupabaseClient()
 
   const { data: facility, error } = await supabase
-    .from('cares_listings')
+    .from('cares_directory_listing')
     .select('*')
     .eq('id', id)
     .single()
@@ -82,7 +88,7 @@ async function getListing(id: string) {
     .order('reported_at', { ascending: false })
     .limit(10)
 
-  const currentVacancies = await getCurrentVacancies([id])
+  const [currentVacancies, availability] = await Promise.all([getCurrentVacancies([id]), getListingAvailability([id])])
   const currentReport = currentVacancies?.[id] || null
 
   let portalData: PortalData = null
@@ -140,6 +146,7 @@ async function getListing(id: string) {
     facility,
     vacancyReports: vacancyReports || [],
     currentReport,
+    availability: availability[id],
     vacancyUnavailable: currentVacancies === null,
     portalData,
     portalProfileUnavailable,
@@ -162,8 +169,8 @@ export async function generateMetadata({
   const cityMatch = f.address?.replace(/^.+?[県都府道]/, '').match(/^(.+?[市区町村])/)
   const city = cityMatch ? cityMatch[1] : ''
   const areaPrefix = city ? `${city}の` : ''
-  const title = `${f.facility_name}（${f.service_type || '介護事業所'}）${city ? ` | ${city}` : ''}`
-  const description = `${areaPrefix}${f.facility_name}の空き状況・料金・専門職メモ。${f.service_type || '介護事業所'}。${f.address || ''}`
+  const title = `${f.facility_name}（${f.service_type || '事業所'}）${city ? ` | ${city}` : ''}`
+  const description = `${areaPrefix}${f.facility_name}の空き状況・料金・専門職メモ。${f.service_type || '事業所'}。${f.address || ''}`
 
   return {
     title,
@@ -195,10 +202,9 @@ export default async function DirectoryDetailPage({
     notFound()
   }
 
-  const { facility: f, currentReport, vacancyUnavailable, portalData, portalProfileUnavailable } = data
+  const { facility: f, currentReport, vacancyUnavailable, portalData, portalProfileUnavailable, availability } = data
   const isOwnerVerified = f.is_owner_verified
-  const officialStatus = isOwnerVerified ? (portalData?.profile?.acceptance_status || f.acceptance_status) : null
-  const displayedStatus = officialStatus && officialStatus !== 'unknown' ? officialStatus : currentReport?.vacancy_type || 'unknown'
+  const displayedStatus = availability?.status || f.current_acceptance_status || 'unknown'
   const statusLabel = acceptanceLabels[displayedStatus] || '要問合せ'
   const statusColor = acceptanceColors[displayedStatus] || acceptanceColors.unknown
 
@@ -217,7 +223,7 @@ export default async function DirectoryDetailPage({
   const claimHref = `https://app.carespace.jp/signup/new-organization?${claimParams.toString()}`
   const officialSignals = [
     isOwnerVerified && { label: '事業所公式', tone: 'bg-blue-50 text-blue-700 border-blue-100' },
-    portalProfile?.acceptance_status && portalProfile.acceptance_status !== 'unknown' && { label: '空き状況更新あり', tone: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+    displayedStatus !== 'unknown' && { label: '空き状況更新あり', tone: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
     portalPosts.length > 0 && { label: `写真・投稿 ${portalPosts.length}件`, tone: 'bg-rose-50 text-rose-700 border-rose-100' },
     portalFees.length > 0 && { label: '料金表あり', tone: 'bg-amber-50 text-amber-700 border-amber-100' },
     portalDocuments.length > 0 && { label: 'パンフレットあり', tone: 'bg-violet-50 text-violet-700 border-violet-100' },
@@ -228,7 +234,7 @@ export default async function DirectoryDetailPage({
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: f.facility_name,
-    description: portalProfile?.overview || `${f.facility_name}（${f.service_type || '介護事業所'}）`,
+    description: portalProfile?.overview || `${f.facility_name}（${f.service_type || '事業所'}）`,
     address: f.address ? {
       '@type': 'PostalAddress',
       streetAddress: f.address,
@@ -264,10 +270,11 @@ export default async function DirectoryDetailPage({
             name={f.facility_name} serviceType={f.service_type} address={f.address}
             cover={publicWebUrl(portalProfile?.cover_image_url)} icon={publicWebUrl(portalProfile?.icon_url)} overview={portalProfile?.overview}
             phone={portalProfile?.phone || f.phone} statusLabel={statusLabel} statusColor={statusColor}
-            listingIds={[f.id]} postCount={portalData ? portalData.postCount : undefined}
+            canonicalListingId={f.id} listingIds={[f.id]} postCount={portalData ? portalData.postCount : undefined}
             photoCount={portalData ? profilePhotos(portalProfile.photos, portalPosts).length : undefined} />
         </div>
         {portalProfileUnavailable && <p role="status" className="mt-3 text-sm text-slate-500">写真・プロフィールを読み込めませんでした。時間をおいて再読み込みしてください。</p>}
+        {availability?.provider_managed && <ProviderAvailability availability={availability} serviceType={f.service_type} />}
         <ProviderIntakeSection listingId={f.id} />
 
         {isOwnerVerified && portalProfile && <>
@@ -280,12 +287,12 @@ export default async function DirectoryDetailPage({
 
         <details open={!(isOwnerVerified && portalProfile)} className="mb-6 rounded-2xl border border-gray-100 bg-white">
           <summary className="cursor-pointer px-5 py-4 text-sm font-bold text-slate-700">事業所の基本情報・お問い合わせ先</summary>
-          <div className="px-5 pb-3"><DirectoryDisclaimer isOwnerVerified={isOwnerVerified} /></div>
+          <div className="px-5 pb-3"><DirectoryDisclaimer isOwnerVerified={isOwnerVerified} sourceKind={f.source_kind} /></div>
         {/* ===== MAIN INFO CARD ===== */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 mb-6 shadow-sm">
-          {f.jigyosho_number && (
+          {(f.public_provider_number || f.jigyosho_number) && (
             <p className="text-sm text-gray-500 font-mono mb-3">
-              事業所番号: {f.jigyosho_number}
+              事業所番号: {f.public_provider_number || f.jigyosho_number}
             </p>
           )}
 
@@ -438,7 +445,7 @@ export default async function DirectoryDetailPage({
                 </Link>
               </div>
               <p className="mt-3 text-[11px] leading-5 text-slate-400">
-                登録後、事業所番号・法人情報が一致すると、このページと自動でつながります。
+                登録後、事業所情報と管理権限の確認を経て、このページと紐づけます。
               </p>
             </div>
           </div>
@@ -446,9 +453,9 @@ export default async function DirectoryDetailPage({
 
         {/* ===== VACANCY SECTION ===== */}
         <div id="community" className="scroll-mt-24 bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 mb-6 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">空き状況</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-3">地域からの空き情報</h2>
 
-          {currentReport ? <div className="mb-4 rounded-xl bg-emerald-50 p-4">
+          {availability?.provider_managed ? <p className="mb-4 text-sm text-gray-600">現在の受入状況は、上の事業所からの回答をご確認ください。</p> : currentReport ? <div className="mb-4 rounded-xl bg-emerald-50 p-4">
             <p className="font-bold text-emerald-900">{acceptanceLabels[currentReport.vacancy_type] || '要確認'}</p>
             <p className="mt-2 text-sm text-gray-700">確認日：{currentReport.confirmed_on} ／ 掲載期限：{currentReport.valid_until}</p>
             <p className="mt-1 text-sm text-gray-600">情報源：{VACANCY_SOURCES[currentReport.information_source as keyof typeof VACANCY_SOURCES] || '未確認'}（投稿者申告）</p>
@@ -460,7 +467,7 @@ export default async function DirectoryDetailPage({
             listingId={f.id}
             facilityName={f.facility_name}
             isOwnerVerified={isOwnerVerified}
-            jigyoshoNumber={f.jigyosho_number}
+            jigyoshoNumber={f.source_kind === 'welfare' ? undefined : f.jigyosho_number}
             showHearts={false}
           />
 
@@ -478,7 +485,7 @@ export default async function DirectoryDetailPage({
             <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
               <Shield className="w-10 h-10 text-green-600 mx-auto mb-3" />
               <p className="text-base font-semibold text-green-800">利用者の費用負担はありません</p>
-              <p className="text-sm text-green-600 mt-2">全額介護保険で賄われます</p>
+              <p className="text-sm text-green-600 mt-2">対象や条件は事業所へご確認ください</p>
             </div>
           </div>
         )}
@@ -491,7 +498,7 @@ export default async function DirectoryDetailPage({
         {/* Attribution */}
         <div className="text-center py-4">
           <p className="text-xs text-gray-400">
-            出典: 介護サービス情報公表システム
+            出典: {f.source_kind === 'welfare' ? '障害福祉サービス等情報公表システム（WAM）' : '介護サービス情報公表システム'}{f.source_version && ` ／ データ版：${f.source_version}`}
           </p>
         </div>
       </div>

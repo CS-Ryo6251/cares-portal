@@ -11,7 +11,7 @@ export default async function ProviderIntakeSection({ listingId }: { listingId: 
   return <section id="apply" className="my-6 overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-sm">
     <div className="p-5 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CalendarDays className="h-5 w-5 text-rose-500" />空き状況・ご利用の相談</h2><span className={`rounded-full px-3 py-1.5 text-sm font-bold ${available ? 'bg-emerald-50 text-emerald-800' : 'bg-stone-100 text-stone-600'}`}>{VACANCY_LABELS[target.status] || VACANCY_LABELS.unknown}</span></div>
-      {target.message ? <><p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">{target.message}</p><p className="mt-2 text-xs text-slate-400">ご案内の更新 {new Date(target.messageUpdatedAt!).toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p></> : <p className="mt-4 text-sm leading-7 text-slate-600">希望の曜日や時間、見学・体験について、事業所へお気軽にご相談ください。</p>}
+      {target.message ? <><p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">{target.message}</p><p className="mt-2 text-xs text-slate-400">案内の確認：{target.messageConfirmedOn} ／ 掲載期限：{target.messageValidUntil}</p></> : <p className="mt-4 text-sm leading-7 text-slate-600">希望の曜日や時間、見学・体験について、事業所へお気軽にご相談ください。</p>}
       <p className="mt-3 text-xs leading-5 text-slate-500">空き状況は変わる場合があります。受入れ・日程は事業所からの連絡でご確認ください。</p>
     </div>
     <div className="flex flex-col gap-3 border-t border-rose-50 bg-rose-50/40 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">

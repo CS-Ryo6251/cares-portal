@@ -1,3 +1,5 @@
+import { getListingAvailability } from '@/lib/provider-availability'
+import { applyDirectoryScheme } from '@/lib/directory-scheme'
 import { serviceTypeValues } from '@/lib/service-types'
 import { getHeartSummaries } from '@/lib/hearts'
 import { NextRequest, NextResponse } from 'next/server'
@@ -8,7 +10,8 @@ const MAX_RESULTS = 100
 const STATUS_MAP: Record<string, string[]> = {
   has_vacancy: ['has_vacancy', 'accepting'],
   no_vacancy: ['no_vacancy', 'not_accepting'],
-  unknown: ['unknown', 'limited', 'waitlist'],
+  conditional: ['conditional', 'limited', 'waitlist'],
+      unknown: ['unknown'],
 }
 
 export async function GET(request: NextRequest) {
@@ -37,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = getSupabaseClient()
     const status = params.get('status')
-    const source = status === 'has_vacancy' || status === 'no_vacancy'
+    const source = status === 'has_vacancy' || status === 'conditional' || status === 'no_vacancy'
       ? 'cares_confirmed_directory_listing' : 'cares_directory_listing'
     let query = supabase
       .from(source)
@@ -52,6 +55,7 @@ export async function GET(request: NextRequest) {
       .order('completeness_score', { ascending: false, nullsFirst: false })
       .limit(MAX_RESULTS)
 
+    query = applyDirectoryScheme(query, params.get('scheme'))
     if (status) {
       const values = STATUS_MAP[status] || [status]
       query = query.in('current_acceptance_status', values)
@@ -75,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     const rows = data || []
     const ids = rows.map((row: any) => row.id)
-    const heartSummaries = await getHeartSummaries(ids)
+    const [heartSummaries, availability] = await Promise.all([getHeartSummaries(ids), getListingAvailability(ids)])
 
     const facilities = rows.map((item: any) => {
       return {
@@ -85,7 +89,10 @@ export async function GET(request: NextRequest) {
         address: item.address,
         latitude: item.latitude ?? null,
         longitude: item.longitude ?? null,
-        acceptance_status: item.current_acceptance_status,
+        acceptance_status: availability[item.id]?.status || item.current_acceptance_status,
+        source_kind: item.source_kind,
+        source_version: item.source_version,
+        availability: availability[item.id],
         is_owner_verified: !!item.is_owner_verified,
         heart_total: heartSummaries === null ? null : (heartSummaries[item.id]?.total || '0'),
       }

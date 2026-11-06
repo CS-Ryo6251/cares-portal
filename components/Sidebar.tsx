@@ -19,6 +19,7 @@ const categories = [
 
 const acceptanceStatuses = [
   { key: 'has_vacancy', label: '空きあり', color: 'bg-green-100 text-green-700' },
+  { key: 'conditional', label: '条件付き', color: 'bg-yellow-100 text-yellow-700' },
   { key: 'no_vacancy', label: '空きなし', color: 'bg-red-100 text-red-700' },
   { key: 'unknown', label: '確認中', color: 'bg-gray-100 text-gray-600' },
 ]
