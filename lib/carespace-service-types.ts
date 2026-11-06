@@ -1,5 +1,5 @@
 // Generated from CareSpace OS src/constants/facility-types.ts
-// Source commit: 48011a832b04e85213408bd8a722d384f91a0525
+// Source commit: e39a75fbe5940eedac6fd425e00a9098a51e9604
 // Regenerate with scripts/sync-service-types.cjs; do not edit by hand.
 
 // 事業所種別の定数定義

@@ -1,3 +1,4 @@
+import { getWelfareMapPin } from '@/lib/welfare-map-pins'
 import { Building2, Home, Heart, Stethoscope, Users, HandHelping, Truck, Armchair, ClipboardList } from 'lucide-react'
 
 // サービス種別 → アイコン + カラー
@@ -75,6 +76,7 @@ type ServiceTypeIconProps = {
 }
 
 export default function ServiceTypeIcon({ serviceType, size = 'sm', className = '' }: ServiceTypeIconProps) {
+  const welfare = getWelfareMapPin(serviceType)
   const style = (serviceType && SERVICE_TYPE_MAP[serviceType]) || DEFAULT_STYLE
   const IconComponent = ICON_COMPONENTS[style.icon as keyof typeof ICON_COMPONENTS] || Building2
 
@@ -92,7 +94,7 @@ export default function ServiceTypeIcon({ serviceType, size = 'sm', className = 
 
   return (
     <span className={`shrink-0 ${sizeClasses[size]} ${style.bg} border ${style.border} flex items-center justify-center ${className}`}>
-      <IconComponent className={`${iconSizeClasses[size]} ${style.text}`} />
+      {welfare ? <span title={welfare.label} className="text-xs font-extrabold" style={{ color: welfare.color }}>{welfare.glyph}</span> : <IconComponent className={`${iconSizeClasses[size]} ${style.text}`} />}
     </span>
   )
 }
