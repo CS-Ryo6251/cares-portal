@@ -107,7 +107,7 @@ test('Postgres: Cares単独オーナー受付・組織境界・機密データ�
 
 test('APIの認証境界: 同一Origin、本文サイズ、権限喪失を拒否、エラーに個人情報を出さない',async()=>{
  let authorized=false
- const server=load('lib/intake-server.ts',{'server-only':{},'next/headers':{cookies:async()=>({get:()=>null})},'./supabase':{getSupabaseServiceClient:()=>({rpc:async()=>({data:authorized?[{user_id:id(41)}]:[],error:null})})},'./supabase-server-auth':{getCurrentUser:async()=>null},'./intake':lib})
+ const server=load('lib/intake-server.ts',{'./availability-calendar':load('lib/availability-calendar.ts'),'./provider-availability':{getListingAvailability:async()=>({})},'server-only':{},'next/headers':{cookies:async()=>({get:()=>null})},'./supabase':{getSupabaseServiceClient:()=>({rpc:async()=>({data:authorized?[{user_id:id(41)}]:[],error:null})})},'./supabase-server-auth':{getCurrentUser:async()=>null},'./intake':lib})
  assert.throws(()=>server.sameOrigin(new Request('https://cares.example/api/intake',{headers:{Origin:'https://evil.example'}})),/開き直して/)
  server.sameOrigin(new Request('https://cares.example/api/intake',{headers:{Origin:'https://cares.example'}}))
  await assert.rejects(server.limitedBody(new Request('https://cares.example',{method:'POST',body:'x'.repeat(101)}),100),/大きすぎ/)

@@ -1,3 +1,5 @@
+import { applyDirectoryScheme } from '@/lib/directory-scheme'
+import { getListingAvailability } from '@/lib/provider-availability'
 import { serviceTypeValues } from '@/lib/service-types'
 import { getHeartSummaries } from '@/lib/hearts'
 import { getCurrentVacancies } from '@/lib/vacancies'
@@ -17,14 +19,15 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     const supabase = getSupabaseClient()
-    const normalizedStatus = ({ accepting: 'has_vacancy', not_accepting: 'no_vacancy', limited: 'unknown', waitlist: 'unknown' } as Record<string, string>)[acceptance_status || ''] || acceptance_status
-    const source = normalizedStatus === 'has_vacancy' || normalizedStatus === 'no_vacancy'
+    const normalizedStatus = ({ accepting: 'has_vacancy', not_accepting: 'no_vacancy', limited: 'conditional', waitlist: 'conditional', available: 'has_vacancy', unavailable: 'no_vacancy' } as Record<string, string>)[acceptance_status || ''] || acceptance_status
+    const source = normalizedStatus === 'has_vacancy' || normalizedStatus === 'conditional' || normalizedStatus === 'no_vacancy'
       ? 'cares_confirmed_directory_listing' : 'cares_directory_listing'
 
     let query = supabase
       .from(source)
       .select('*', { count: 'estimated' })
 
+    query = applyDirectoryScheme(query, searchParams.get('scheme'))
     if (q) {
       query = query.or(`facility_name.ilike.%${q}%,address.ilike.%${q}%`)
     }
@@ -52,11 +55,12 @@ export async function GET(request: NextRequest) {
     }
 
     const facilityIds = (facilities || []).map(f => f.id)
-    const [hearts, vacancies] = await Promise.all([getHeartSummaries(facilityIds), getCurrentVacancies(facilityIds)])
+    const [hearts, vacancies, availability] = await Promise.all([getHeartSummaries(facilityIds), getCurrentVacancies(facilityIds), getListingAvailability(facilityIds)])
     const facilitiesWithVacancy = (facilities || []).map(f => ({
       ...f,
-      acceptance_status: f.current_acceptance_status,
-      current_vacancy: vacancies?.[f.id] || null,
+      acceptance_status: availability[f.id]?.status || f.current_acceptance_status,
+      current_vacancy: availability[f.id]?.provider_managed ? null : vacancies?.[f.id] || null,
+      availability: availability[f.id],
       heart_total: hearts === null ? null : (hearts[f.id]?.total || '0'),
     }))
 

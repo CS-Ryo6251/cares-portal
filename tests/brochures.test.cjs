@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),{PGlite}=require('@electric-sql/pglite'),{PDFDocument,PDFName}=require('pdf-lib')
 function load(file,mocks={}){const mod={exports:{}};new Function('require','module','exports',ts.transpileModule(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(name=>Object.hasOwn(mocks,name)?mocks[name]:require(name),mod,mod.exports);return mod.exports}
 const catalog=load('lib/brochures.ts'),intake=load('lib/intake.ts')
-const security=load('lib/intake-server.ts',{'server-only':{},'next/headers':{},'./supabase':{},'./supabase-server-auth':{},'./intake':intake})
+const security=load('lib/intake-server.ts',{'./availability-calendar':load('lib/availability-calendar.ts'),'./provider-availability':{},'server-only':{},'next/headers':{},'./supabase':{},'./supabase-server-auth':{},'./intake':intake})
 const helpers=load('lib/brochures-server.ts',{'server-only':{},'./supabase':{},'./supabase-server-auth':{},'./intake':intake,'./intake-server':security})
 const id=n=>`10000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 test('資料情報: 発行年月・タイトル・長さを検証し公開状態や投稿者の入力を無視',()=>{

@@ -1,3 +1,6 @@
+import AvailabilityCaption from './AvailabilityCaption'
+import type { ProviderAvailability } from '@/lib/provider-availability'
+import { directorySourceLabel } from '@/lib/directory-scheme'
 import { ArrowRight, BadgeCheck, Heart } from 'lucide-react'
 import FacilityAddressLink from './FacilityAddressLink'
 import FacilityListCover from './FacilityListCover'
@@ -9,10 +12,10 @@ type Props = {
   id: string; name: string; serviceType: string | null; address: string | null
   coverImage?: string | null; overview?: string | null; total: string | null | undefined
   supportLabel?: string; rank?: number; isOfficial?: boolean
-  acceptanceStatus?: string | null; distanceKm?: number | null
+  availability?: ProviderAvailability; sourceKind?: string | null; acceptanceStatus?: string | null; distanceKm?: number | null
 }
 
-export default function FacilityListCard({ id, name, serviceType, address, coverImage = null, overview, total, supportLabel = '応援ハート', rank, isOfficial, acceptanceStatus, distanceKm }: Props) {
+export default function FacilityListCard({ id, name, serviceType, address, coverImage = null, overview, total, supportLabel = '応援ハート', rank, isOfficial, acceptanceStatus, distanceKm, availability, sourceKind }: Props) {
   const status = acceptanceStatus ? vacancyStatusMap[acceptanceStatus] : null
   const exact = formatHearts(total)
   const countLabel = exact === '—' ? '応援数を取得できません' : `${exact} ハート`
@@ -24,7 +27,7 @@ export default function FacilityListCard({ id, name, serviceType, address, cover
     </div>
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-        {serviceType && <span>{facilityTypeLabels[serviceType] || serviceType}</span>}
+        {serviceType && <span>{facilityTypeLabels[serviceType] || serviceType}</span>}<span>{directorySourceLabel(sourceKind,serviceType)}</span>
         {isOfficial === true && <span className="inline-flex items-center gap-1 text-rose-600"><BadgeCheck aria-hidden="true" className="h-3.5 w-3.5" />公式</span>}
         {isOfficial === false && <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[10px]">公表DB</span>}
       </div>
@@ -34,6 +37,7 @@ export default function FacilityListCard({ id, name, serviceType, address, cover
         {status && <span className={`inline-flex rounded-full px-2 py-1 font-semibold ${status.color}`}>{status.label}</span>}
         {typeof distanceKm === 'number' && Number.isFinite(distanceKm) && <span className="text-slate-500">現在地から約{distanceKm < 1 ? `${Math.round(distanceKm * 1000)}m` : `${distanceKm.toFixed(1)}km`}</span>}
       </div>}
+      <AvailabilityCaption availability={availability} />
       {overview && <p className="mt-2 hidden text-xs leading-6 text-slate-500 sm:line-clamp-2">{overview}</p>}
     </div>
     <div className="col-start-2 sm:col-start-auto sm:text-right">

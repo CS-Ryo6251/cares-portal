@@ -1,3 +1,4 @@
+import { withCurrentListingStatus } from '@/lib/provider-availability'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAuthServerClient } from '@/lib/supabase-server-auth'
 
@@ -53,7 +54,7 @@ export async function GET() {
       }
     }
 
-    const result = (favorites || []).map(fav => ({
+    const result = (await withCurrentListingStatus(favorites || [])).map(fav => ({
       ...fav,
       note_count: noteCounts[fav.listing_id] || 0,
     }))

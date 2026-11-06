@@ -10,12 +10,12 @@ type Props = {
   facilityId?: string; name: string; serviceType?: string | null; address?: string | null
   cover?: string | null; icon?: string | null; overview?: string | null; phone?: string | null
   statusLabel: string; statusColor: string; listingIds: string[]; postCount?: number | null; photoCount?: number
-  isOfficial?: boolean; hasPublicProfile?: boolean
+  isOfficial?: boolean; hasPublicProfile?: boolean; canonicalListingId?: string
 }
 export default function FacilityProfileHeader(props: Props) {
   // A verified directory listing can exist before its owner publishes a profile.
   const publicFacilityId = props.hasPublicProfile === false ? undefined : props.facilityId
-  const publicUrl = `https://cares.carespace.jp/${publicFacilityId ? `facility/${publicFacilityId}` : `directory/${props.listingIds[0]}`}`
+  const publicUrl = `https://cares.carespace.jp/${props.canonicalListingId ? `directory/${props.canonicalListingId}` : publicFacilityId ? `facility/${publicFacilityId}` : `directory/${props.listingIds[0]}`}`
   return <section className="overflow-hidden bg-white sm:rounded-3xl sm:border sm:border-slate-200/80" aria-label="事業所のプロフィール">
     <div className="relative h-32 overflow-hidden bg-[#f7e9e4] sm:h-72">
       {props.cover ? <img src={props.cover} alt={`${props.name}のカバー写真`} fetchPriority="high" className="h-full w-full object-cover" /> :

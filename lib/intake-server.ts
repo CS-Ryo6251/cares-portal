@@ -1,3 +1,5 @@
+import { availabilityToday } from './availability-calendar'
+import { getListingAvailability } from './provider-availability'
 import 'server-only'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { cookies } from 'next/headers'
@@ -62,18 +64,15 @@ export async function getIntakeTarget(id: string) {
   const [listing, recipients, settings] = await Promise.all([
     db.from('cares_listings').select('id,facility_name,service_type,phone,owner_facility_id,is_owner_verified,acceptance_status').eq('id', id).maybeSingle(),
     db.rpc('cares_intake_recipients', { p_listing: id }),
-    db.from('cares_intake_settings').select('enabled,vacancy_message,updated_at').eq('listing_id', id).maybeSingle(),
+    db.from('cares_intake_settings').select('enabled,vacancy_message,updated_at,availability_version,message_confirmed_on,message_valid_until').eq('listing_id', id).maybeSingle(),
   ])
   if (listing.error || recipients.error || settings.error) throw new Error('target lookup failed')
   if (!listing.data?.is_owner_verified || !recipients.data?.length) return null
-  let status = listing.data.acceptance_status || 'unknown'
-  if (listing.data.owner_facility_id) {
-    const { data, error } = await db.from('facility_portal_profiles').select('acceptance_status').eq('facility_id', listing.data.owner_facility_id).eq('is_published', true).maybeSingle()
-    if (error) throw new Error('vacancy lookup failed')
-    if (data?.acceptance_status) status = data.acceptance_status
-  }
+  const availability = (await getListingAvailability([id]))[id]
+  const status = availability?.status || 'unknown'
+  const messageIsCurrent = settings.data?.message_confirmed_on && settings.data.message_confirmed_on <= availabilityToday() && settings.data?.message_valid_until >= availabilityToday()
   return { id, name: listing.data.facility_name as string, serviceType: listing.data.service_type as string | null, phone: listing.data.phone as string | null,
-    status: status as string, enabled: settings.data?.enabled !== false, message: (settings.data?.vacancy_message || '') as string, messageUpdatedAt: settings.data?.updated_at as string | undefined }
+    status: status as string, availability, enabled: settings.data?.enabled !== false, message: (!messageIsCurrent || (availability?.provider_managed && (!availability.published || !['has_vacancy','conditional'].includes(status) || settings.data?.availability_version !== availability.version)) ? '' : settings.data?.vacancy_message || '') as string, messageConfirmedOn: settings.data?.message_confirmed_on as string | undefined, messageValidUntil: settings.data?.message_valid_until as string | undefined, messageUpdatedAt: settings.data?.updated_at as string | undefined }
 }
 export type IntakeTarget = NonNullable<Awaited<ReturnType<typeof getIntakeTarget>>>
 export async function requireTarget(id: string) {

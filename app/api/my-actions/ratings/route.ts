@@ -1,3 +1,4 @@
+import { withCurrentListingStatus } from '@/lib/provider-availability'
 import { NextResponse } from 'next/server'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createAuthServerClient } from '@/lib/supabase-server-auth'
@@ -34,7 +35,7 @@ export async function GET() {
       return NextResponse.json({ error: '取得に失敗しました' }, { status: 500 })
     }
 
-    return NextResponse.json({ ratings: data || [] })
+    return NextResponse.json({ ratings: await withCurrentListingStatus(data || []) })
   } catch (error) {
     console.error('評価APIエラー:', error)
     return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 })

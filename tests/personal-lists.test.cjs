@@ -6,7 +6,7 @@ function load(file, mocks = {}) {
   return mod.exports
 }
 const types = load('lib/personal-lists.ts'), intake = load('lib/intake.ts')
-const security = load('lib/intake-server.ts', { 'server-only': {}, 'next/headers': {}, './supabase': {}, './supabase-server-auth': {}, './intake': intake })
+const security = load('lib/intake-server.ts', { './availability-calendar':load('lib/availability-calendar.ts'),'./provider-availability': {}, 'server-only': {}, 'next/headers': {}, './supabase': {}, './supabase-server-auth': {}, './intake': intake })
 const id = n => `10000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 const entry = n => ({ listing_id: id(n), private_note: `非公開メモ${n}`, public_note: `紹介コメント${n}` })
 

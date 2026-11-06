@@ -2,8 +2,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 function load(file){const mod={exports:{}};new Function('require','module','exports',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(name=>name.startsWith('.')?load(path.join(path.dirname(file),name+'.ts')):require(name),mod,mod.exports);return mod.exports}
 const catalog=load('lib/service-types.ts'),{serviceTypes,serviceTypeGroups,serviceTypeValues,registrationServiceType}=catalog
 const {rankingFilters}=load('lib/support-ranking.ts')
-test('OSの40種別を登録・グループ・ランキングで欠落なく使える',()=>{
- assert.equal(serviceTypes.length,40);assert.equal(new Set(serviceTypes).size,40)
+test('OSの介護・福祉種別を登録・グループ・ランキングで欠落なく使える',()=>{
+ assert.ok(serviceTypes.length > 40);assert.equal(new Set(serviceTypes).size,serviceTypes.length)
  assert.deepEqual(Object.values(serviceTypeGroups).flat(),[...serviceTypes])
  for(const type of serviceTypes){assert.equal(registrationServiceType(type),type);assert.equal(rankingFilters({service_type:type}).service,type)}
  for(const type of ['居宅療養管理指導','認知症対応型通所介護','住宅型有料老人ホーム','地域包括支援センター','特定福祉用具販売'])assert.ok(serviceTypes.includes(type))
@@ -20,4 +20,10 @@ test('登録値の空欄・未定義・不正な値を拒否し、既存の通�
  assert.equal(registrationServiceType('  デイサービス  '),'通所介護')
  assert.equal(registrationServiceType('特養'),'介護老人福祉施設')
  assert.equal(rankingFilters({service_type:'__proto__'}).service,'')
+})
+
+test('障害福祉と介護の同名に近いサービスを分離',()=>{
+ for(const type of ['居宅介護（障害福祉）','短期入所（障害福祉）','共同生活援助（障害福祉）','就労選択支援','放課後等デイサービス']) assert.ok(serviceTypes.includes(type))
+ assert.equal(serviceTypeValues('短期入所（障害福祉）').includes('短期入所生活介護'),false)
+ assert.equal(serviceTypeValues('共同生活援助（障害福祉）').includes('グループホーム'),false)
 })

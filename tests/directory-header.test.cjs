@@ -20,7 +20,7 @@ async function renderDirectory({ verified = true, profile = null, profileError =
   const supabase = { from(table) {
     const filters = []
     queried.push({ table, filters })
-    const result = () => table === 'cares_listings' ? { data: listing } : table === 'facility_portal_profiles' ? { data: profile, error: profileError } : { data: [], count: 0 }
+    const result = () => table === 'cares_directory_listing' ? { data: listing } : table === 'facility_portal_profiles' ? { data: profile, error: profileError } : { data: [], count: 0 }
     const query = {
       select() { return query }, eq(key, value) { filters.push([key, value]); return query },
       order() { return query }, limit() { return query }, single: async () => result(), maybeSingle: async () => result(),
@@ -40,6 +40,8 @@ async function renderDirectory({ verified = true, profile = null, profileError =
     '@/app/facility/[id]/InquiryButton': props => element('button', { 'data-inquiry': props.facilityId }, 'お問い合わせ'),
   }).default
   const page = load('app/directory/[id]/page.tsx', {
+    '@/components/ProviderAvailability': empty,
+    '@/lib/provider-availability': { getListingAvailability: async () => ({}) },
     '@/components/FacilityAddressLink': addressLink,
     '@/components/FacilityProfileHeader': header,
     '@/components/ProviderIntakeSection': () => element('section', { id: 'apply' }, '空き状況・ご利用の相談'),
@@ -100,7 +102,7 @@ test('公開中の写真とアイコン、公式プロフィールへの共有�
   assertIdentityFirst(html)
   assert.match(html, /src="https:\/\/example.invalid\/cover.jpg"/)
   assert.match(html, /src="https:\/\/example.invalid\/icon.jpg"/)
-  assert.match(html, /href="https:\/\/cares.carespace.jp\/facility\/facility-a"/)
+  assert.match(html, /href="https:\/\/cares.carespace.jp\/directory\/listing-a"/)
   assert.match(html, /data-heart-facility="facility-a"/)
   assert.match(html, /data-inquiry="facility-a"/)
 })

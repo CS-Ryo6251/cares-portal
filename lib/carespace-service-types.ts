@@ -1,9 +1,10 @@
 // Generated from CareSpace OS src/constants/facility-types.ts
-// Source commit: 49931701aaa0312fd901f7706c14b1d9276f321f
+// Source commit: 48011a832b04e85213408bd8a722d384f91a0525
 // Regenerate with scripts/sync-service-types.cjs; do not edit by hand.
 
 // 事業所種別の定数定義
-// 介護保険サービスの種別を統一的に管理するためのマスターリスト
+// 既存の介護保険の名称・順序を保持し、福祉分野の選択肢を追加する。
+import { WELFARE_FACILITY_TYPES, WELFARE_FACILITY_TYPES_BY_CATEGORY } from './carespace-welfare-service-types';
 
 export const FACILITY_TYPES = [
   // 居宅サービス
@@ -58,7 +59,8 @@ export const FACILITY_TYPES = [
   '地域包括支援センター',
 
   // その他
-  'その他'
+  'その他',
+  ...WELFARE_FACILITY_TYPES,
 ] as const;
 
 export type FacilityType = typeof FACILITY_TYPES[number];
@@ -118,5 +120,6 @@ export const FACILITY_TYPES_BY_CATEGORY = {
   ],
   'その他': [
     'その他'
-  ]
+  ],
+  ...WELFARE_FACILITY_TYPES_BY_CATEGORY,
 } as const;

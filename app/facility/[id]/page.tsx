@@ -1,3 +1,7 @@
+// Availability expires on the JST date boundary; do not prerender stale positive states.
+export const dynamic = 'force-dynamic'
+import ProviderAvailability from '@/components/ProviderAvailability'
+import { getListingAvailability, getFacilityAvailability, facilityAvailability } from '@/lib/provider-availability'
 import { getSupabaseClient } from '@/lib/supabase'
 import { simulationTariffs } from '@/lib/simulation-tariffs'
 import { profilePhotos, publicWebUrl } from '@/lib/profile-media'
@@ -14,6 +18,7 @@ import FacilityPostFeed, { FacilityPhotoGallery } from '@/components/FacilityPos
 import FloatingActions from './FloatingActions'
 
 const acceptanceLabels: Record<string, string> = {
+  conditional: '条件付きで相談可能',
   has_vacancy: '空きあり',
   no_vacancy: '空きなし',
   accepting: '受入可能',
@@ -24,6 +29,7 @@ const acceptanceLabels: Record<string, string> = {
 }
 
 const acceptanceColors: Record<string, string> = {
+  conditional: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   has_vacancy: 'bg-green-100 text-green-700 border-green-200',
   no_vacancy: 'bg-red-100 text-red-700 border-red-200',
   accepting: 'bg-green-100 text-green-700 border-green-200',
@@ -85,8 +91,13 @@ async function getFacilityDetail(facilityId: string) {
   const { data: directoryListings } = await supabase.from('cares_listings')
     .select('id,service_type').eq('owner_facility_id', facilityId).eq('is_owner_verified', true).order('id')
 
+  const availability = await getListingAvailability((directoryListings || []).map(row => row.id))
+  const joined = Array.isArray(profile.facilities) ? profile.facilities[0] : profile.facilities
+  const providerRows = await getFacilityAvailability([facilityId])
   return {
     ...profile,
+    availability,
+    acceptance_status: facilityAvailability(providerRows, facilityId, joined?.service_type, profile.acceptance_status),
     directoryListings: directoryListings || [],
     posts: posts || [],
     postCount: postsError ? null : (postCount ?? posts?.length ?? 0),
@@ -181,7 +192,7 @@ export default async function FacilityDetailPage({ params, searchParams }: {
         cover={publicWebUrl(facility.cover_image_url)} icon={publicWebUrl(facility.icon_url)} overview={facility.overview}
         statusLabel={acceptanceLabels[facility.acceptance_status] || '確認中'} statusColor={acceptanceColors[facility.acceptance_status] || acceptanceColors.unknown}
         listingIds={facility.directoryListings.map((listing: { id: string }) => listing.id)} postCount={facility.postCount} photoCount={photos.length} />
-      <div className="px-4 sm:px-0">{facility.directoryListings.map((listing: { id: string }) => <ProviderIntakeSection key={listing.id} listingId={listing.id} />)}</div>
+      <div className="px-4 sm:px-0">{facility.directoryListings.map((listing: { id: string; service_type: string }) => facility.availability[listing.id]?.provider_managed && <ProviderAvailability key={listing.id} availability={facility.availability[listing.id]} serviceType={listing.service_type} />)}{facility.directoryListings.map((listing: { id: string }) => <ProviderIntakeSection key={listing.id} listingId={listing.id} />)}</div>
     <FloatingActions providerSettings={facility.simulation_settings} fees={facility.fees} feePattern={facility.fee_pattern} tariffs={simulationTariffs(f.service_type)} serviceType={f.service_type} facilityName={f.name} address={f.address} feesUnavailable={facility.feesUnavailable} />
       <FacilityProfileTabs
         posts={<FacilityPostFeed posts={facility.posts} facilityId={id} facilityName={f.name} listingId={facility.directoryListings[0]?.id} initialCategory={sp.category} unavailable={facility.postsUnavailable} totalCount={facility.postCount ?? undefined} />}

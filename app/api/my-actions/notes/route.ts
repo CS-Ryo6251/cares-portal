@@ -1,3 +1,4 @@
+import { withCurrentListingStatus } from '@/lib/provider-availability'
 import { NextResponse } from 'next/server'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createAuthServerClient } from '@/lib/supabase-server-auth'
@@ -63,8 +64,8 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      personal_notes: personalNotes || [],
-      professional_notes: professionalNotes || [],
+      personal_notes: await withCurrentListingStatus(personalNotes || []),
+      professional_notes: await withCurrentListingStatus(professionalNotes || []),
     })
   } catch (error) {
     console.error('メモAPIエラー:', error)

@@ -1,5 +1,10 @@
 'use client'
 
+import AvailabilityCaption from './AvailabilityCaption'
+import type { ProviderAvailability } from '@/lib/provider-availability'
+import { directorySourceLabel } from '@/lib/directory-scheme'
+import { vacancyStatusMap } from '@/lib/constants'
+
 import HeartCount from '@/components/HeartCount'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -34,6 +39,8 @@ type FacilityMapItem = {
   address: string | null
   latitude?: number | null
   longitude?: number | null
+  availability?: ProviderAvailability
+  source_kind?: string | null
   acceptance_status: string | null
   is_owner_verified: boolean
   heart_total: string | null
@@ -635,6 +642,8 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
       east: String(east),
       west: String(west),
     })
+    const scheme = searchParams.get('scheme')
+    if (scheme) params.set('scheme', scheme)
     const status = searchParams.get('status')
     const serviceType = searchParams.get('service_type')
     const q = searchParams.get('q')
@@ -1106,8 +1115,8 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
               )}
             </div>
             <div className="mt-3 border-t border-slate-100 pt-2.5">
-              {activeFacility.service_type && <p className="mb-2 line-clamp-2 text-xs leading-5 text-slate-500">{activeFacility.service_type}</p>}
-              <HeartCount total={activeFacility.heart_total} />
+              {activeFacility.service_type && <p className="mb-2 line-clamp-2 text-xs leading-5 text-slate-500">{activeFacility.service_type} ／ {directorySourceLabel(activeFacility.source_kind,activeFacility.service_type)}</p>}
+              <p className="mb-2 text-xs font-semibold">{vacancyStatusMap[activeFacility.acceptance_status || 'unknown']?.label || '要確認'}</p><AvailabilityCaption availability={activeFacility.availability} /><HeartCount total={activeFacility.heart_total} />
             </div>
           </a>
         )}

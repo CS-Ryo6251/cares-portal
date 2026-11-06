@@ -1,3 +1,6 @@
+import AvailabilityCaption from './AvailabilityCaption'
+import type { ProviderAvailability } from '@/lib/provider-availability'
+import { directorySourceLabel } from '@/lib/directory-scheme'
 import HeartCount from '@/components/HeartCount'
 import Link from 'next/link'
 import { Phone } from 'lucide-react'
@@ -15,6 +18,9 @@ type FacilityDirectoryCardProps = {
     acceptance_status: string | null
     source: string | null
     heart_total?: string | null
+    source_kind?: string | null
+    public_provider_number?: string | null
+    availability?: ProviderAvailability
     current_vacancy?: { confirmed_on: string; valid_until: string } | null
   }
 }
@@ -45,7 +51,7 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
           )}
           {!isOfficial && (
             <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">
-              公表DB
+              {directorySourceLabel(facility.source_kind,facility.service_type)} 公表DB
             </span>
           )}
         </div>
@@ -64,6 +70,7 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
         </div>
 
         <div className="mt-3"><HeartCount total={facility.heart_total} /></div>
+        <AvailabilityCaption availability={facility.availability} />
         {facility.current_vacancy && <p className="mt-2 text-xs text-gray-500">{facility.current_vacancy.confirmed_on} 確認・{facility.current_vacancy.valid_until} まで</p>}
         {/* Address */}
         {facility.address && (
@@ -80,9 +87,9 @@ export default function FacilityDirectoryCard({ facility }: FacilityDirectoryCar
               <span>{facility.phone}</span>
             </div>
           )}
-          {facility.jigyosho_number && (
+          {(facility.public_provider_number || facility.jigyosho_number) && (
             <span className="text-xs text-gray-400">
-              事業所番号: {facility.jigyosho_number}
+              事業所番号: {facility.public_provider_number || facility.jigyosho_number}
             </span>
           )}
         </div>
