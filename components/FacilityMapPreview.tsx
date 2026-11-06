@@ -1,5 +1,6 @@
 'use client'
 
+import { getWelfareMapPin } from '@/lib/welfare-map-pins'
 import AvailabilityCaption from './AvailabilityCaption'
 import type { ProviderAvailability } from '@/lib/provider-availability'
 import { directorySourceLabel } from '@/lib/directory-scheme'
@@ -64,7 +65,7 @@ const PREFERRED_AREA_KEY = 'cares_preferred_area'
 const PREFERRED_LAT_KEY = 'cares_preferred_lat'
 const PREFERRED_LNG_KEY = 'cares_preferred_lng'
 
-const mapServiceStyles: Record<string, { icon: string; color: string; soft: string; label: string }> = {
+const mapServiceStyles: Record<string, { icon: string; color: string; soft: string; label: string; glyph?: string }> = {
   visit: { icon: 'truck', color: '#2563eb', soft: '#dbeafe', label: '訪問系' },
   day: { icon: 'users', color: '#16a34a', soft: '#dcfce7', label: '通所系' },
   residential: { icon: 'building', color: '#9333ea', soft: '#f3e8ff', label: '入所系' },
@@ -163,6 +164,8 @@ function parseCoordinate(value: number | string | null | undefined) {
 
 
 function getMapServiceStyle(serviceType?: string | null) {
+  const welfare = getWelfareMapPin(serviceType)
+  if (welfare) return { ...welfare, soft: '#f8fafc' }
   if (!serviceType) return mapServiceStyles.default
   if (serviceType.includes('訪問')) return mapServiceStyles.visit
   if (serviceType.includes('通所') || serviceType.includes('デイ')) return mapServiceStyles.day
@@ -233,7 +236,7 @@ function createMarkerContent(facility: FacilityMapItem, active: boolean) {
   node.className = `cares-google-marker ${active ? 'is-active' : ''}`
   node.style.setProperty('--marker-color', style.color)
   node.style.setProperty('--marker-soft', style.soft)
-  node.innerHTML = `
+  node.innerHTML = style.glyph ? `<span style="font-size:13px;font-weight:800">${style.glyph}</span>` : `
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${svgPath}
     </svg>
@@ -525,6 +528,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                 map,
                 position,
                 title: facility.facility_name,
+                label: style.glyph ? { text: style.glyph, color: '#ffffff', fontSize: '10px', fontWeight: '700' } : undefined,
                 icon: {
                   path: google.maps.SymbolPath.CIRCLE,
                   fillColor: style.color,
@@ -1039,7 +1043,7 @@ export default function FacilityMapPreview({ facilities, area, userLatitude, use
                       }`}
                       style={{ backgroundColor: markerStyle.color }}
                     >
-                      <MarkerIcon className="h-4 w-4" />
+                      {markerStyle.glyph ? <span className="text-xs font-extrabold">{markerStyle.glyph}</span> : <MarkerIcon className="h-4 w-4" />}
                     </span>
                     <span
                       className="mx-auto block h-3 w-3 rotate-45 rounded-sm shadow-md"

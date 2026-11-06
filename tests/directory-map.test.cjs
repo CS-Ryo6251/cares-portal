@@ -46,3 +46,20 @@ test('ディレクトリAPIは大量データの全件集計を避け、概数�
   assert.equal(body.total, 226147); assert.equal(body.totalPages, 4523); assert.equal(body.totalIsEstimate, true)
   assert.match(filter, /source_kind.eq.welfare/)
 })
+
+test('福祉の登録71種別すべてがOS共通の専用ピンを持ち、地図と一覧へ描画される', () => {
+  const { WELFARE_MAP_PINS, getWelfareMapPin } = load('lib/welfare-map-pins.ts')
+  const Icon = load('components/ServiceTypeIcon.tsx').default
+  const MapPreview = load('components/FacilityMapPreview.tsx', { 'next/navigation': { useRouter: () => ({}), useSearchParams: () => new URLSearchParams() } }).default
+  assert.equal(WELFARE_MAP_PINS.length, 71)
+  assert.equal(new Set(WELFARE_MAP_PINS.map(pin => pin.glyph)).size, 71)
+  for (const pin of WELFARE_MAP_PINS) {
+    const icon = renderToStaticMarkup(React.createElement(Icon, { serviceType: pin.label }))
+    const map = renderToStaticMarkup(React.createElement(MapPreview, { facilities: [{ id: 'synthetic', facility_name: '合成事業所', service_type: pin.label, address: '山形県山形市', latitude: 38.25, longitude: 140.34 }] }))
+    assert(icon.includes(pin.glyph), pin.label)
+    assert(map.includes(pin.glyph), pin.label)
+    assert(map.includes(pin.color), pin.label)
+  }
+  assert.equal(getWelfareMapPin('就労継続支援Ｂ型').glyph, '就B')
+  assert.equal(getWelfareMapPin('居宅介護支援'), null)
+})

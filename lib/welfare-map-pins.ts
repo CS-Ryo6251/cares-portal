@@ -1,0 +1,98 @@
+// Generated from CareSpace OS src/constants/welfare-map-pins.ts; do not edit by hand.
+import { welfareFacilityType, type WelfareFacilityType } from './carespace-welfare-service-types'
+
+const families = {
+  visit: { color: '#be123c', softClassName: 'bg-rose-50 text-rose-700 ring-rose-200', icon: 'truck' },
+  day: { color: '#c2410c', softClassName: 'bg-orange-50 text-orange-700 ring-orange-200', icon: 'users' },
+  home: { color: '#7e22ce', softClassName: 'bg-purple-50 text-purple-700 ring-purple-200', icon: 'home' },
+  work: { color: '#047857', softClassName: 'bg-emerald-50 text-emerald-700 ring-emerald-200', icon: 'hand' },
+  consultation: { color: '#4338ca', softClassName: 'bg-indigo-50 text-indigo-700 ring-indigo-200', icon: 'clipboard' },
+  child: { color: '#0369a1', softClassName: 'bg-sky-50 text-sky-700 ring-sky-200', icon: 'users' },
+  community: { color: '#0f766e', softClassName: 'bg-teal-50 text-teal-700 ring-teal-200', icon: 'heart' },
+  family: { color: '#a21caf', softClassName: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200', icon: 'heart' },
+  living: { color: '#92400e', softClassName: 'bg-amber-50 text-amber-800 ring-amber-200', icon: 'hand' },
+} as const
+
+// An explicit, typed entry for every registered welfare service. New catalog
+// values must receive a pin here; they must never silently become "other".
+export const WELFARE_PIN_DEFINITIONS = {
+  '居宅介護（障害福祉）': ['居障', '障害居宅', 'visit'],
+  '重度訪問介護': ['重訪', '重度訪問', 'visit'],
+  '同行援護': ['同行', '同行援護', 'visit'],
+  '行動援護': ['行援', '行動援護', 'visit'],
+  '重度障害者等包括支援': ['包括', '重度包括', 'visit'],
+  '療養介護': ['療介', '療養介護', 'day'],
+  '生活介護': ['生介', '生活介護', 'day'],
+  '短期入所（障害福祉）': ['障短', '障害短期', 'home'],
+  '施設入所支援': ['施入', '施設入所', 'home'],
+  '共同生活援助（障害福祉）': ['共援', '共同生活援助', 'home'],
+  '自立生活援助': ['自援', '自立生活援助', 'home'],
+  '宿泊型自立訓練': ['宿訓', '宿泊訓練', 'home'],
+  '自立訓練（機能訓練）': ['機訓', '機能訓練', 'work'],
+  '自立訓練（生活訓練）': ['生訓', '生活訓練', 'work'],
+  '就労選択支援': ['就選', '就労選択', 'work'],
+  '就労移行支援': ['就移', '就労移行', 'work'],
+  '就労継続支援A型': ['就A', '就労A型', 'work'],
+  '就労継続支援B型': ['就B', '就労B型', 'work'],
+  '就労定着支援': ['就定', '就労定着', 'work'],
+  '計画相談支援': ['計相', '計画相談', 'consultation'],
+  '地域相談支援（地域移行支援）': ['地移', '地域移行', 'consultation'],
+  '地域相談支援（地域定着支援）': ['地定', '地域定着', 'consultation'],
+  '障害児相談支援': ['児相', '障害児相談', 'consultation'],
+  '児童発達支援': ['児発', '児童発達', 'child'],
+  '放課後等デイサービス': ['放デ', '放課後デイ', 'child'],
+  '居宅訪問型児童発達支援': ['居児', '居宅訪問児童', 'child'],
+  '保育所等訪問支援': ['保訪', '保育所訪問', 'child'],
+  '福祉型障害児入所施設': ['福児', '福祉型児童入所', 'child'],
+  '医療型障害児入所施設': ['医児', '医療型児童入所', 'child'],
+  '移動支援': ['移動', '移動支援', 'community'],
+  '日中一時支援': ['日中', '日中一時', 'community'],
+  '地域活動支援センター': ['地活', '地域活動', 'community'],
+  '基幹相談支援センター': ['基相', '基幹相談', 'consultation'],
+  '福祉ホーム': ['福住', '福祉ホーム', 'home'],
+  '保育所': ['保育', '保育所', 'child'],
+  '認定こども園': ['認子', 'こども園', 'child'],
+  '小規模保育事業': ['小保', '小規模保育', 'child'],
+  '家庭的保育事業': ['家保', '家庭的保育', 'child'],
+  '居宅訪問型保育事業': ['居保', '居宅訪問保育', 'child'],
+  '事業所内保育事業': ['事保', '事業所内保育', 'child'],
+  '乳児等通園支援事業': ['乳通', '乳児等通園', 'child'],
+  '放課後児童健全育成事業': ['学童', '学童', 'child'],
+  '一時預かり事業': ['一預', '一時預かり', 'child'],
+  '地域子育て支援拠点事業': ['子拠', '子育て拠点', 'family'],
+  '子育て短期支援事業': ['子短', '子育て短期', 'family'],
+  '養育支援訪問事業': ['養訪', '養育訪問', 'family'],
+  '子育て世帯訪問支援事業': ['子訪', '子育て訪問', 'family'],
+  '児童育成支援拠点事業': ['児拠', '児童育成拠点', 'family'],
+  '親子関係形成支援事業': ['親子', '親子関係', 'family'],
+  '乳児院': ['乳院', '乳児院', 'family'],
+  '児童養護施設': ['児養', '児童養護', 'family'],
+  '母子生活支援施設': ['母子', '母子生活', 'family'],
+  '児童心理治療施設': ['児心', '児童心理', 'family'],
+  '児童自立支援施設': ['児自', '児童自立', 'family'],
+  '児童家庭支援センター': ['児家', '児童家庭', 'family'],
+  '里親支援センター': ['里親', '里親支援', 'family'],
+  '児童自立生活援助事業': ['児生', '児童生活援助', 'family'],
+  '小規模住居型児童養育事業': ['里住', '小規模児童養育', 'family'],
+  '自立相談支援事業': ['自相', '自立相談', 'living'],
+  '就労準備支援事業': ['就準', '就労準備', 'living'],
+  '家計改善支援事業': ['家計', '家計改善', 'living'],
+  '生活困窮者居住支援事業': ['困住', '困窮者居住', 'living'],
+  '子どもの学習・生活支援事業': ['学支', '学習・生活', 'living'],
+  '救護施設': ['救護', '救護施設', 'living'],
+  '更生施設': ['更生', '更生施設', 'living'],
+  '医療保護施設': ['医保', '医療保護', 'living'],
+  '授産施設': ['授産', '授産施設', 'living'],
+  '宿所提供施設': ['宿所', '宿所提供', 'living'],
+  '日常生活自立支援事業': ['権援', '日常生活自立', 'living'],
+  '女性相談支援センター': ['女相', '女性相談', 'consultation'],
+  '女性自立支援施設': ['女自', '女性自立', 'family'],
+} as const satisfies Record<WelfareFacilityType, readonly [string, string, keyof typeof families]>
+
+export function getWelfareMapPin(value?: string | null) {
+  const type = welfareFacilityType(value)
+  if (!type) return null
+  const [glyph, shortLabel, family] = WELFARE_PIN_DEFINITIONS[type]
+  return { key: `welfare:${type}` as const, label: type, shortLabel, glyph, ...families[family] }
+}
+export const WELFARE_MAP_PINS = (Object.keys(WELFARE_PIN_DEFINITIONS) as WelfareFacilityType[]).map(type => getWelfareMapPin(type)!)

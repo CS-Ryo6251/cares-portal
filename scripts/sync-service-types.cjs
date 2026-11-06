@@ -20,3 +20,7 @@ if (content.includes("'./welfare-service-types'")) {
  const file = path.join(__dirname, '../lib/carespace-welfare-service-types.ts')
  if (process.argv.includes('--check')) { if (fs.readFileSync(file,'utf8') !== welfare) throw new Error('Welfare catalog differs') } else fs.writeFileSync(file, welfare)
 }
+
+const pins = '// Generated from CareSpace OS src/constants/welfare-map-pins.ts; do not edit by hand.\n' + read('src/constants/welfare-map-pins.ts').replace("'./welfare-service-types'", "'./carespace-welfare-service-types'")
+const pinFile = path.join(__dirname, '../lib/welfare-map-pins.ts')
+if (process.argv.includes('--check')) { if (fs.readFileSync(pinFile, 'utf8') !== pins) throw new Error('Welfare map pins differ') } else fs.writeFileSync(pinFile, pins)
