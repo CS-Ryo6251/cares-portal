@@ -595,7 +595,8 @@ export default async function FeedPage({
           <h1 id="home-title" className="text-2xl font-bold leading-snug tracking-tight text-slate-900 sm:text-3xl">
             介護・福祉事業所の<span className="whitespace-nowrap">「いま」が見つかる。</span>
           </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">空き状況や日々のようすから、気になる事業所へ。</p>
+          <p className="mt-2 text-sm leading-6 text-slate-500">介護・障害福祉・障害児支援の空き状況や日々のようすから、気になる事業所へ。</p>
+          <a href="/?view=facilities&scheme=welfare" className="mt-3 inline-flex min-h-11 items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">障害福祉・障害児の事業所を探す</a>
         </section>
 
         {currentView === 'posts' && <GeolocationBanner />}

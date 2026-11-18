@@ -41,6 +41,7 @@ async function renderDirectory({ verified = true, profile = null, profileError =
   }).default
   const page = load('app/directory/[id]/page.tsx', {
     '@/components/ProviderAvailability': empty,
+    '@/components/ProfessionalConsultation': empty,
     '@/lib/provider-availability': { getListingAvailability: async () => ({}) },
     '@/components/FacilityAddressLink': addressLink,
     '@/components/FacilityProfileHeader': header,
