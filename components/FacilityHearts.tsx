@@ -116,7 +116,7 @@ export default function FacilityHearts({ listingId, facilityId, variant = 'card'
     {sent && <p role="status" className="mt-3 text-sm font-semibold text-rose-700">♡ +1 応援を届けました。ありがとうございます！</p>}
     {sent && receipt && <div className="mt-3 rounded-xl border border-rose-100 bg-white p-3 text-xs leading-5 text-slate-600">
       <p>{receipt.recorded ? 'あなたの応援の記録に保存しました。' : receipt.authenticated ? 'この応援はログイン前に送ったため、個人の記録には含まれません。' : '登録すると、これからの応援をグラフと履歴で振り返れます。'}</p>
-      <Link href={receipt.authenticated ? '/my-actions' : '/signup?redirect=%2Fmy-actions'} className="mt-1 inline-flex min-h-11 items-center font-bold text-rose-700 underline">{receipt.authenticated ? '自分の応援の記録を見る' : '無料登録して、応援の記録をはじめる'}</Link>
+      <Link href={receipt.authenticated ? '/my-actions' : '/signup?redirect=%2Fmy-actions'} className="mt-1 inline-flex min-h-11 items-center font-bold text-rose-700 underline">{receipt.authenticated ? '自分の応援の記録を見る' : '業界関係者の方は、OS登録で応援の記録へ'}</Link>
       {!receipt.authenticated && <Link href="/login?redirect=%2Fmy-actions" className="block min-h-10 py-2 text-slate-500 underline">アカウントをお持ちの方はログイン</Link>}
     </div>}
     {error && <p role="alert" className="mt-2 text-sm text-red-700">{error} <button onClick={load} className="min-h-11 underline">再読み込み</button></p>}

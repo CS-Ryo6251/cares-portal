@@ -101,19 +101,11 @@ test('CaresのログアウトでOSなど別セッションを失効させない'
   assert.equal(scope, 'local')
 })
 
-test('会員登録の確認メールでも応援画面への戻り先を保持し、外部URLは拒否する', async () => {
-  let redirectTo
-  const route = load('app/api/auth/signup/route.ts', {
-    'next/headers': { cookies: async () => ({ getAll: () => [], set: () => {} }) },
-    '@supabase/ssr': { createServerClient: () => ({ auth: { signUp: async payload => {
-      redirectTo = payload.options.emailRedirectTo
-      return { data: { user: { id: 'synthetic-user', email: 'test@example.invalid' }, session: null } }
-    } } }) },
-    '@/lib/supabase': { getSupabaseServiceClient: () => ({ from: () => ({ insert: async () => ({ error: null }) }) }) },
-  })
-  for (const [redirect, expected] of [['/my-actions', '/my-actions'], ['https://evil.example', '/']]) {
-    const response = await route.POST(new NextRequest('https://cares.example/api/auth/signup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'test@example.invalid', password: 'synthetic-password', displayName: '検証用', profession: 'family', redirect }) }))
-    assert.equal(response.status, 200)
-    assert.equal(new URL(redirectTo).searchParams.get('redirect'), expected)
-  }
+test('Cares独立登録を廃止し、Auth作成もプロフィール挿入もせずOS登録へ案内する', async () => {
+  const route = load('app/api/auth/signup/route.ts', {})
+  const response = await route.POST(new NextRequest('https://cares.example/api/auth/signup', { method: 'POST', body: JSON.stringify({ email: 'test@example.invalid', profession: 'family' }) }))
+  assert.equal(response.status, 410)
+  const body = await response.json()
+  assert.equal(body.code, 'OS_REGISTRATION_REQUIRED')
+  assert.equal(body.redirectUrl, 'https://app.carespace.jp/signup?source=cares')
 })

@@ -376,13 +376,13 @@ export default function DirectoryDetailClient({
                         残り{notesRemainingCount}件のメモがあります
                       </p>
                       <p className="text-xs text-gray-500 mb-3">
-                        無料登録すると全てのメモを閲覧できます
+                        業界関係者はOSの登録で全てのメモを閲覧できます
                       </p>
                       <button
                         onClick={() => setShowLoginModal(true)}
                         className="px-5 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
                       >
-                        無料登録して続きを読む
+                        CareSpace OSに登録して続きを読む
                       </button>
                     </div>
                   </div>

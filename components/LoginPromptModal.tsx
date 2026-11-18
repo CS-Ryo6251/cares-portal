@@ -71,11 +71,11 @@ export default function LoginPromptModal({ isOpen, onClose, variant = 'default' 
           href={`/signup?redirect=${encodeURIComponent(currentPath)}`}
           className="block w-full py-3 bg-gray-800 text-white rounded-xl text-base font-medium text-center hover:bg-gray-700 transition-colors"
         >
-          Caresの利用者登録（無料）
+          業界関係者の利用登録（CareSpace OS）
         </a>
 
         <p className="mt-3 text-center text-sm text-gray-500">
-          Cares・CareSpace OSのアカウントをお持ちの方{' '}
+          共通アカウントをお持ちの方{' '}
           <a href={`/login?redirect=${encodeURIComponent(currentPath)}`} className="text-gray-700 font-medium hover:underline">
             ログイン
           </a>

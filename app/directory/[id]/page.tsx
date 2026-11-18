@@ -1,6 +1,7 @@
 // Availability expires on the JST date boundary; do not prerender stale positive states.
 export const dynamic = 'force-dynamic'
 import ProviderAvailability from '@/components/ProviderAvailability'
+import ProfessionalConsultation from '@/components/ProfessionalConsultation'
 import { getListingAvailability } from '@/lib/provider-availability'
 import FacilityProfileHeader from '@/components/FacilityProfileHeader'
 import FacilityAddressLink from '@/components/FacilityAddressLink'
@@ -275,6 +276,7 @@ export default async function DirectoryDetailPage({
         </div>
         {portalProfileUnavailable && <p role="status" className="mt-3 text-sm text-slate-500">写真・プロフィールを読み込めませんでした。時間をおいて再読み込みしてください。</p>}
         {availability?.provider_managed && <ProviderAvailability availability={availability} serviceType={f.service_type} />}
+        <ProfessionalConsultation listingId={f.id} facilityName={f.facility_name} availability={availability} />
         <ProviderIntakeSection listingId={f.id} />
 
         {isOwnerVerified && portalProfile && <>

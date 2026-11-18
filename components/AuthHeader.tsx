@@ -177,7 +177,7 @@ export default function AuthHeader() {
           className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-800 text-xs sm:text-sm font-medium text-white hover:bg-gray-700 transition-colors"
         >
           <span className="sm:hidden">登録</span>
-          <span className="hidden sm:inline">新規登録</span>
+          <span className="hidden sm:inline">業界関係者の登録</span>
         </a>
       </div>
     )
