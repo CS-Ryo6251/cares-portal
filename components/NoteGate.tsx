@@ -27,13 +27,13 @@ export default function NoteGate({ limited, remainingCount, listingId, children 
             あと{remainingCount}件のメモを見るにはログインが必要です
           </p>
           <p className="text-xs text-gray-400 mb-4">
-            無料登録で全てのメモを閲覧できます
+            業界関係者はOSの登録で全てのメモを閲覧できます
           </p>
           <button
             onClick={() => setShowLoginModal(true)}
             className="inline-flex items-center px-5 py-2.5 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
           >
-            無料登録して続きを読む
+            CareSpace OSに登録して続きを読む
           </button>
         </div>
       )}
