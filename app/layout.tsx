@@ -87,20 +87,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-rose-100 bg-slate-950 py-10 text-white">
+        <footer className="border-t border-rose-100 bg-white py-10 text-slate-700">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <div className="mb-2 flex items-center justify-center gap-2"><Image src="/brand/cares-logo-b.png" alt="Cares" width={2172} height={724} sizes="120px" className="h-auto w-[120px] brightness-0 invert" /><span className="text-xs font-bold text-white/45">by CareSpace</span></div>
-            <p className="mb-5 text-xs text-white/45">介護事業所の「いま」を、必要な人へ。</p>
-            <div className="mb-5 flex flex-wrap items-center justify-center gap-4 text-sm text-white/60">
-              <a href="/" className="transition-colors hover:text-white">事業所をさがす</a>
-              <a href="/cases" className="transition-colors hover:text-white">支援の相談</a>
-              <a href="/ranking" className="transition-colors hover:text-white">応援ランキング</a>
-              <a href="/blog" className="transition-colors hover:text-white">コラム</a>
-              <a href="/area" className="transition-colors hover:text-white">エリアから探す</a>
-              <a href="/for-business" className="transition-colors hover:text-white">事業所の掲載管理・登録案内</a>
-              <a href="https://app.carespace.jp" className="transition-colors hover:text-white">CareSpaceOS</a>
+            <div className="mb-2 flex items-center justify-center gap-2"><Image src="/brand/cares-logo-b.png" alt="Cares" width={2172} height={724} sizes="120px" className="h-auto w-[120px]" /><span className="text-xs font-bold text-slate-500">by CareSpace</span></div>
+            <p className="mb-5 text-xs text-slate-500">介護事業所の「いま」を、必要な人へ。</p>
+            <div className="mb-5 flex flex-wrap items-center justify-center gap-4 text-sm text-slate-600">
+              <a href="/" className="transition-colors hover:text-cares-700">事業所をさがす</a>
+              <a href="/cases" className="transition-colors hover:text-cares-700">支援の相談</a>
+              <a href="/ranking" className="transition-colors hover:text-cares-700">応援ランキング</a>
+              <a href="/blog" className="transition-colors hover:text-cares-700">コラム</a>
+              <a href="/area" className="transition-colors hover:text-cares-700">エリアから探す</a>
+              <a href="/for-business" className="transition-colors hover:text-cares-700">事業所の掲載管理・登録案内</a>
+              <a href="https://app.carespace.jp" className="transition-colors hover:text-cares-700">CareSpaceOS</a>
             </div>
-            <p className="text-xs text-white/35">&copy; {new Date().getFullYear()} 株式会社CARESPACE</p>
+            <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} 株式会社CARESPACE</p>
           </div>
         </footer>
       </body>
