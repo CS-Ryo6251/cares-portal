@@ -12,6 +12,8 @@ export type ProviderAvailability = {
   evidence: string | null
   recruitment_post_id: string | null
   recruitment_status: string | null
+  recruitment_title?: string | null
+  recruitment_content?: string | null
   published: boolean
 }
 
