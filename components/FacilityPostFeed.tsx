@@ -8,6 +8,7 @@ import CommentSection from './CommentSection'
 import ViewTracker from './ViewTracker'
 import FacilityHearts from './FacilityHearts'
 import PostShareButton from './PostShareButton'
+import PostVideo from './PostVideo'
 
 function ProfileDialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -104,7 +105,7 @@ export default function FacilityPostFeed({ posts, facilityId, facilityName, list
         <div className="mt-3 text-center"><PostShareButton facilityId={facilityId} facilityName={facilityName} postId={selected.id} title={selected.title} canSupport={Boolean(listingId)} /></div>
       </div>
       <div className="space-y-2">{selectedMedia.map((media, index) => media.type === 'video' ?
-        <video key={media.id} src={media.url} controls playsInline preload="metadata" className="max-h-[65dvh] w-full bg-black" /> :
+        <PostVideo key={media.id} src={media.url} className="max-h-[65dvh]" /> :
         <Photo key={media.id} src={media.url} alt={(selected.title || facilityName) + ' 写真' + (index + 1)} className="max-h-[65dvh] w-full bg-slate-50 object-contain" />)}</div>
       <div className="p-5 sm:p-7">
         <p className="text-xs text-slate-400">{new Date(selected.created_at).toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>

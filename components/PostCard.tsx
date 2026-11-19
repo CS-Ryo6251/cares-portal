@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import CommentSection from './CommentSection'
 import ServiceTypeIcon from './ServiceTypeIcon'
+import PostVideo from './PostVideo'
 import { facilityTypeLabels, vacancyStatusMap, postCategoryLabels, formatRelativeDate } from '@/lib/constants'
 
 type PostCardProps = {
@@ -34,6 +35,7 @@ type PostCardProps = {
 
 export default function PostCard({ post, facility, acceptanceStatus }: PostCardProps) {
   const [commentOpen, setCommentOpen] = useState(false)
+  const [mediaIndex, setMediaIndex] = useState(0)
 
   const category = post.category ? postCategoryLabels[post.category] : null
   const typeLabel = facilityTypeLabels[facility.facility_type] || facility.facility_type
@@ -102,26 +104,25 @@ export default function PostCard({ post, facility, acceptanceStatus }: PostCardP
       {/* Photo area */}
       {hasImages && (
         <div className="relative">
-          <img
-            src={sortedMedia[0].media_url}
+          {sortedMedia[mediaIndex].media_type?.startsWith('video') ?
+            <PostVideo key={sortedMedia[mediaIndex].id} src={sortedMedia[mediaIndex].media_url} className="aspect-[4/3] object-contain" /> : <img
+            src={sortedMedia[mediaIndex].media_url}
             alt={post.title || '投稿画像'}
             className="w-full aspect-[4/3] object-cover"
-          />
+          />}
           {sortedMedia.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {sortedMedia.slice(0, 5).map((_, i) => (
-                <span
+            <div className="flex justify-center gap-1 bg-slate-50 py-1" aria-label="投稿の写真・動画">
+              {sortedMedia.map((media, i) => (
+                <button
                   key={i}
-                  className={`w-2 h-2 rounded-full ${
-                    i === 0 ? 'bg-white' : 'bg-white/50'
+                  onClick={() => setMediaIndex(i)}
+                  aria-label={`${i + 1}件目の${media.media_type?.startsWith('video') ? '動画' : '写真'}を見る`}
+                  aria-pressed={i === mediaIndex}
+                  className={`h-11 min-w-11 rounded-lg text-xs font-bold ${
+                    i === mediaIndex ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-200'
                   }`}
-                />
+                >{i + 1}</button>
               ))}
-              {sortedMedia.length > 5 && (
-                <span className="text-white text-xs font-medium ml-1">
-                  +{sortedMedia.length - 5}
-                </span>
-              )}
             </div>
           )}
         </div>
