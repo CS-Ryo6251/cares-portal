@@ -11,6 +11,10 @@ export default function ProviderAvailability({ availability, serviceType }: { av
   return <section className="my-5 rounded-2xl border border-emerald-100 bg-white p-5 sm:p-6" aria-label="事業所からの空き情報">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-bold">事業所からの空き情報</h2><span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-900">{VACANCY_LABELS[availability.status] || VACANCY_LABELS.unknown}</span></div>
     {recruiting && <p className="mt-3 font-bold text-emerald-800">利用者を募集しています</p>}
+    {recruiting && (availability.recruitment_title || availability.recruitment_content) && <div className="mt-4 rounded-xl bg-emerald-50/60 p-4" aria-label="募集の案内">
+      {availability.recruitment_title && <h3 className="break-words font-bold text-slate-900">{availability.recruitment_title}</h3>}
+      {availability.recruitment_content && <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">{availability.recruitment_content}</p>}
+    </div>}
     {availability.published && availability.checked_at && <p className="mt-3 text-xs leading-6 text-slate-500">確認：{new Date(availability.checked_at).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })} ／ 掲載期限：{availability.valid_until}<br />情報源：事業所の回答{availability.evidence === 'fax_reply' ? '（FAXで届いた照会への回答）' : ''}</p>}
     {!availability.published && <p className="mt-3 text-sm text-slate-600">現在公開されている受入情報はありません。事業所へご確認ください。</p>}
     {detailsVisible && period && <p className="mt-3 text-xs leading-6 text-slate-500">{period}</p>}

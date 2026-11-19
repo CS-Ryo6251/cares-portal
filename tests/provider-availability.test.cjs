@@ -33,13 +33,17 @@ test('公開カレンダーは条件付き・数量不明・泊まり退所日�
 test('公開ページは同じ版の募集・受入条件・適用期間を表示し、tombstoneの古い条件を表示しない',()=>{
   const React=require('react'),{renderToStaticMarkup}=require('react-dom/server')
   const Component=load('components/ProviderAvailability.tsx',{'@/lib/intake':load('lib/intake.ts'),'@/lib/availability-presentation':presentation}).default
-  const current={listing_id:id(1),version:2,status:'conditional',published:true,provider_managed:true,recruitment_status:'active',summary:{accepts:'合成の一般受入条件',detailConfirmation:{confirmedOn:calendar.availabilityToday(),validUntil:calendar.availabilityToday()}},checked_at:new Date().toISOString(),valid_until:calendar.availabilityToday()}
+  const current={listing_id:id(1),version:2,status:'conditional',published:true,provider_managed:true,recruitment_status:'active',recruitment_title:'見学のご案内',recruitment_content:'火曜日に空きがあります。\n<script>合成の募集本文</script>',summary:{accepts:'合成の一般受入条件',detailConfirmation:{confirmedOn:calendar.availabilityToday(),validUntil:calendar.availabilityToday()}},checked_at:new Date().toISOString(),valid_until:calendar.availabilityToday()}
   const html=renderToStaticMarkup(React.createElement(Component,{availability:current,serviceType:'生活介護'}))
   assert.match(html,/条件付きで相談可能/);assert.match(html,/利用者を募集/);assert.match(html,/合成の一般受入条件/)
+  assert.match(html,/見学のご案内/);assert.match(html,/火曜日に空きがあります。\n&lt;script&gt;合成の募集本文&lt;\/script&gt;/)
+  assert.match(html,/whitespace-pre-wrap/);assert.doesNotMatch(html,/<script>/)
   const withdrawn=renderToStaticMarkup(React.createElement(Component,{availability:{...current,status:'unknown',published:false},serviceType:'生活介護'}))
-  assert.doesNotMatch(withdrawn,/利用者を募集|合成の一般受入条件/)
+  assert.doesNotMatch(withdrawn,/利用者を募集|合成の一般受入条件|見学のご案内|合成の募集本文/)
   const full=renderToStaticMarkup(React.createElement(Component,{availability:{...current,status:'no_vacancy'},serviceType:'生活介護'}))
-  assert.doesNotMatch(full,/利用者を募集|合成の一般受入条件/)
+  assert.doesNotMatch(full,/利用者を募集|合成の一般受入条件|見学のご案内|合成の募集本文/)
+  const paused=renderToStaticMarkup(React.createElement(Component,{availability:{...current,recruitment_status:'paused'}}))
+  assert.doesNotMatch(paused,/見学のご案内|合成の募集本文/)
 })
 
 test('受付は通知先確認を維持し、別の版・非公開版の古い受付文面を出さない',async()=>{
@@ -97,6 +101,11 @@ test('PostgreSQL: OS正本とCaresビュー・受付RPCの統合、所有権、�
     await db.exec(read('supabase/migrations/20261106132035_cares_shared_availability.sql'))
     await db.exec(read('supabase/migrations/20261106132057_cares_intake_shared_availability.sql'))
     await db.exec(read('supabase/migrations/20261106145712_cares_welfare_availability_backfill_batch.sql'))
+    const availabilityColumns=async view=>(await db.query('select column_name from information_schema.columns where table_name=$1 order by ordinal_position',[view])).rows.map(row=>row.column_name)
+    const beforeCopy=await availabilityColumns('service_availability_public'),beforeCares=await availabilityColumns('cares_current_availability')
+    await db.exec(read('supabase/migrations/20261119125033_cares_recruitment_copy.sql'))
+    assert.deepEqual(await availabilityColumns('service_availability_public'),[...beforeCopy,'recruitment_title','recruitment_content'])
+    assert.deepEqual(await availabilityColumns('cares_current_availability'),[...beforeCares,'recruitment_title','recruitment_content'])
     assert.deepEqual((await columns()).slice(0,oldColumns.length),oldColumns)
     assert.ok((await columns()).includes('public_provider_number'))
     await db.exec(`insert into cares_listings(id,facility_name,service_type,is_owner_verified,owner_facility_id,acceptance_status) values
@@ -198,6 +207,37 @@ test('PostgreSQL: OS正本とCaresビュー・受付RPCの統合、所有権、�
       assert.equal((await provider()).version,1);assert.equal(await count(),0)
       const recruited=await provider({version:1,op:202,recruit:true});assert.equal(recruited.version,2);assert.equal(await count(),1)
       const original=(await posts())[0].id
+      // The public view exposes only the current, consented recruitment's copy.
+      const publicCopy=async()=>{
+        await db.exec('set role anon')
+        const row=(await db.query('select recruitment_title,recruitment_content from cares_current_availability where listing_id=$1',[id(5)])).rows[0]
+        await db.exec('reset role; set role service_role')
+        return row
+      }
+      assert.deepEqual(await publicCopy(),{recruitment_title:'合成募集',recruitment_content:'公開の募集本文'})
+      await db.exec('set role anon')
+      await assert.rejects(db.query('select content from service_posts'),/permission denied/)
+      await db.exec('reset role; set role service_role')
+      for(const update of [
+        "update service_availability_projection set published=false where listing_id=$1",
+        "update service_availability_projection set valid_until=(now() at time zone 'Asia/Tokyo')::date-1 where listing_id=$1",
+        "update service_availability_projection set recruitment_status='paused' where listing_id=$1",
+        "update service_availability_projection set status='unavailable' where listing_id=$1",
+        "update service_availability_projection set version=version+1 where listing_id=$1",
+        `update service_posts set facility_id='${id(13)}' where id=$1`,
+        "update service_posts set type='searchUsers' where id=$1",
+        "update service_posts set status='inactive' where id=$1",
+        `update service_posts set service_details=service_details || '{"publishToCares":false}'::jsonb where id=$1`,
+        `update service_posts set service_details=service_details || '{"visibility":"private"}'::jsonb where id=$1`,
+        `update service_posts set service_details=service_details || '{"availabilityVersion":0}'::jsonb where id=$1`,
+        `update service_posts set service_details=service_details || '{"availabilityTargetId":"${id(999)}"}'::jsonb where id=$1`,
+      ]) {
+        await db.exec('begin')
+        await db.query(update,[update.includes('where listing_id')?id(5):original])
+        assert.deepEqual(await publicCopy(),{recruitment_title:null,recruitment_content:null},update)
+        await db.exec('rollback')
+      }
+      assert.deepEqual(await publicCopy(),{recruitment_title:'合成募集',recruitment_content:'公開の募集本文'})
       await provider({version:2,op:203,value:{...summary,weekly:{火:'2名'}}})
       assert.equal((await posts())[0].service_details.availability.weekly.火,'2名')
       assert.equal((await posts())[0].service_details.availabilityVersion,3)
