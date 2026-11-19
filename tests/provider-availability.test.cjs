@@ -103,7 +103,7 @@ test('PostgreSQL: OS正本とCaresビュー・受付RPCの統合、所有権、�
     await db.exec(read('supabase/migrations/20261106145712_cares_welfare_availability_backfill_batch.sql'))
     const availabilityColumns=async view=>(await db.query('select column_name from information_schema.columns where table_name=$1 order by ordinal_position',[view])).rows.map(row=>row.column_name)
     const beforeCopy=await availabilityColumns('service_availability_public'),beforeCares=await availabilityColumns('cares_current_availability')
-    await db.exec(read('supabase/migrations/20261119125033_cares_recruitment_copy.sql'))
+    await db.exec(read('supabase/migrations/20261119125706_cares_recruitment_copy.sql'))
     assert.deepEqual(await availabilityColumns('service_availability_public'),[...beforeCopy,'recruitment_title','recruitment_content'])
     assert.deepEqual(await availabilityColumns('cares_current_availability'),[...beforeCares,'recruitment_title','recruitment_content'])
     assert.deepEqual((await columns()).slice(0,oldColumns.length),oldColumns)
